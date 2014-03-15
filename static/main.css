@@ -1,0 +1,21 @@
+@import url(http://fonts.googleapis.com/css?family=Roboto:500,400);
+
+body {
+	font-family: Roboto, Verdana, sans-serif;
+	font-weight: 400;
+	}
+
+h1 {
+	color: #A80004;
+	font-size: 14;
+	}
+	
+#wrapper {
+	background-color: #EEF09F;
+	}
+	
+#content {
+	background-color: #DDE364;
+	}
+	
+
