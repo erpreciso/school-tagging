@@ -7,6 +7,28 @@ import os
 import re
 from google.appengine.ext import ndb
 
+USERS = {
+	"teachers": [
+		{
+			"id": "teacher 1",
+			"username": "t",
+			"password": "t",
+			},
+		],
+	"students": [
+		{
+			"id": "student 1",
+			"username": "s",
+			"password": "s",
+		},
+		{
+			"id": "student 2",
+			"username": "s2",
+			"password": "s2",
+		},
+	],
+}
+
 class MainHandler(webapp2.RequestHandler):
 	template_dir = os.path.join(os.path.dirname(__file__), 'pages')
 	jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
@@ -27,23 +49,12 @@ class HomePageHandler(MainHandler):
 	def get(self):
 		self.render_page("content.html")
 
-class People(ndb.Model):
-	username = ndb.StringProperty()
-	password = ndb.StringProperty()
-	email = ndb.TextProperty()
-	created =  ndb.DateTimeProperty(auto_now_add = True)
-
-def user_key(ukey = 'default'):
-	return ndb.Key.from_path("People", ukey)
-
 class SignupPageHandler(MainHandler):
 	def write_signup(self,
 				username="",
-				email="",
 				username_error="",
 				password_missing_error_sw=False,
 				password_match_error_sw=False,
-				mail_error_sw=False,
 				):
 		if password_missing_error_sw:
 			password_missing_error="That wasn't a valid password."
@@ -53,18 +64,11 @@ class SignupPageHandler(MainHandler):
 			password_match_error="Your passwords didn't match."
 		else:
 			password_match_error=""
-		if mail_error_sw:
-			mail_error="That's not a valid email."
-		else:
-			mail_error=""
-		tutt = People.query().order(People.created)
 		self.render_page("signup.html",username = username,
-												email = email,
 												username_error = username_error,
 												password_missing_error = password_missing_error,
 												password_match_error = password_match_error,
-												mail_error = mail_error,
-												tutt = tutt)
+												)
 
 	def get(self):
 		self.write_signup()
@@ -73,7 +77,6 @@ class SignupPageHandler(MainHandler):
 		username=self.request.get("username")
 		password=self.request.get("password")
 		verify_password=self.request.get("verify")
-		email=self.request.get("email")
 		
 		#verifica presenza username
 		username_error_sw = False
@@ -97,19 +100,12 @@ class SignupPageHandler(MainHandler):
 		password_match_error_sw = False
 		if password != verify_password:
 			password_match_error_sw = True
-		#verifica correttezza email
-		mail_error_sw = False
-		if email != "":
-			mail_re=re.compile(r"^[\S]+@[\S]+\.[\S]+$")
-			if mail_re.match(email) == None:
-				mail_error_sw = True
-		if password_match_error_sw or username_error_sw or password_missing_error_sw or mail_error_sw == True:
+		if password_match_error_sw or username_error_sw or password_missing_error_sw:
 			self.write_signup(username,
 						email,
 						username_error,
 						password_missing_error_sw,
 						password_match_error_sw,
-						mail_error_sw,
 						)
 		else:
 			#~ ck = ndb.GqlQuery("SELECT * FROM People WHERE username = :1",username)
