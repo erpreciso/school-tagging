@@ -1,29 +1,24 @@
 {% extends "wrapper.html" %}
 
 {% block content %}
-<div id="content">
+<div id="signup">
 	<h2>Signup</h2>
     <form method="post">
-		<table>
-			<tr>
-				<td class="label">Username</td>
-				<td><input type="text" name="username" value="{{username}}"></td>
-				<td class="error">{{username_error}}</td>
-			</tr>
-			<tr>
-				<td class="label">Password</td>
-				<td><input type="password" name="password"></td>
-				<td class="error">{{password_missing_error}}</td>
-			</tr>
-			<tr>
-				<td class="label">Verify Password</td>
-				<td><input type="password" name="verify"></td>
-				<td class="error">{{password_match_error}}</td>
-			</tr>
-			<tr>
-				<td><input type="submit"></td>
-			</tr>
-		</table>
+		<label>Role</label>
+		<select name="role">
+			<option>students</option>
+			<option>teachers</option>
+		</select>
+		<label>Username</label>
+		<input type="text" name="username" value="{{username}}">
+		<div class="error">{{username_error}}</div>
+		<label>Password</label>
+		<input type="password" name="password">
+		<div class="error">{{password_missing_error}}</div>
+		<label>Verify Password</label>
+		<input type="password" name="verify">
+		<div class="error">{{password_match_error}}</div>
+		<input type="submit">
 	</form>
 	<hr>
 </div>
