@@ -1,10 +1,23 @@
 {% extends "wrapper.html" %}
 
 {% block payload %}
+<script>
+	channel = new goog.appengine.Channel('{{ token }}');
+	socket = channel.open();
+	socket.onopen = onOpened;
+	socket.onmessage = onMessage;
+	socket.onerror = onError;
+	socket.onclose = onClose;
+</script>
 <div id="content">
 	<h3>Welcome! {{username}}</h3>
 	<h3>Dashboard</h3>
 	{{cache}}
 	<p></p>
+	<form method="POST">
+		<label>message</label>
+		<input type="text" name="message">
+		<input type="submit">
+	</form>
 </div>
 {% endblock %}

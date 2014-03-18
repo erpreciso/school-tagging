@@ -20,11 +20,20 @@ DEBUG = True
 #~ in Logout class: doesn't clear the cache
 #~ -----------------------------------------------------------
 
-USER_CACHE = {
+CHANNEL = {"student":None, "teacher":None}
+
+USER_CACHE = [
+	{
 	'hashpassword': '7d69e7ad3f56a8cfa6b35450ac1903b64557c1d9223393e6b863c9cc86bd26db|Okzmj',
 	'username': u'rrr',
 	'role': u'students',
-	}
+	},
+	{
+		'hashpassword': 'cbf37cbdaa4b4bf387264b1b980f0b8e0345aeeb47bb56678477bd70ad71ee47|BOZCt',
+		'role': u'teachers',
+		'username': u'ttt'
+		}
+	]
 
 USERS = {
 	"teachers": [
@@ -43,22 +52,26 @@ USERS = {
 	]
 	}
 
-def get_user_role():
-	if USER_CACHE["role"] == "students":
-		return "student"
-	elif USER_CACHE["role"] == "teachers":
-		return "teacher"
-	else:
-		raise Exception("No known role")
+def clear_cache():
+	USER_CACHE.clear()
 
-def get_user_name():
-	return USER_CACHE["username"]
+def get_user_role(username):
+	for user in USER_CACHE:
+		if user["username"] == username:
+			if user["role"] == "students":
+				return "student"
+			elif user["role"] == "teachers":
+				return "teacher"
+			else:
+				raise Exception("No known role")
 
 def add_user_to_cache(role, username, password):
+	user = {}
+	user["role"] = role
+	user["username"] = username
+	user["hashpassword"] = password
 	global USER_CACHE
-	USER_CACHE["role"] = role
-	USER_CACHE["username"] = username
-	USER_CACHE["hashpassword"] = password
+	USER_CACHE.append(user)
 	
 def all_usernames():
 	a = [x["username"] for x in USERS["teachers"]]
@@ -74,7 +87,6 @@ def add_user_to_database(role, username, password, id="default"):
 	USERS[role].append(user)
 
 def get_user_password(role, username):
-	logging.info(role)
 	for user in USERS[role]:
 		if user["username"] == username:
 			return user["hashpassword"]
@@ -155,10 +167,10 @@ class SignupPageHandler(MainHandler):
 		else:
 			password_match_error=""
 		self.render_page("signup.html",username = username,
-												username_error = username_error,
-												password_missing_error = password_missing_error,
-												password_match_error = password_match_error,
-												)
+						username_error = username_error,
+						password_missing_error = password_missing_error,
+						password_match_error = password_match_error,
+						)
 
 	def get(self):
 		clear_my_cookie(self)
@@ -241,26 +253,44 @@ class LogoutPageHandler(MainHandler):
 	def get(self):
 		clear_my_cookie(self)
 		if not DEBUG:
-			USER_CACHE.clear()
+			clear_cache()
 		self.redirect("/login")
 
 class WelcomePageHandler(MainHandler):
 	def get(self):
 		cookie = self.request.cookies.get("schooltagging")
 		if check_cookie(cookie):
-			if get_user_role() == "student":
+			username = get_user_from_cookie(cookie)
+			role = get_user_role(username)
+			logging.info(username)
+			logging.info(role)
+			token = channel.create_channel(username)
+			global CHANNEL
+			CHANNEL[role] = token
+			if role == "student":
 				self.render_page(
 						"student.html",
-						username=get_user_name(),
+						username=username,
+						token=token,
 						)
-			elif get_user_role() == "teacher":
+			elif role == "teacher":
 				self.render_page(
 						"teacher.html",
-						username=get_user_name(),
+						username=username,
 						cache=USER_CACHE,
+						token=token,
 						)
 		else:
 			self.redirect("/login")
+	
+	def post(self):
+		cookie = self.request.cookies.get("schooltagging")
+		if check_cookie(cookie):
+			role = get_user_role(get_user_from_cookie(cookie))
+			username = get_user_from_cookie(cookie)
+			logging.info(CHANNEL)
+			channel.send_message(CHANNEL["student"], "prrrr")
+			
 
 class DevPageHandler(MainHandler):
 	def get(self):
