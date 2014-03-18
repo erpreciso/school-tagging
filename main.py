@@ -9,6 +9,8 @@ import random
 import string
 import hashlib
 import logging
+from google.appengine.api import channel
+from google.appengine.api import users
 
 DEBUG = True
 #~ Debug settings
@@ -91,6 +93,11 @@ def check_cookie(c):
 	global USER_CACHE
 	USER_CACHE.clear()
 	return False
+
+def get_user_from_cookie(c):
+	if c and '|' in c:
+		if '|' in c[c.find('|') + 1:]:
+			return c.split('|')[0]
 
 def set_my_cookie(self, username, password):
 	cookie = 'schooltagging=' + str(username)
@@ -255,11 +262,18 @@ class WelcomePageHandler(MainHandler):
 		else:
 			self.redirect("/login")
 
-
+class DevPageHandler(MainHandler):
+	def get(self):
+		cookie = self.request.cookies.get("schooltagging")
+		user = get_user_from_cookie(cookie)
+		token = channel.create_channel(user)
+		#~ self.render_page("dev.html", token=token, user=user)
+		
 app = webapp2.WSGIApplication([
     ('/', HomePageHandler),
     ('/signup', SignupPageHandler),
     ('/login', LoginPageHandler),
     ('/welcome', WelcomePageHandler),
     ('/logout', LogoutPageHandler),
+    ('/dev', DevPageHandler),
 	], debug=True)
