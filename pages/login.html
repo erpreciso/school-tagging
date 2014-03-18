@@ -4,20 +4,16 @@
 <div id="content">
 	<h2>Login</h2>
     <form method="post">
-		<table>
-			<tr>
-				<td class="label">Username</td>
-				<td><input type="text" name="username" value="{{username}}"></td>
-			</tr>
-			<tr>
-				<td class="label">Password</td>
-				<td><input type="password" name="password"></td>
-			</tr>
-			<tr><td class="error">{{login_error}}</td></tr>
-			<tr>
-				<td><input type="submit"></td>
-			</tr>
-		</table>
+		<label>Username</label>
+		<input type="text" name="username" value="{{username}}">
+		<label>Password</label>
+		<input type="password" name="password">
+		<select name="role">
+			<option>students</option>
+			<option>teachers</option>
+		</select>
+		<div class="error">{{login_error}}</div>
+		<input type="submit">
 	</form>
 	<hr>
 </div>

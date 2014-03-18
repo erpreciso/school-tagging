@@ -9,6 +9,9 @@ import random
 import string
 import hashlib
 
+USER_CACHE = {}
+
+#~ temp cookie rrr|7a6990be279be51803e015ffcb32ed3523205a73bfee13e7c45ed14c31b242a0|aqRpS
 USERS = {
 	"teachers": [
 		{
@@ -44,6 +47,20 @@ def add_user(role, username, password, id="default"):
 			}
 	USERS[role].append(a)
 
+def get_user_password(role, username):
+	for k in USERS[role]:
+		if k["username"] == username:
+			return k["password"]
+	return False
+		
+def set_my_cookie(username, password):
+	cookie = 'schooltagging=' + str(username)
+	cookie = cookie + '|' + str(password)
+	return cookie
+
+def clear_my_cookie(self):
+	self.response.delete_cookie('schooltagging', path = '/')
+
 def make_salt():
 	return ''.join(random.choice(string.letters) for x in xrange(5))
 
@@ -52,6 +69,9 @@ def make_pw_hash(name, pw, salt = None):
 		salt = make_salt()
 	h = hashlib.sha256(name + pw + salt).hexdigest()
 	return "%s|%s" % (h,salt)
+
+def valid_pw(name, pw, h, salt):
+	return h == make_pw_hash(name, pw, salt)
 
 class MainHandler(webapp2.RequestHandler):
 	template_dir = os.path.join(os.path.dirname(__file__), 'pages')
@@ -95,6 +115,7 @@ class SignupPageHandler(MainHandler):
 												)
 
 	def get(self):
+		clear_my_cookie(self)
 		self.write_signup()
 
 	def post(self):
@@ -135,13 +156,83 @@ class SignupPageHandler(MainHandler):
 				role = self.request.get("role")
 				password = make_pw_hash(username, password)
 				add_user(role, username, password)
-				self.response.headers.add_header('Set-Cookie',
-								'schooltagging=%s|%s; Path=/' % (str(username),str(password)))
-				self.redirect("/")
+				self.response.headers.add_header(
+						'Set-Cookie',
+						set_my_cookie(username, password),
+						)
+				global USER_CACHE
+				USER_CACHE['user'] = username
+				USER_CACHE['hashpassword'] = password
+				self.redirect("/welcome")
 				
+class LoginPageHandler(MainHandler):
+	
+	def write_login(self, username = "", login_error = ""):
+		self.render_page(
+								"login.html",
+								username = username,
+								login_error = login_error,
+								)
+	def get(self):
+		clear_my_cookie(self)
+		self.write_login()
+	
+	def post(self):
+		username = self.request.get("username")
+		user_password = self.request.get("password")
+		role = self.request.get("role")
+		if username == "" or user_password == "":
+			self.write_login(login_error = "Invalid login")
+		else:
+			db_password = get_user_password(role, username)
+			if db_password:
+				salt = db_password.split('|')[1]
+				login_password = make_pw_hash(username, user_password, salt)
+				if login_password == db_password:
+					self.response.headers.add_header(
+							'Set-Cookie',
+							set_my_cookie(username, login_password),
+							)
+					global USER_CACHE
+					USER_CACHE['user'] = username
+					USER_CACHE['hashpassword'] = login_password
+					self.redirect("/welcome")
+			self.write_login(login_error = "Invalid login")
 
+class LogoutPageHandler(MainHandler):
+	
+	def get(self):
+		clear_my_cookie(self)
+		USER_CACHE.clear()
+		self.redirect("/login")
+
+class WelcomePageHandler(MainHandler):
+	def get(self):
+		cookie = self.request.cookies.get("schooltagging")
+		if check_cookie(cookie):
+			self.render_page(
+					"welcome.html",
+					username=USER_CACHE["user"],
+					)
+		else:
+			self.redirect("/login")
+
+def check_cookie(c):
+	if 'user' in USER_CACHE.keys():
+		if c and '|' in c:
+			if '|' in c[c.find('|') + 1:]:
+				username = c.split('|')[0]
+				user_pswsalt = '%s|%s' % (c.split('|')[1], c.split('|')[2])
+				if username == USER_CACHE['user'] and user_pswsalt == USER_CACHE['hashpassword']:
+					return True
+	global USER_CACHE
+	USER_CACHE.clear()
+	return False
 
 app = webapp2.WSGIApplication([
     ('/', HomePageHandler),
     ('/signup', SignupPageHandler),
+    ('/login', LoginPageHandler),
+    ('/welcome', WelcomePageHandler),
+    ('/logout', LogoutPageHandler),
 	], debug=True)

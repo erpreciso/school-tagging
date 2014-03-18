@@ -11,11 +11,13 @@ h1 {
 	}
 	
 #wrapper {
-	background-color: #EEF09F;
+	
 	}
 	
 #content, #signup {
-	background-color: #DDE364;
+	
 	}
 	
-
+.error {
+	color: red;
+	}
