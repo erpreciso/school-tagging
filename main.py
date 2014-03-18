@@ -9,54 +9,64 @@ import random
 import string
 import hashlib
 
-USER_CACHE = {}
+DEBUG = True
+#~ Debug settings
+#~ --------------
+#~ in check_cookie: returns True even if there are no cookie
+#~ USER_CACHE global variable always contains a student login
+#~ -----------------------------------------------------------
 
-#~ temp cookie rrr|7a6990be279be51803e015ffcb32ed3523205a73bfee13e7c45ed14c31b242a0|aqRpS
-USERS = {
-	"teachers": [
-		{
-			"id": "teacher 1",
-			"username": "t",
-			"password": "t",
-			},
-		],
-	"students": [
-		{
-			"id": "student 1",
-			"username": "s",
-			"password": "s",
-		},
-		{
-			"id": "student 2",
-			"username": "s2",
-			"password": "s2",
-		},
-	],
-}
+USER_CACHE = {
+	'hashpassword': '7d69e7ad3f56a8cfa6b35450ac1903b64557c1d9223393e6b863c9cc86bd26db|Okzmj',
+	'user': u'rrr',
+	'role': u'students',
+	}
 
+USERS = {"teachers": [], "students": []}
+
+def add_user_to_cache(role, username, password):
+	global USER_CACHE
+	USER_CACHE["role"] = role
+	USER_CACHE["user"] = username
+	USER_CACHE["hashpassword"] = password
+	
 def all_usernames():
 	a = [x["username"] for x in USERS["teachers"]]
 	b = [x["username"] for x in USERS["students"]]
 	return a + b
 
-def add_user(role, username, password, id="default"):
-	a = {
-				"id": id,
-				"username": username,
-				"password": password,
+def add_user_to_database(role, username, password, id="default"):
+	user = {
+			"id": id,
+			"username": username,
+			"password": password,
 			}
-	USERS[role].append(a)
+	USERS[role].append(user)
 
 def get_user_password(role, username):
 	for k in USERS[role]:
 		if k["username"] == username:
 			return k["password"]
 	return False
-		
-def set_my_cookie(username, password):
+
+def check_cookie(c):
+	if DEBUG:
+		return True
+	if 'user' in USER_CACHE.keys():
+		if c and '|' in c:
+			if '|' in c[c.find('|') + 1:]:
+				username = c.split('|')[0]
+				user_pswsalt = '%s|%s' % (c.split('|')[1], c.split('|')[2])
+				if username == USER_CACHE['user'] and user_pswsalt == USER_CACHE['hashpassword']:
+					return True
+	global USER_CACHE
+	USER_CACHE.clear()
+	return False
+
+def set_my_cookie(self, username, password):
 	cookie = 'schooltagging=' + str(username)
 	cookie = cookie + '|' + str(password)
-	return cookie
+	self.response.headers.add_header('Set-Cookie', cookie)
 
 def clear_my_cookie(self):
 	self.response.delete_cookie('schooltagging', path = '/')
@@ -155,24 +165,20 @@ class SignupPageHandler(MainHandler):
 			else:
 				role = self.request.get("role")
 				password = make_pw_hash(username, password)
-				add_user(role, username, password)
-				self.response.headers.add_header(
-						'Set-Cookie',
-						set_my_cookie(username, password),
-						)
-				global USER_CACHE
-				USER_CACHE['user'] = username
-				USER_CACHE['hashpassword'] = password
+				add_user_to_database(role, username, password)
+				add_user_to_cache(role, username, password)
+				set_my_cookie(self, username, password)
 				self.redirect("/welcome")
 				
 class LoginPageHandler(MainHandler):
-	
+
 	def write_login(self, username = "", login_error = ""):
 		self.render_page(
-								"login.html",
-								username = username,
-								login_error = login_error,
-								)
+				"login.html",
+				username = username,
+				login_error = login_error,
+				)
+
 	def get(self):
 		clear_my_cookie(self)
 		self.write_login()
@@ -189,13 +195,8 @@ class LoginPageHandler(MainHandler):
 				salt = db_password.split('|')[1]
 				login_password = make_pw_hash(username, user_password, salt)
 				if login_password == db_password:
-					self.response.headers.add_header(
-							'Set-Cookie',
-							set_my_cookie(username, login_password),
-							)
-					global USER_CACHE
-					USER_CACHE['user'] = username
-					USER_CACHE['hashpassword'] = login_password
+					set_my_cookie(self, username, login_password)
+					add_user_to_cache(role, username, login_password)
 					self.redirect("/welcome")
 			self.write_login(login_error = "Invalid login")
 
@@ -213,21 +214,11 @@ class WelcomePageHandler(MainHandler):
 			self.render_page(
 					"welcome.html",
 					username=USER_CACHE["user"],
+					cache = USER_CACHE,
 					)
 		else:
 			self.redirect("/login")
 
-def check_cookie(c):
-	if 'user' in USER_CACHE.keys():
-		if c and '|' in c:
-			if '|' in c[c.find('|') + 1:]:
-				username = c.split('|')[0]
-				user_pswsalt = '%s|%s' % (c.split('|')[1], c.split('|')[2])
-				if username == USER_CACHE['user'] and user_pswsalt == USER_CACHE['hashpassword']:
-					return True
-	global USER_CACHE
-	USER_CACHE.clear()
-	return False
 
 app = webapp2.WSGIApplication([
     ('/', HomePageHandler),
