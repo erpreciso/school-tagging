@@ -7,7 +7,6 @@ school-tagging application
 {% block wrapper %}
 <div id="wrapper">
 	<h1>School Tagging application</h1>
-	<h2>under development</h2>
 	<h3>
 		<a href="/login">Login</a>
 		|
@@ -16,8 +15,26 @@ school-tagging application
 		<a href="/logout">Logout</a>
 	</h3>
 	<p></p>
+	<h3>Welcome! {{username}}</h3>
 	{% block payload %}
-	{% endblock %}	
+	{% endblock %}
+	<div id="userlist">
+		<p>Who's logged in</p>
+	{% for user in logged %}
+		<div class="user">
+			<div><strong>{{user[0]}}</strong></div>
+			<div>{{user[1]}}</div>
+		</div>
+	{% endfor %}
+	</div>
+	<h2>Message Board</h2>
+	<form method="POST">
+		<label>Send message --> </label>
+		<input type="text" name="message">
+		<input type="submit">
+	</form>
+	<h3>Message History</h3>
+	<div id="all_messages"></div>
 </div>
 <!--
 	javascript code for the Channel API

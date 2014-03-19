@@ -7,7 +7,17 @@ body {
 
 h1 {
 	color: #A80004;
-	font-size: 14;
+	font-size: 2em;
+	}
+
+h2 {
+	color: #FB0006;
+	font-size: 1.5em;
+	}
+	
+h3 {
+	color: #6F0003;
+	font-size: 1.2em;
 	}
 	
 #wrapper {
@@ -20,4 +30,14 @@ h1 {
 	
 .error {
 	color: red;
+	}
+
+.user {
+	background-color: yellow;
+	display: inline-block;
+	font-size: 0.8em;
+	}
+
+#userlist {
+	background-color: #C2F5C7;
 	}

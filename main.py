@@ -26,17 +26,21 @@ LOGGED = []
 
 USERS = [
 	{
-		'hashpassword': 'cbf37cbdaa4b4bf387264b1b980f0b8e0345aeeb47bb56678477bd70ad71ee47|BOZCt',
-		'role': u'teacher',
-		'username': u'ttt'
+		'username': u'tizio',
+		'role': u'student',
+		'hashpassword': 'b43eb7400b6faf49c758b0838c974a1efef2c58d4d1468ff2a5dbe306e826501|yfcBy',
 	},
 	{
-		'hashpassword': '7d69e7ad3f56a8cfa6b35450ac1903b64557c1d9223393e6b863c9cc86bd26db|Okzmj',
-		'username': u'rrr',
+		'username': u'caio',
 		'role': u'student',
+		'hashpassword': 'e1d382f8d7d6ea53f3c0ca42c50f82d9ea2be6d4afd11675858789570a0226b0|zLGNf',
+	},
+	{
+		'username': u'sempronio',
+		'role': u'teacher',
+		'hashpassword': '42b13e20a38202b273fdb6ea29e240710acca6c7f7a627276cbc9253fefc3941|LxXVd',
 	},
 	]
-
 
 def remove_from_LOGGED(username):
 	global LOGGED
@@ -46,17 +50,20 @@ def remove_from_LOGGED(username):
 			if MYLOGS:
 				logging.info(str("Removed " + username + " from LOGGED"))
 
-def add_user_to_LOGGED(role, username, password):
-	global LOGGED
-	user = {
-			"username": username,
-			"hashpassword": password,
-			"role": role,
-			}
-	LOGGED.append(user)
-	if MYLOGS:
-		logging.info(str("User added to LOGGED list --> " + str(user)))
-		logging.info(str("Count of logged users --> " + str(len(LOGGED))))
+def add_user_to_LOGGED(role, username):
+	if (role, username) not in get_all_LOGGED_users():
+		global LOGGED
+		user = {
+				"username": username,
+				"role": role,
+				}
+		LOGGED.append(user)
+		if MYLOGS:
+			logging.info(str("User added to LOGGED list --> " + str(user)))
+			logging.info(str("Count of logged users --> " + str(len(LOGGED))))
+	else:
+		if MYLOGS:
+			logging.info("User already in LOGGED list")
 
 def get_all_LOGGED_users():
 	return [(user["role"], user["username"]) for user in LOGGED]
@@ -134,13 +141,39 @@ def clear_my_cookie(self):
 			logging.info(str("Cookie not existing"))
 
 def create_a_channel(username):
-	token = channel.create_channel(username)
-	global CHANNELS
-	CHANNELS["username"] = token
-	if MYLOGS:
-		logging.info(str("Channel created for " + username))
-	return token
+	logging.info(str(CHANNELS))
+	if username not in CHANNELS.keys():
+		token = channel.create_channel(username)
+		global CHANNELS
+		CHANNELS[username] = token
+		if MYLOGS:
+			logging.info(str("Channel created for " + username))
+			logging.info(str("Current channels --> " + str(CHANNELS)))
+		return token
+	else:
+		if MYLOGS:
+			logging.info(str("Channel already existing for " + username))
+		return get_channel(username)
 
+def get_channel(username):
+	if username in CHANNELS.keys():
+		return CHANNELS[username]
+		if MYLOGS:
+			logging.info(str("Retrieved channel name for " + username))
+	else:
+		if MYLOGS:
+			logging.info(str("Channel not existing for " + username))
+
+def send_message_to_user(username, message):
+	ch = get_channel(username)
+	if ch:
+		channel.send_message(ch, message)
+		if MYLOGS:
+			logging.info("Message delivered")
+	else:
+		if MYLOGS:
+			logging.info("Message not sent")
+	
 def make_salt():
 	return ''.join(random.choice(string.letters) for x in xrange(5))
 
@@ -234,7 +267,7 @@ class SignupPageHandler(MainHandler):
 				role = self.request.get("role")
 				password = make_pw_hash(username, password)
 				add_user_to_database(role, username, password)
-				add_user_to_LOGGED(role, username, password)
+				add_user_to_LOGGED(role, username)
 				set_my_cookie(self, role, username, password)
 				self.redirect("/welcome")
 				
@@ -264,7 +297,7 @@ class LoginPageHandler(MainHandler):
 				login_password = make_pw_hash(username, userpassword, salt)
 				if login_password == db_password:
 					set_my_cookie(self, role, username, login_password)
-					add_user_to_LOGGED(role, username, login_password)
+					add_user_to_LOGGED(role, username)
 					self.redirect("/welcome")
 			self.write_login(login_error = "Invalid login")
 
@@ -285,6 +318,7 @@ class WelcomePageHandler(MainHandler):
 			user_info = user_info_from_cookie(cookie)
 			username = user_info["username"]
 			role = user_info["role"]
+			add_user_to_LOGGED(role, username)
 			token = create_a_channel(username)
 			if role == "student":
 				templ = "student.html"
@@ -301,17 +335,17 @@ class WelcomePageHandler(MainHandler):
 	
 	def post(self):
 		cookie = self.request.cookies.get("schooltagging")
-		message = self.request.get("message")
-		if check_cookie(cookie):
-			role = get_user_role(get_user_from_cookie(cookie))
-			username = get_user_from_cookie(cookie)
-			if role == "student":
-				role = "teacher"
-			else:
-				role = "student"
-			channel.send_message(CHANNEL[role], message)
+		if user_in_database(cookie):
+			message = self.request.get("message")
+			user_info = user_info_from_cookie(cookie)
+			username = user_info["username"]
+			role = user_info["role"]
+			for (logged_role, logged_user) in get_all_LOGGED_users():
+				if username != logged_user:
+					send_message_to_user(logged_user, message)
 			self.redirect("/welcome")
-			
+		else:
+			self.redirect("/login")
 
 class DevPageHandler(MainHandler):
 	def get(self):
