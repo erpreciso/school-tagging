@@ -14,27 +14,15 @@ from google.appengine.api import users
 
 DEBUG = False
 MYLOGS = True
-#~ Debug settings
-#~ --------------
-#~ in check_cookie: returns True even if there are no cookie
-#~ USER_CACHE global variable always contains a student login
-#~ in Logout class: doesn't clear the cache
-#~ -----------------------------------------------------------
 
-CHANNEL = {"student":None, "teacher":None}
+TODO = """
+when a channel is closed, remove the user from the LOGGED list.
 
-USER_CACHE = [
-		{
-		'hashpassword': '7d69e7ad3f56a8cfa6b35450ac1903b64557c1d9223393e6b863c9cc86bd26db|Okzmj',
-		'username': u'rrr',
-		'role': u'students',
-		},
-		{
-		'hashpassword': 'cbf37cbdaa4b4bf387264b1b980f0b8e0345aeeb47bb56678477bd70ad71ee47|BOZCt',
-		'role': u'teachers',
-		'username': u'ttt'
-		}
-	]
+"""
+
+CHANNELS = {}
+
+LOGGED = []
 
 USERS = [
 	{
@@ -49,75 +37,85 @@ USERS = [
 	},
 	]
 
-def clear_cache(username):
-	for user in USER_CACHE:
-		if user["username"] == user:
-			user.clear()
 
-def get_user_role(username):
-	for user in USER_CACHE:
+def remove_from_LOGGED(username):
+	global LOGGED
+	for user in LOGGED:
 		if user["username"] == username:
-			if user["role"] == "students":
-				return "student"
-			elif user["role"] == "teachers":
-				return "teacher"
-			else:
-				raise Exception("No known role")
+			LOGGED.remove(user)
+			if MYLOGS:
+				logging.info(str("Removed " + username + " from LOGGED"))
 
-def add_user_to_cache(role, username, password):
-	user = {}
-	user["role"] = role
-	user["username"] = username
-	user["hashpassword"] = password
-	global USER_CACHE
-	USER_CACHE.append(user)
+def add_user_to_LOGGED(role, username, password):
+	global LOGGED
+	user = {
+			"username": username,
+			"hashpassword": password,
+			"role": role,
+			}
+	LOGGED.append(user)
+	if MYLOGS:
+		logging.info(str("User added to LOGGED list --> " + str(user)))
+		logging.info(str("Count of logged users --> " + str(len(LOGGED))))
+
+def get_all_LOGGED_users():
+	return [(user["role"], user["username"]) for user in LOGGED]
 	
-def all_usernames():
-	a = [x["username"] for x in USERS["teacher"]]
-	b = [x["username"] for x in USERS["student"]]
-	return a + b
+def get_all_usernames_in_USERS():
+	return [user["username"] for user in USERS]
 
-def add_user_to_database(role, username, password, id="default"):
+def get_password_from_database(username):
+	password = None
+	for user in USERS:
+		if user["username"] == username:
+			password = user["hashpassword"]
+	if password:
+		if MYLOGS:
+			logging.info(str("Password retrieved for " + username))
+		return password
+	else:
+		if MYLOGS:
+			logging.info(str("Password not existing for " + username))
+		return password
+	
+def add_user_to_database(role, username, password):
 	global USERS
 	user = {
-			"id": id,
 			"username": username,
 			"hashpassword": password,
 			"role": role,
 			}
 	USERS.append(user)
 	if MYLOGS:
-		loggin.info(str("User added to db --> " + user))
-		logging.info(str("Count of users in db --> " + len(USER)))
+		logging.info(str("User added to db --> " + str(user)))
+		logging.info(str("Count of registered users --> " + str(len(USERS))))
 
-def get_user_password(role, username):
-	for user in USERS[role]:
-		if user["username"] == username:
-			return user["hashpassword"]
+def user_info_from_cookie(cookie):
+	assert cookie.count("|") == 3
+	info = {
+		"role": cookie.split("|")[0],
+		"username": cookie.split("|")[1],
+		"hashpassword": cookie.split("|")[2],
+		"salt": cookie.split("|")[3],
+		}
+	if MYLOGS:
+		logging.info(str("Extracted info from cookie --> " + str(info)))
+	return info
+	
+def user_in_database(cookie):
+	if cookie:
+		info = user_info_from_cookie(cookie)
+		cookie_username = info["username"]
+		cookie_saltpassword = "%s|%s" % (info["hashpassword"], info["salt"])
+		for user in USERS:
+			if cookie_username == user["username"] and \
+				cookie_saltpassword == user['hashpassword']:
+				if MYLOGS:
+					logging.info("User in database, cookie verified")
+				return True
+	if MYLOGS:
+		logging.info("User not in database, cookie verified")
 	return False
-
-def check_cookie(c):
-	if DEBUG:
-		return True
-	for user in USER_CACHE:
-		if 'username' in user.keys():
-			if c and '|' in c:
-				if '|' in c[c.find('|') + 1:]:
-					username = c.split('|')[0]
-					user_pswsalt = '%s|%s' % (c.split('|')[1], c.split('|')[2])
-					if username == user['username'] and user_pswsalt == user['hashpassword']:
-						return True
-	return False
-
-def get_user_from_cookie(c):
-	if c and '|' in c:
-		if '|' in c[c.find('|') + 1:]:
-			return c.split('|')[1]
-
-def get_role_from_cookie(c):
-	if c and '|' in c:
-		if '|' in c[c.find('|') + 1:]:
-			return c.split('|')[0]
 
 def set_my_cookie(self, role, username, password):
 	cookie = "|".join([str(role),str(username),str(password)])
@@ -126,9 +124,22 @@ def set_my_cookie(self, role, username, password):
 		logging.info(str("Setup Cookie --> " + cookie))
 
 def clear_my_cookie(self):
-	self.response.delete_cookie('schooltagging', path = '/')
+	cookie = self.request.cookies.get("schooltagging")
+	if cookie:
+		self.response.delete_cookie('schooltagging', path = '/')
+		if MYLOGS:
+			logging.info(str("Cookie deleted"))
+	else:
+		if MYLOGS:
+			logging.info(str("Cookie not existing"))
+
+def create_a_channel(username):
+	token = channel.create_channel(username)
+	global CHANNELS
+	CHANNELS["username"] = token
 	if MYLOGS:
-		logging.info(str("Cookie deleted"))
+		logging.info(str("Channel created for " + username))
+	return token
 
 def make_salt():
 	return ''.join(random.choice(string.letters) for x in xrange(5))
@@ -209,7 +220,7 @@ class SignupPageHandler(MainHandler):
 						password_match_error_sw,
 						)
 		else:
-			if username in all_usernames():
+			if username in get_all_usernames_in_USERS():
 				username_error = "That user already exists"
 				self.write_signup(username,
 						username_error,
@@ -218,10 +229,12 @@ class SignupPageHandler(MainHandler):
 						mail_error_sw,
 						)
 			else:
+				if MYLOGS:
+					logging.info("No errors, user allowed to be registered")
 				role = self.request.get("role")
 				password = make_pw_hash(username, password)
 				add_user_to_database(role, username, password)
-				add_user_to_cache(role, username, password)
+				add_user_to_LOGGED(role, username, password)
 				set_my_cookie(self, role, username, password)
 				self.redirect("/welcome")
 				
@@ -240,18 +253,18 @@ class LoginPageHandler(MainHandler):
 	
 	def post(self):
 		username = self.request.get("username")
-		user_password = self.request.get("password")
+		userpassword = self.request.get("password")
 		role = self.request.get("role")
-		if username == "" or user_password == "":
+		if username == "" or userpassword == "":
 			self.write_login(login_error = "Invalid login")
 		else:
-			db_password = get_user_password(role, username)
+			db_password = get_password_from_database(username)
 			if db_password:
 				salt = db_password.split('|')[1]
-				login_password = make_pw_hash(username, user_password, salt)
+				login_password = make_pw_hash(username, userpassword, salt)
 				if login_password == db_password:
-					set_my_cookie(self, username, login_password)
-					add_user_to_cache(role, username, login_password)
+					set_my_cookie(self, role, username, login_password)
+					add_user_to_LOGGED(role, username, login_password)
 					self.redirect("/welcome")
 			self.write_login(login_error = "Invalid login")
 
@@ -259,33 +272,30 @@ class LogoutPageHandler(MainHandler):
 	
 	def get(self):
 		cookie = self.request.cookies.get("schooltagging")
-		user = get_user_from_cookie(cookie)
-		clear_my_cookie(self)
-		if not DEBUG:
-			clear_cache(user)
+		if cookie:
+			username = user_info_from_cookie(cookie)["username"]
+			clear_my_cookie(self)
+			remove_from_LOGGED(username)
 		self.redirect("/login")
 
 class WelcomePageHandler(MainHandler):
 	def get(self):
 		cookie = self.request.cookies.get("schooltagging")
-		if check_cookie(cookie):
-			username = get_user_from_cookie(cookie)
-			role = get_user_role(username)
-			token = channel.create_channel(username)
-			global CHANNEL
-			CHANNEL[role] = token
+		if user_in_database(cookie):
+			user_info = user_info_from_cookie(cookie)
+			username = user_info["username"]
+			role = user_info["role"]
+			token = create_a_channel(username)
 			if role == "student":
-				self.render_page(
-						"student.html",
-						username=username,
-						token=token,
-						)
+				templ = "student.html"
 			elif role == "teacher":
-				self.render_page(
-						"teacher.html",
-						username=username,
-						token=token,
-						)
+				templ = "teacher.html"
+			self.render_page(
+					templ,
+					username=username,
+					token=token,
+					logged=get_all_LOGGED_users(),
+					)
 		else:
 			self.redirect("/login")
 	
