@@ -12,7 +12,7 @@ import logging
 from google.appengine.api import channel
 from google.appengine.api import users
 
-DEBUG = True
+DEBUG = False
 #~ Debug settings
 #~ --------------
 #~ in check_cookie: returns True even if there are no cookie
@@ -23,12 +23,12 @@ DEBUG = True
 CHANNEL = {"student":None, "teacher":None}
 
 USER_CACHE = [
-	{
-	'hashpassword': '7d69e7ad3f56a8cfa6b35450ac1903b64557c1d9223393e6b863c9cc86bd26db|Okzmj',
-	'username': u'rrr',
-	'role': u'students',
-	},
-	{
+		{
+		'hashpassword': '7d69e7ad3f56a8cfa6b35450ac1903b64557c1d9223393e6b863c9cc86bd26db|Okzmj',
+		'username': u'rrr',
+		'role': u'students',
+		},
+		{
 		'hashpassword': 'cbf37cbdaa4b4bf387264b1b980f0b8e0345aeeb47bb56678477bd70ad71ee47|BOZCt',
 		'role': u'teachers',
 		'username': u'ttt'
@@ -52,8 +52,10 @@ USERS = {
 	]
 	}
 
-def clear_cache():
-	USER_CACHE.clear()
+def clear_cache(username):
+	for user in USER_CACHE:
+		if user["username"] == user:
+			user.clear()
 
 def get_user_role(username):
 	for user in USER_CACHE:
@@ -95,15 +97,14 @@ def get_user_password(role, username):
 def check_cookie(c):
 	if DEBUG:
 		return True
-	if 'username' in USER_CACHE.keys():
-		if c and '|' in c:
-			if '|' in c[c.find('|') + 1:]:
-				username = c.split('|')[0]
-				user_pswsalt = '%s|%s' % (c.split('|')[1], c.split('|')[2])
-				if username == USER_CACHE['username'] and user_pswsalt == USER_CACHE['hashpassword']:
-					return True
-	global USER_CACHE
-	USER_CACHE.clear()
+	for user in USER_CACHE:
+		if 'username' in user.keys():
+			if c and '|' in c:
+				if '|' in c[c.find('|') + 1:]:
+					username = c.split('|')[0]
+					user_pswsalt = '%s|%s' % (c.split('|')[1], c.split('|')[2])
+					if username == user['username'] and user_pswsalt == user['hashpassword']:
+						return True
 	return False
 
 def get_user_from_cookie(c):
@@ -251,9 +252,11 @@ class LoginPageHandler(MainHandler):
 class LogoutPageHandler(MainHandler):
 	
 	def get(self):
+		cookie = self.request.cookies.get("schooltagging")
+		user = get_user_from_cookie(cookie)
 		clear_my_cookie(self)
 		if not DEBUG:
-			clear_cache()
+			clear_cache(user)
 		self.redirect("/login")
 
 class WelcomePageHandler(MainHandler):
@@ -262,8 +265,6 @@ class WelcomePageHandler(MainHandler):
 		if check_cookie(cookie):
 			username = get_user_from_cookie(cookie)
 			role = get_user_role(username)
-			logging.info(username)
-			logging.info(role)
 			token = channel.create_channel(username)
 			global CHANNEL
 			CHANNEL[role] = token
@@ -277,7 +278,6 @@ class WelcomePageHandler(MainHandler):
 				self.render_page(
 						"teacher.html",
 						username=username,
-						cache=USER_CACHE,
 						token=token,
 						)
 		else:
@@ -285,11 +285,16 @@ class WelcomePageHandler(MainHandler):
 	
 	def post(self):
 		cookie = self.request.cookies.get("schooltagging")
+		message = self.request.get("message")
 		if check_cookie(cookie):
 			role = get_user_role(get_user_from_cookie(cookie))
 			username = get_user_from_cookie(cookie)
-			logging.info(CHANNEL)
-			channel.send_message(CHANNEL["student"], "prrrr")
+			if role == "student":
+				role = "teacher"
+			else:
+				role = "student"
+			channel.send_message(CHANNEL[role], message)
+			self.redirect("/welcome")
 			
 
 class DevPageHandler(MainHandler):
@@ -297,7 +302,7 @@ class DevPageHandler(MainHandler):
 		cookie = self.request.cookies.get("schooltagging")
 		user = get_user_from_cookie(cookie)
 		token = channel.create_channel(user)
-		#~ self.render_page("dev.html", token=token, user=user)
+		self.render_page("dev.html", token=token, user=user)
 		
 app = webapp2.WSGIApplication([
     ('/', HomePageHandler),

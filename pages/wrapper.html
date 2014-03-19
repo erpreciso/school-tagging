@@ -17,6 +17,17 @@ school-tagging application
 	</h3>
 	<p></p>
 	{% block payload %}
-	{% endblock %}
+	{% endblock %}	
 </div>
+<!--
+	javascript code for the Channel API
+-->
+<script>
+	channel = new goog.appengine.Channel('{{ token }}');
+	socket = channel.open();
+	socket.onopen = onOpened;
+	socket.onmessage = onMessage;
+	//~ socket.onerror = onError;
+	//~ socket.onclose = onClose;
+</script>
 {% endblock %}
