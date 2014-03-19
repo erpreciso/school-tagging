@@ -9,22 +9,30 @@ import random
 import string
 import hashlib
 import logging
+import json
+from time import localtime, strftime
 from google.appengine.api import channel
 from google.appengine.api import users
 
-DEBUG = False
-MYLOGS = True
 
 TODO = """
 when a channel is closed, remove the user from the LOGGED list.
+algorithm to send messages to be revisited to avoid dups.
 
 """
+
+MYLOGS = True
+
+MESSAGES = []
 
 CHANNELS = {}
 
 LOGGED = []
 
-USERS = [
+
+USERS = []
+
+DEBUG_USERS = [
 	{
 		'username': u'tizio',
 		'role': u'student',
@@ -41,6 +49,21 @@ USERS = [
 		'hashpassword': '42b13e20a38202b273fdb6ea29e240710acca6c7f7a627276cbc9253fefc3941|LxXVd',
 	},
 	]
+
+def store_message(*a):
+	message = {
+		"username": a[0],
+		"timestamp": a[1],
+		"message": a[2],
+		}
+	global MESSAGES
+	MESSAGES.append(message)
+	if MYLOGS:
+		logging.info(str("Message added to db --> " + str(message)))
+	return message
+
+def get_all_messages():
+	return [message for message in MESSAGES]
 
 def remove_from_LOGGED(username):
 	global LOGGED
@@ -166,6 +189,7 @@ def get_channel(username):
 
 def send_message_to_user(username, message):
 	ch = get_channel(username)
+	message = json.dumps(message)
 	if ch:
 		channel.send_message(ch, message)
 		if MYLOGS:
@@ -312,6 +336,15 @@ class LogoutPageHandler(MainHandler):
 		self.redirect("/login")
 
 class WelcomePageHandler(MainHandler):
+	def write_welcome(self, templ, username, token):
+		self.render_page(
+					templ,
+					username=username,
+					token=token,
+					logged=get_all_LOGGED_users(),
+					messages=get_all_messages(),
+					)
+
 	def get(self):
 		cookie = self.request.cookies.get("schooltagging")
 		if user_in_database(cookie):
@@ -324,25 +357,23 @@ class WelcomePageHandler(MainHandler):
 				templ = "student.html"
 			elif role == "teacher":
 				templ = "teacher.html"
-			self.render_page(
-					templ,
-					username=username,
-					token=token,
-					logged=get_all_LOGGED_users(),
-					)
+			self.write_welcome(templ, username, token)
 		else:
 			self.redirect("/login")
 	
 	def post(self):
 		cookie = self.request.cookies.get("schooltagging")
+		message = self.request.get("message")
 		if user_in_database(cookie):
-			message = self.request.get("message")
-			user_info = user_info_from_cookie(cookie)
-			username = user_info["username"]
-			role = user_info["role"]
-			for (logged_role, logged_user) in get_all_LOGGED_users():
-				if username != logged_user:
-					send_message_to_user(logged_user, message)
+			if message:
+				user_info = user_info_from_cookie(cookie)
+				username = user_info["username"]
+				role = user_info["role"]
+				for (logged_role, logged_user) in get_all_LOGGED_users():
+					if username != logged_user:
+						timestamp = strftime("%a, %d %b %H:%M:%S",localtime())
+						message = store_message(username, timestamp, message)
+						send_message_to_user(logged_user, message)
 			self.redirect("/welcome")
 		else:
 			self.redirect("/login")

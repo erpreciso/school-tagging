@@ -5,6 +5,11 @@ body {
 	font-weight: 400;
 	}
 
+a {
+	text-decoration: none;
+	color: #A80004;
+	}
+	
 h1 {
 	color: #A80004;
 	font-size: 2em;
@@ -40,4 +45,11 @@ h3 {
 
 #userlist {
 	background-color: #C2F5C7;
+	}
+
+.msg {
+	font-size: 0.8em;
+	color: #0B0BBB;
+	display: block;
+	background-color: #CFFEFC
 	}

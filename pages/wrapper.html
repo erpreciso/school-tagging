@@ -6,7 +6,9 @@ school-tagging application
 
 {% block wrapper %}
 <div id="wrapper">
-	<h1>School Tagging application</h1>
+	<h1>
+		<a href="/welcome">School Tagging application</a>
+	</h1>
 	<h3>
 		<a href="/login">Login</a>
 		|
@@ -31,16 +33,24 @@ school-tagging application
 	<form method="POST">
 		<label>Send message --> </label>
 		<input type="text" name="message">
-		<input type="submit">
+		<input type="submit" value="GO!">
 	</form>
 	<h3>Message History</h3>
-	<div id="all_messages"></div>
+	<div id="all_messages">
+	{% for message in messages %}
+		<div class="msg">
+			{{message["timestamp"]}} 
+			| {{message["username"]}} 
+			| <strong>{{message["message"]}}</strong>
+		</div>
+	{% endfor %}
+	</div>
 </div>
 <!--
 	javascript code for the Channel API
 -->
 <script>
-	channel = new goog.appengine.Channel('{{ token }}');
+	channel = new goog.appengine.Channel('{{token}}');
 	socket = channel.open();
 	socket.onopen = onOpened;
 	socket.onmessage = onMessage;
