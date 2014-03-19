@@ -13,6 +13,7 @@ from google.appengine.api import channel
 from google.appengine.api import users
 
 DEBUG = False
+MYLOGS = True
 #~ Debug settings
 #~ --------------
 #~ in check_cookie: returns True even if there are no cookie
@@ -35,22 +36,18 @@ USER_CACHE = [
 		}
 	]
 
-USERS = {
-	"teachers": [
-		{
+USERS = [
+	{
 		'hashpassword': 'cbf37cbdaa4b4bf387264b1b980f0b8e0345aeeb47bb56678477bd70ad71ee47|BOZCt',
-		'role': u'teachers',
+		'role': u'teacher',
 		'username': u'ttt'
-		}
-	],
-	"students": [
-		{
+	},
+	{
 		'hashpassword': '7d69e7ad3f56a8cfa6b35450ac1903b64557c1d9223393e6b863c9cc86bd26db|Okzmj',
 		'username': u'rrr',
-		'role': u'students',
-		}
+		'role': u'student',
+	},
 	]
-	}
 
 def clear_cache(username):
 	for user in USER_CACHE:
@@ -76,17 +73,22 @@ def add_user_to_cache(role, username, password):
 	USER_CACHE.append(user)
 	
 def all_usernames():
-	a = [x["username"] for x in USERS["teachers"]]
-	b = [x["username"] for x in USERS["students"]]
+	a = [x["username"] for x in USERS["teacher"]]
+	b = [x["username"] for x in USERS["student"]]
 	return a + b
 
 def add_user_to_database(role, username, password, id="default"):
+	global USERS
 	user = {
 			"id": id,
 			"username": username,
 			"hashpassword": password,
+			"role": role,
 			}
-	USERS[role].append(user)
+	USERS.append(user)
+	if MYLOGS:
+		loggin.info(str("User added to db --> " + user))
+		logging.info(str("Count of users in db --> " + len(USER)))
 
 def get_user_password(role, username):
 	for user in USERS[role]:
@@ -110,15 +112,23 @@ def check_cookie(c):
 def get_user_from_cookie(c):
 	if c and '|' in c:
 		if '|' in c[c.find('|') + 1:]:
+			return c.split('|')[1]
+
+def get_role_from_cookie(c):
+	if c and '|' in c:
+		if '|' in c[c.find('|') + 1:]:
 			return c.split('|')[0]
 
-def set_my_cookie(self, username, password):
-	cookie = 'schooltagging=' + str(username)
-	cookie = cookie + '|' + str(password)
-	self.response.headers.add_header('Set-Cookie', cookie)
+def set_my_cookie(self, role, username, password):
+	cookie = "|".join([str(role),str(username),str(password)])
+	self.response.headers.add_header('Set-Cookie', 'schooltagging=' + cookie)
+	if MYLOGS:
+		logging.info(str("Setup Cookie --> " + cookie))
 
 def clear_my_cookie(self):
 	self.response.delete_cookie('schooltagging', path = '/')
+	if MYLOGS:
+		logging.info(str("Cookie deleted"))
 
 def make_salt():
 	return ''.join(random.choice(string.letters) for x in xrange(5))
@@ -147,10 +157,6 @@ class MainHandler(webapp2.RequestHandler):
 		
 	def render_page(self, template, **kw):
 		self.writeout(self.render_str(template, **kw))
-
-class HomePageHandler(MainHandler):
-	def get(self):
-		self.render_page("content.html")
 
 class SignupPageHandler(MainHandler):
 	def write_signup(self,
@@ -216,7 +222,7 @@ class SignupPageHandler(MainHandler):
 				password = make_pw_hash(username, password)
 				add_user_to_database(role, username, password)
 				add_user_to_cache(role, username, password)
-				set_my_cookie(self, username, password)
+				set_my_cookie(self, role, username, password)
 				self.redirect("/welcome")
 				
 class LoginPageHandler(MainHandler):
@@ -305,7 +311,7 @@ class DevPageHandler(MainHandler):
 		self.render_page("dev.html", token=token, user=user)
 		
 app = webapp2.WSGIApplication([
-    ('/', HomePageHandler),
+    ('/', LoginPageHandler),
     ('/signup', SignupPageHandler),
     ('/login', LoginPageHandler),
     ('/welcome', WelcomePageHandler),
