@@ -25,14 +25,9 @@ MYLOGS = True
 
 MESSAGES = []
 
-CHANNELS = {}
-
 LOGGED = []
 
-
-USERS = []
-
-DEBUG_USERS = [
+USERS = [
 	{
 		'username': u'tizio',
 		'role': u'student',
@@ -164,39 +159,16 @@ def clear_my_cookie(self):
 			logging.info(str("Cookie not existing"))
 
 def create_a_channel(username):
-	logging.info(str(CHANNELS))
-	if username not in CHANNELS.keys():
-		token = channel.create_channel(username)
-		global CHANNELS
-		CHANNELS[username] = token
-		if MYLOGS:
-			logging.info(str("Channel created for " + username))
-			logging.info(str("Current channels --> " + str(CHANNELS)))
-		return token
-	else:
-		if MYLOGS:
-			logging.info(str("Channel already existing for " + username))
-		return get_channel(username)
-
-def get_channel(username):
-	if username in CHANNELS.keys():
-		return CHANNELS[username]
-		if MYLOGS:
-			logging.info(str("Retrieved channel name for " + username))
-	else:
-		if MYLOGS:
-			logging.info(str("Channel not existing for " + username))
+	token = channel.create_channel(username)
+	if MYLOGS:
+		logging.info(str("Channel created for " + username))
+	return token
 
 def send_message_to_user(username, message):
-	ch = get_channel(username)
 	message = json.dumps(message)
-	if ch:
-		channel.send_message(ch, message)
-		if MYLOGS:
-			logging.info("Message delivered")
-	else:
-		if MYLOGS:
-			logging.info("Message not sent")
+	channel.send_message(username, message)
+	if MYLOGS:
+		logging.info("Message delivered")
 	
 def make_salt():
 	return ''.join(random.choice(string.letters) for x in xrange(5))
@@ -378,18 +350,16 @@ class WelcomePageHandler(MainHandler):
 		else:
 			self.redirect("/login")
 
-class DevPageHandler(MainHandler):
-	def get(self):
-		cookie = self.request.cookies.get("schooltagging")
-		user = get_user_from_cookie(cookie)
-		token = channel.create_channel(user)
-		self.render_page("dev.html", token=token, user=user)
-		
+class ConnectedHandler(MainHandler):
+	def post(self):
+		client_id = self.request.get('from')
+		logging.info(str("ID --> " + str(client_id)))
+
 app = webapp2.WSGIApplication([
     ('/', LoginPageHandler),
     ('/signup', SignupPageHandler),
     ('/login', LoginPageHandler),
     ('/welcome', WelcomePageHandler),
     ('/logout', LogoutPageHandler),
-    ('/dev', DevPageHandler),
+    ('/_ah/channel/connected/', ConnectedHandler),
 	], debug=True)

@@ -54,7 +54,7 @@ school-tagging application
 	socket = channel.open();
 	socket.onopen = onOpened;
 	socket.onmessage = onMessage;
-	//~ socket.onerror = onError;
-	//~ socket.onclose = onClose;
+	socket.onerror = function(){};
+	socket.onclose = function(){};
 </script>
 {% endblock %}
