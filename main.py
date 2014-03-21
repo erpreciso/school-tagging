@@ -69,12 +69,13 @@ def remove_from_LOGGED(username):
 			if MYLOGS:
 				logging.info(str("Removed " + username + " from LOGGED"))
 
-def add_user_to_LOGGED(role, username):
+def add_user_to_LOGGED(role, username, token):
 	if (role, username) not in get_all_LOGGED_users():
 		global LOGGED
 		user = {
 				"username": username,
 				"role": role,
+				"token": token,
 				}
 		LOGGED.append(user)
 		if MYLOGS:
@@ -87,10 +88,20 @@ def add_user_to_LOGGED(role, username):
 def get_all_LOGGED_users():
 	"""return tuple (role, username) """
 	return [(user["role"], user["username"]) for user in LOGGED]
-	
+
+def user_in_LOGGED(username, role):
+	return (role, username) in get_all_LOGGED_users()
+
 def get_all_usernames_in_USERS():
 	return [user["username"] for user in USERS]
 
+def get_token_from_LOGGED(username):
+	for user in LOGGED:
+		if user["username"] == username:
+			return user["token"]
+	
+	
+	
 def get_password_from_database(username):
 	password = None
 	for user in USERS:
@@ -172,21 +183,21 @@ def send_message_to_user(username, message):
 	if MYLOGS:
 		logging.info("Message delivered")
 
-def broadcast_user_connection(new_connected_user):
-	for role, username in get_all_LOGGED_users():
-		send_message_of_user_connected(new_connected_user, username)
+def broadcast_user_connection(new_username):
+	for (role, username) in get_all_LOGGED_users():
+		if username != new_username:
+			send_message_of_user_connected(new_username, role, username)
 	if MYLOGS:
 		logging.info("All messages of new connection sent")
-		
-	
-	
-def send_message_of_user_connected(new_connected_user, recipient):
+
+def send_message_of_user_connected(new_username, new_role, recipient):
 	message = {
 		"type": "connected user",
-		"username": new_connected_user,
+		"username": new_username,
+		"role": new_role,
 		}
 	message = json.dumps(message)
-	channel.send_message(username, message)
+	channel.send_message(recipient, message)
 	if MYLOGS:
 		logging.info("Message that the user is connected delivered to " + str(recipient))
 
@@ -313,7 +324,7 @@ class LoginPageHandler(MainHandler):
 				login_password = make_pw_hash(username, userpassword, salt)
 				if login_password == db_password:
 					set_my_cookie(self, role, username, login_password)
-					add_user_to_LOGGED(role, username)
+					#~ add_user_to_LOGGED(role, username)
 					self.redirect("/welcome")
 			self.write_login(login_error = "Invalid login")
 
@@ -343,8 +354,11 @@ class WelcomePageHandler(MainHandler):
 			user_info = user_info_from_cookie(cookie)
 			username = user_info["username"]
 			role = user_info["role"]
-			add_user_to_LOGGED(role, username)
-			token = create_a_channel(username)
+			if not user_in_LOGGED(username, role):
+				token = create_a_channel(username)
+				add_user_to_LOGGED(role, username, token)
+			else:
+				token = get_token_from_LOGGED(username)
 			if role == "student":
 				templ = "student.html"
 			elif role == "teacher":
@@ -373,7 +387,8 @@ class WelcomePageHandler(MainHandler):
 class ConnectedHandler(MainHandler):
 	def post(self):
 		client_id = self.request.get('from')
-		logging.info(str("ID --> " + str(client_id)))
+		logging.info(str("connected ID --> " + str(client_id)))
+		broadcast_user_connection(client_id)
 
 app = webapp2.WSGIApplication([
     ('/', LoginPageHandler),
