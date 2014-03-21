@@ -6,36 +6,31 @@ school-tagging application
 
 {% block wrapper %}
 <div id="wrapper">
-	<h1>
-		<a href="/welcome">School Tagging application</a>
-	</h1>
-	<h3>
-		<a href="/login">Login</a>
-		|
-		<a href="/signup">Signup</a>
-		|
-		<a href="/logout">Logout</a>
-	</h3>
-	<p></p>
+	<header>
+		<div id="title">
+			<h1><a href="/welcome">School Tagging application</a></h1>
+		</div>
+		<div id="login_tools">
+			<a href="/login">Login</a>
+			|
+			<a href="/signup">Signup</a>
+			|
+			<a href="/logout">Logout</a>
+		</div>
+	</header>
 	<h3>Welcome! {{username}}</h3>
 	{% block payload %}
+<!--
+	student's payload here...
+-->
 	{% endblock %}
-	<div id="userlist">
-		<p>Who's logged in</p>
-	{% for user in logged %}
-		<div class="user">
-			<div><strong>{{user[0]}}</strong></div>
-			<div>{{user[1]}}</div>
-		</div>
-	{% endfor %}
-	</div>
-	<h2>Message Board</h2>
+	<h4>Message Board</h4>
 	<form method="POST">
 		<label>Send message --> </label>
 		<input type="text" name="message">
 		<input type="submit" value="GO!">
 	</form>
-	<h3>Message History</h3>
+	<h4>Message History</h4>
 	<div id="all_messages">
 	{% for message in messages %}
 		<div class="msg">
@@ -45,6 +40,17 @@ school-tagging application
 		</div>
 	{% endfor %}
 	</div>
+	<footer>
+		<div id="userlist">
+			<p>Who's logged in</p>
+		{% for user in logged %}
+			<div class="user">
+				<div><strong>{{user[0]}}</strong></div>
+				<div>{{user[1]}}</div>
+			</div>
+		{% endfor %}
+		</div>
+	</footer>
 </div>
 <!--
 	javascript code for the Channel API

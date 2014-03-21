@@ -7,22 +7,43 @@ body {
 
 a {
 	text-decoration: none;
-	color: #A80004;
+	color: #010323;
+	}
+
+
+header {
+	display: inline;
+	}
+
+footer {
+	position: absolute;
+	bottom: 10%;
+	}
+	
+#title {
+	display: inline;
+	}
+
+#login_tools {
+	display: inline;
+	position: relative;
+	left: 10%;
 	}
 	
 h1 {
-	color: #A80004;
+	color: #010323;
 	font-size: 2em;
+	display: inline;
 	}
 
-h2 {
-	color: #FB0006;
+h4 {
+	color: #090169;
 	font-size: 1.5em;
 	}
 	
 h3 {
-	color: #6F0003;
-	font-size: 1.2em;
+	color: #0C0244;
+	font-size: 1em;
 	}
 	
 #wrapper {
@@ -38,13 +59,15 @@ h3 {
 	}
 
 .user {
-	background-color: yellow;
+	background-color: #FFFFFF;
 	display: inline-block;
 	font-size: 0.8em;
+	margin: 3px;
 	}
 
 #userlist {
-	background-color: #C2F5C7;
+	background-color: #F2F2F2;
+	font-size: 0.8em;
 	}
 
 .msg {

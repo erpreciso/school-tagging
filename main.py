@@ -50,6 +50,7 @@ def store_message(*a):
 		"username": a[0],
 		"timestamp": a[1],
 		"message": a[2],
+		"type": "msg",
 		}
 	global MESSAGES
 	MESSAGES.append(message)
@@ -84,6 +85,7 @@ def add_user_to_LOGGED(role, username):
 			logging.info("User already in LOGGED list")
 
 def get_all_LOGGED_users():
+	"""return tuple (role, username) """
 	return [(user["role"], user["username"]) for user in LOGGED]
 	
 def get_all_usernames_in_USERS():
@@ -169,7 +171,25 @@ def send_message_to_user(username, message):
 	channel.send_message(username, message)
 	if MYLOGS:
 		logging.info("Message delivered")
+
+def broadcast_user_connection(new_connected_user):
+	for role, username in get_all_LOGGED_users():
+		send_message_of_user_connected(new_connected_user, username)
+	if MYLOGS:
+		logging.info("All messages of new connection sent")
+		
 	
+	
+def send_message_of_user_connected(new_connected_user, recipient):
+	message = {
+		"type": "connected user",
+		"username": new_connected_user,
+		}
+	message = json.dumps(message)
+	channel.send_message(username, message)
+	if MYLOGS:
+		logging.info("Message that the user is connected delivered to " + str(recipient))
+
 def make_salt():
 	return ''.join(random.choice(string.letters) for x in xrange(5))
 
