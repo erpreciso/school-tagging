@@ -183,23 +183,27 @@ def send_message_to_user(username, message):
 	if MYLOGS:
 		logging.info("Message delivered")
 
-def broadcast_user_connection(new_username):
+def broadcast_user_connection_info(target_user, status):
 	for (role, username) in get_all_LOGGED_users():
-		if username != new_username:
-			send_message_of_user_connected(new_username, role, username)
+		if username != target_user:
+			send_message_of_user_connection_info(target_user, status, role, username)
 	if MYLOGS:
 		logging.info("All messages of new connection sent")
 
-def send_message_of_user_connected(new_username, new_role, recipient):
+def send_message_of_user_connection_info(target_user, status, role, recipient):
+	if status == "open":
+		type = "connected user"
+	elif status == "close":
+		type = "disconnected user"
 	message = {
-		"type": "connected user",
-		"username": new_username,
-		"role": new_role,
+		"type": type,
+		"username": target_user,
+		"role": role,
 		}
 	message = json.dumps(message)
 	channel.send_message(recipient, message)
 	if MYLOGS:
-		logging.info("Message that the user is connected delivered to " + str(recipient))
+		logging.info("Message that the user is " + status + " delivered to " + str(recipient))
 
 def make_salt():
 	return ''.join(random.choice(string.letters) for x in xrange(5))
@@ -334,6 +338,7 @@ class LogoutPageHandler(MainHandler):
 		cookie = self.request.cookies.get("schooltagging")
 		if cookie:
 			username = user_info_from_cookie(cookie)["username"]
+			broadcast_user_connection_info(username, "close")
 			clear_my_cookie(self)
 			remove_from_LOGGED(username)
 		self.redirect("/login")
@@ -388,7 +393,13 @@ class ConnectedHandler(MainHandler):
 	def post(self):
 		client_id = self.request.get('from')
 		logging.info(str("connected ID --> " + str(client_id)))
-		broadcast_user_connection(client_id)
+		broadcast_user_connection_info(client_id, "open")
+
+class DisconnectedHandler(MainHandler):
+	def post(self):
+		client_id = self.request.get('from')
+		logging.info(str("Disconnected ID --> " + str(client_id)))
+		broadcast_user_connection_info(client_id, "close")
 
 app = webapp2.WSGIApplication([
     ('/', LoginPageHandler),
@@ -397,4 +408,5 @@ app = webapp2.WSGIApplication([
     ('/welcome', WelcomePageHandler),
     ('/logout', LogoutPageHandler),
     ('/_ah/channel/connected/', ConnectedHandler),
+    ('/_ah/channel/disconnected/', DisconnectedHandler),
 	], debug=True)
