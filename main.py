@@ -186,8 +186,7 @@ def broadcast_message(message, sender):
 	timestamp = strftime("%a, %d %b %H:%M:%S",localtime())
 	message = store_message(sender, timestamp, message)
 	for (role, user) in get_all_LOGGED_users():
-		if sender != user:
-			send_message_to_user(user, message)
+		send_message_to_user(user, message)
 
 	if MYLOGS:
 		logging.info("Message broadcasted")
@@ -384,7 +383,8 @@ class WelcomePageHandler(MainHandler):
 			self.write_welcome(template, username, token)
 		else:
 			self.redirect("/login")
-	
+
+class MessageHandler(MainHandler):
 	def post(self):
 		cookie = self.request.cookies.get("schooltagging")
 		message = self.request.get("message")
@@ -393,7 +393,7 @@ class WelcomePageHandler(MainHandler):
 				user_info = user_info_from_cookie(cookie)
 				sender = user_info["username"]
 				broadcast_message(message, sender)
-			self.redirect("/welcome")
+			#~ self.redirect("/welcome")
 		else:
 			self.redirect("/login")
 
@@ -408,6 +408,7 @@ class DisconnectedHandler(MainHandler):
 		client_id = self.request.get('from')
 		logging.info(str("Disconnected ID --> " + str(client_id)))
 		broadcast_user_connection_info(client_id, "close")
+		remove_from_LOGGED(client_id)
 
 app = webapp2.WSGIApplication([
     ('/', LoginPageHandler),
@@ -415,6 +416,7 @@ app = webapp2.WSGIApplication([
     ('/login', LoginPageHandler),
     ('/welcome', WelcomePageHandler),
     ('/logout', LogoutPageHandler),
+    ('/message', MessageHandler),
     ('/_ah/channel/connected/', ConnectedHandler),
     ('/_ah/channel/disconnected/', DisconnectedHandler),
 	], debug=True)

@@ -1,4 +1,6 @@
 $(document).ready(function() {
+	
+	$("#send_message").on("click", send_message);
 	//~ $("a").click(function(event) {
 	  //~ event.preventDefault();
 	  //~ onClose();
@@ -16,6 +18,12 @@ onClose = function() {
 
 }
 
+function send_message() {
+	var message = $("input[name*='message']").val();
+	$("input[name*='message']").val("");
+	$.post("/message", {"message": message});
+	//~ alert(message);
+}
 
 onMessage = function(message) {
 	var data = JSON.parse(message.data);
