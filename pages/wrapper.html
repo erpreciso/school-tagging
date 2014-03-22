@@ -27,9 +27,9 @@ school-tagging application
 	<footer>
 		<div id="message_board">
 			<h2>Message Board</h2>
-			<label for="message">Send message --> </label>
 			<input type="text" name="message" placeholder="type message">
-			<button id="send_message">Go!</button>
+			<button id="send_message">Send message</button>
+			<button id="clear_messages">Clear history</button>
 			<h2>Message History</h2>
 			<div id="all_messages">
 			{% for message in messages %}

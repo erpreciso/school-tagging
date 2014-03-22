@@ -1,6 +1,7 @@
 $(document).ready(function() {
 	
 	$("#send_message").on("click", send_message);
+	$("#clear_messages").on("click", clear_messages);
 	$("#ask_exercises_list").on("click", ask_exercises_list);
 	
 	
@@ -12,7 +13,6 @@ onOpened = function() {
 
 onClose = function() {
 	//~ alert("hit");
-	//~ ''
 
 }
 
@@ -45,6 +45,10 @@ function send_message() {
 	$.post("/message", {"message": message});
 }
 
+function clear_messages() {
+	$.get("/clear_messages");
+}
+
 function select_sentence () {
 	var chosen = $("#chosen_sentence").val();
 	send_exercise_request(chosen);
@@ -65,7 +69,6 @@ onMessage = function(message) {
 		msg += data.timestamp + " | ";
 		msg += data.username + " | ";
 		msg += "<strong>" + data.message + "</strong>";
-		//~ msg += " |   ---- ...last message received</div>";
 		msg += "</div>";
 		$("#all_messages").append(msg);
 	}
@@ -80,9 +83,11 @@ onMessage = function(message) {
 	}
 	else if (data.type == "disconnected user") {
 		$("#" + data.username).remove();
-		//~ alert("disconn " + data.username);
 	}
 	else if (data.type == "exercise") {
+		
+		//~ TODO if teacher, no instructions and no events, it's just a FYI
+		//~ ===============================================================
 		$("#exercise").remove();
 		var instructions = "<div id='instructions'>Please click on the correct ";
 		instructions += data.message["to find"];
@@ -103,7 +108,6 @@ onMessage = function(message) {
 		$(".word").on("click", word_clicked);
 	}
 	else if (data.type == "exercises list") {
-		//~ alert(JSON.stringify(data.message));
 		$("#exercise_list").remove();
 		var exercise = "<div id='exercise_list'>";
 		exercise += "<div id='exercise_list_title'>List of available exercises</div>";
@@ -114,6 +118,9 @@ onMessage = function(message) {
 		exercise += "</div>";
 		$("#exercise_area").append(exercise);
 		$(".sentence").on("click", sentence_clicked);
+	}
+	else if (data.type == "clear message history") {
+		$("#all_messages").empty();
 	}
 	//~ alert(JSON.stringify(message));
 }

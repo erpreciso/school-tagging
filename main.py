@@ -106,6 +106,22 @@ def select_template(role):
 def get_all_messages():
 	return [message for message in MESSAGES]
 
+def clear_messages():
+	global MESSAGES
+	MESSAGES = []
+	if MYLOGS:
+		logging.info("Messages list cleared")
+
+def broadcast_clear_messages():
+	for (role, user) in get_all_LOGGED_users():
+		message = {
+					"type": "clear message history",
+					}
+		message = json.dumps(message)
+		channel.send_message(user, message)
+	if MYLOGS:
+		logging.info("Clear messages list broadcasted")
+
 def remove_from_LOGGED(username):
 	global LOGGED
 	for user in LOGGED:
@@ -485,7 +501,11 @@ class ExerciseRequestHandler(MainHandler):
 			exercise_number = int(self.request.get("exercise_number"))
 			exercise = get_all_exercises()[exercise_number]
 			broadcast_exercise_to_students(exercise)
-		
+
+class ClearMessagesHandler(MainHandler):
+	def get(self):
+		clear_messages()
+		broadcast_clear_messages()
 		
 class ConnectedHandler(MainHandler):
 	def post(self):
@@ -511,4 +531,5 @@ app = webapp2.WSGIApplication([
     ('/_ah/channel/disconnected/', DisconnectedHandler),
     ('/exercise_list_request', ExerciseListRequestHandler),
     ('/exercise_request', ExerciseRequestHandler),
+    ('/clear_messages', ClearMessagesHandler),
 	], debug=True)
