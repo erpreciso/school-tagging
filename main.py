@@ -66,6 +66,16 @@ USERS = [
 		'role': u'teacher',
 		'hashpassword': '42b13e20a38202b273fdb6ea29e240710acca6c7f7a627276cbc9253fefc3941|LxXVd',
 	},
+	{
+		'username': u'Anakin',
+		'role': u'student',
+		'hashpassword': 'e9cd536b7de0733b6af44f02bc16496fa21fc8dfcd321cd7d335ac2ac36826ff|LwKWk',
+	},
+	{
+		'username': u'Yoda',
+		'role': u'teacher',
+		'hashpassword': 'e4044eb18be6548f8f3af8344a1769572c2e2f43682afc26df2ea3824f6d65f0|BosOY',
+	},
 	]
 
 def pick_an_exercise():
