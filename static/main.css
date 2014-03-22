@@ -39,6 +39,23 @@ footer {
 	padding: 10px;
 	}
 
+#exercise_list {
+	background-color: #E8E8E8;
+	}
+
+#exercise_list #exercise_list_title {
+	background-color: #FFFFFF;
+	padding: 2px;
+	margin: 2px;
+	font-weight: bold;
+	}
+
+#exercise_list .sentence {
+	background-color: #ECEBED;
+	padding: 3px;
+	margin: 2px;
+	}
+
 #exercise #instructions {
 	font-size: 0.8em;
 	}
@@ -49,7 +66,7 @@ footer {
 	}
 
 #content {
-	background-color: #FFFEE1
+	background-color: #F0F0F0
 	}
 
 #title {

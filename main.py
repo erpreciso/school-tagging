@@ -25,11 +25,23 @@ MYLOGS = True
 
 EXERCISES_POOL = [
 	{
-		"sentence": "The cat is on the table",
+		"sentence": "Of course, no man is entirely in his right mind at any time.",
 		"to find": "article",
 		},
 	{
-		"sentence": "The dog is the best",
+		"sentence": "Early to rise and early to bed makes a male healthy and wealthy and dead.",
+		"to find": "pronom",
+		},
+	{
+		"sentence": "Expect nothing. Live frugally on surprise.",
+		"to find": "pronom",
+		},
+	{
+		"sentence": "I'd rather be a lightning rod than a seismograph.",
+		"to find": "pronom",
+		},
+	{
+		"sentence": "Children are all foreigners.",
 		"to find": "pronom",
 		},
 	]
@@ -63,6 +75,13 @@ def pick_an_exercise():
 		"to find": exercise["to find"],
 		"words": exercise["sentence"].split(" "),
 		}
+
+def get_all_exercises():
+	return [{
+		"sentence": exercise["sentence"],
+		"to find": exercise["to find"],
+		"words": exercise["sentence"].split(" "),
+		} for exercise in EXERCISES_POOL]
 
 def store_message(*a):
 	message = {
@@ -216,8 +235,14 @@ def send_message_to_user(username, message):
 	if MYLOGS:
 		logging.info("Message delivered")
 
-def send_exercise(username):
-	exercise = pick_an_exercise()
+def broadcast_exercise_to_students(exercise):
+	for (role, user) in get_all_LOGGED_users():
+		send_exercise(user, exercise)
+	if MYLOGS:
+		logging.info("Exercise broadcasted")
+	
+	
+def send_exercise(username, exercise):
 	message = {
 		"type": "exercise",
 		"message": exercise,
@@ -227,6 +252,17 @@ def send_exercise(username):
 	if MYLOGS:
 		logging.info(str("Exercise delivered to " + username))
 	
+def send_exercises_list(username):
+	exercises = get_all_exercises()
+	message = {
+		"type": "exercises list",
+		"message": exercises,
+		}
+	message = json.dumps(message)
+	channel.send_message(username, message)
+	if MYLOGS:
+		logging.info(str("Exercises list delivered to " + username))
+
 def broadcast_user_connection_info(target_user, status):
 	for (role, username) in get_all_LOGGED_users():
 		if username != target_user:
@@ -428,16 +464,29 @@ class MessageHandler(MainHandler):
 		else:
 			self.redirect("/login")
 
-class ExerciseRequestHandler(MainHandler):
+class ExerciseListRequestHandler(MainHandler):
 	def get(self):
 		cookie = self.request.cookies.get("schooltagging")
 		if user_in_database(cookie):
 			user_info = user_info_from_cookie(cookie)
 			username = user_info["username"]
 			if MYLOGS:
-				logging.info(str("Exercise request from " + username))
-			send_exercise(username)
+				logging.info(str("Exercise List request from " + username))
+			send_exercises_list(username)
 
+class ExerciseRequestHandler(MainHandler):
+	def post(self):
+		cookie = self.request.cookies.get("schooltagging")
+		if user_in_database(cookie):
+			user_info = user_info_from_cookie(cookie)
+			username = user_info["username"]
+			if MYLOGS:
+				logging.info(str("Exercise request from " + username))
+			exercise_number = int(self.request.get("exercise_number"))
+			exercise = get_all_exercises()[exercise_number]
+			broadcast_exercise_to_students(exercise)
+		
+		
 class ConnectedHandler(MainHandler):
 	def post(self):
 		client_id = self.request.get('from')
@@ -460,5 +509,6 @@ app = webapp2.WSGIApplication([
     ('/message', MessageHandler),
     ('/_ah/channel/connected/', ConnectedHandler),
     ('/_ah/channel/disconnected/', DisconnectedHandler),
+    ('/exercise_list_request', ExerciseListRequestHandler),
     ('/exercise_request', ExerciseRequestHandler),
 	], debug=True)
