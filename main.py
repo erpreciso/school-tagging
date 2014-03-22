@@ -99,9 +99,7 @@ def get_token_from_LOGGED(username):
 	for user in LOGGED:
 		if user["username"] == username:
 			return user["token"]
-	
-	
-	
+
 def get_password_from_database(username):
 	password = None
 	for user in USERS:
@@ -176,6 +174,16 @@ def create_a_channel(username):
 	if MYLOGS:
 		logging.info(str("Channel created for " + username))
 	return token
+
+def broadcast_message(message, sender):
+	timestamp = strftime("%a, %d %b %H:%M:%S",localtime())
+	message = store_message(sender, timestamp, message)
+	for (role, user) in get_all_LOGGED_users():
+		if sender != user:
+			send_message_to_user(user, message)
+
+	if MYLOGS:
+		logging.info("Message broadcasted")
 
 def send_message_to_user(username, message):
 	message = json.dumps(message)
@@ -298,7 +306,7 @@ class SignupPageHandler(MainHandler):
 				role = self.request.get("role")
 				password = make_pw_hash(username, password)
 				add_user_to_database(role, username, password)
-				add_user_to_LOGGED(role, username)
+				add_user_to_LOGGED(role, username, "")
 				set_my_cookie(self, role, username, password)
 				self.redirect("/welcome")
 				
@@ -359,7 +367,7 @@ class WelcomePageHandler(MainHandler):
 			user_info = user_info_from_cookie(cookie)
 			username = user_info["username"]
 			role = user_info["role"]
-			if not user_in_LOGGED(username, role):
+			if not user_in_LOGGED(username, role) or get_token_from_LOGGED == "":
 				token = create_a_channel(username)
 				add_user_to_LOGGED(role, username, token)
 			else:
@@ -378,13 +386,9 @@ class WelcomePageHandler(MainHandler):
 		if user_in_database(cookie):
 			if message:
 				user_info = user_info_from_cookie(cookie)
-				username = user_info["username"]
-				role = user_info["role"]
-				for (logged_role, logged_user) in get_all_LOGGED_users():
-					if username != logged_user:
-						timestamp = strftime("%a, %d %b %H:%M:%S",localtime())
-						message = store_message(username, timestamp, message)
-						send_message_to_user(logged_user, message)
+				sender = user_info["username"]
+				broadcast_message(message, sender)
+				
 			self.redirect("/welcome")
 		else:
 			self.redirect("/login")

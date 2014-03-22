@@ -1,14 +1,31 @@
+$(document).ready(function() {
+	//~ $("a").click(function(event) {
+	  //~ event.preventDefault();
+	  //~ onClose();
+	  //~ alert(event.target);
+		//~ });
+	});
+
 onOpened = function() {
 	//~ alert("HIT");
 }
+
+onClose = function() {
+	//~ alert("hit");
+	//~ ''
+
+}
+
+
 onMessage = function(message) {
 	var data = JSON.parse(message.data);
 	if (data.type == "msg") {
 		var msg = "<div class='msg'>";
 		msg += data.timestamp + " | ";
 		msg += data.username + " | ";
-		msg += "<strong>" + data.message + "</strong> | ";
-		msg += "  ---- ...last message received</div>";
+		msg += "<strong>" + data.message + "</strong>";
+		//~ msg += " |   ---- ...last message received</div>";
+		msg += "</div>";
 		$("#all_messages").append(msg);
 	}
 	else if (data.type == "connected user") {

@@ -61,6 +61,6 @@ school-tagging application
 	socket.onopen = onOpened;
 	socket.onmessage = onMessage;
 	socket.onerror = function(){};
-	socket.onclose = function(){};
+	socket.onclose = onClose;
 </script>
 {% endblock %}
