@@ -24,21 +24,23 @@ school-tagging application
 	student's payload here...
 -->
 	{% endblock %}
-	<h4>Message Board</h4>
-	<form method="POST">
-		<label>Send message --> </label>
-		<input type="text" name="message">
-		<input type="submit" value="GO!">
-	</form>
-	<h4>Message History</h4>
-	<div id="all_messages">
-	{% for message in messages %}
-		<div class="msg">
-			{{message["timestamp"]}} 
-			| {{message["username"]}} 
-			| <strong>{{message["message"]}}</strong>
-		</div>
-	{% endfor %}
+	<div id="message_board">
+		<h4>Message Board</h4>
+		<form method="POST">
+			<label>Send message --> </label>
+			<input type="text" name="message">
+			<input type="submit" value="GO!">
+		</form>
+		<h4>Message History</h4>
+		<div id="all_messages">
+		{% for message in messages %}
+			<div class="msg">
+				{{message["timestamp"]}} 
+				| {{message["username"]}} 
+				| <strong>{{message["message"]}}</strong>
+			</div>
+		{% endfor %}
+	</div>
 	</div>
 	<footer>
 		<div id="userlist">
