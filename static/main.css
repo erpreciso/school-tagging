@@ -5,55 +5,69 @@ body {
 	font-weight: 400;
 	}
 
+
 a {
 	text-decoration: none;
-	color: #010323;
+	color: black;
+	}
+
+h1 a {
+	color: white;
+	
 	}
 
 
 header {
-	display: inline;
+	border: 1px solid #737373;
 	}
 
 footer {
+	border: 1px solid #737373;
+	padding: 3px;
+	background-color: #CECECE;
 	position: absolute;
-	bottom: 10%;
+	bottom: 0%;
 	}
-	
+
+#content {
+	background-color: #FFFEE1
+	}
+
 #title {
-	display: inline;
+	padding: 5px;
+	text-transform: uppercase;
+	color: white;
+	background-color: #3C3C3C;
 	}
 
 #login_tools {
-	display: inline;
-	position: relative;
-	left: 10%;
+	font-size: 0.7em;
+	margin: 4px;
 	}
 	
 h1 {
-	color: #010323;
 	font-size: 1.5em;
 	display: inline;
-	text-transform: uppercase;
+	
 	}
 
-h4 {
-	color: #090169;
+h2 {
+	color: #48474B;
 	font-size: 1.2em;
+	font-weight: normal;
+	margin: 0 0 0 0;
+	padding: 2px;
 	}
-	
-h3 {
-	color: #0C0244;
-	font-size: 1em;
+
+#welcome {
+	font-size: 1.2em;
+	color: #333333;
 	}
-	
+
 #wrapper {
 	
 	}
-	
-#content, #signup {
-	
-	}
+
 	
 .error {
 	color: red;

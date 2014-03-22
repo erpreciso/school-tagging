@@ -58,6 +58,13 @@ def store_message(*a):
 		logging.info(str("Message added to db --> " + str(message)))
 	return message
 
+def select_template(role):
+	assert role in ["student", "teacher"]
+	if role == "student":
+		return "student.html"
+	elif role == "teacher":
+		return "teacher.html"
+				
 def get_all_messages():
 	return [message for message in MESSAGES]
 
@@ -372,11 +379,9 @@ class WelcomePageHandler(MainHandler):
 				add_user_to_LOGGED(role, username, token)
 			else:
 				token = get_token_from_LOGGED(username)
-			if role == "student":
-				templ = "student.html"
-			elif role == "teacher":
-				templ = "teacher.html"
-			self.write_welcome(templ, username, token)
+			#~ template = select_template(role)
+			template = "welcome.html"
+			self.write_welcome(template, username, token)
 		else:
 			self.redirect("/login")
 	
@@ -388,7 +393,6 @@ class WelcomePageHandler(MainHandler):
 				user_info = user_info_from_cookie(cookie)
 				sender = user_info["username"]
 				broadcast_message(message, sender)
-				
 			self.redirect("/welcome")
 		else:
 			self.redirect("/login")

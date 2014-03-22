@@ -18,33 +18,33 @@ school-tagging application
 			<a href="/logout">Logout</a>
 		</div>
 	</header>
-	<h3>Welcome! {{username}}</h3>
+	<div id="welcome">Welcome! {{username}}</div>
 	{% block payload %}
 <!--
 	student's payload here...
 -->
 	{% endblock %}
-	<div id="message_board">
-		<h4>Message Board</h4>
-		<form method="POST">
-			<label>Send message --> </label>
-			<input type="text" name="message">
-			<input type="submit" value="GO!">
-		</form>
-		<h4>Message History</h4>
-		<div id="all_messages">
-		{% for message in messages %}
-			<div class="msg">
-				{{message["timestamp"]}} 
-				| {{message["username"]}} 
-				| <strong>{{message["message"]}}</strong>
-			</div>
-		{% endfor %}
-	</div>
-	</div>
 	<footer>
+		<div id="message_board">
+			<h2>Message Board</h2>
+			<form method="POST">
+				<label>Send message --> </label>
+				<input type="text" name="message">
+				<input type="submit" value="GO!">
+			</form>
+			<h2>Message History</h2>
+			<div id="all_messages">
+			{% for message in messages %}
+				<div class="msg">
+					{{message["timestamp"]}} 
+					| {{message["username"]}} 
+					| <strong>{{message["message"]}}</strong>
+				</div>
+			{% endfor %}
+			</div>
+		</div>
 		<div id="userlist">
-			<p>Who's logged in</p>
+			<div>Who's logged in</div>
 		{% for user in logged %}
 			<div class="user" id="{{user[1]}}">
 				<div><strong>{{user[0]}}</strong></div>
