@@ -29,6 +29,25 @@ footer {
 	bottom: 0%;
 	}
 
+.word {
+	display: inline;
+	}
+
+#exercise {
+	background-color: #C0C0C0;
+	margin: 20px;
+	padding: 10px;
+	}
+
+#exercise #instructions {
+	font-size: 0.8em;
+	}
+
+#exercise #target {
+	font-size: 1.5em;
+	color: red;
+	}
+
 #content {
 	background-color: #FFFEE1
 	}

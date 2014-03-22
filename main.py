@@ -23,6 +23,17 @@ algorithm to send messages to be revisited to avoid dups.
 
 MYLOGS = True
 
+EXERCISES_POOL = [
+	{
+		"sentence": "The cat is on the table",
+		"to find": "article",
+		},
+	{
+		"sentence": "The dog is the best",
+		"to find": "pronom",
+		},
+	]
+
 MESSAGES = []
 
 LOGGED = []
@@ -44,6 +55,14 @@ USERS = [
 		'hashpassword': '42b13e20a38202b273fdb6ea29e240710acca6c7f7a627276cbc9253fefc3941|LxXVd',
 	},
 	]
+
+def pick_an_exercise():
+	exercise = EXERCISES_POOL[1]
+	return {
+		"sentence": exercise["sentence"],
+		"to find": exercise["to find"],
+		"words": exercise["sentence"].split(" "),
+		}
 
 def store_message(*a):
 	message = {
@@ -197,6 +216,17 @@ def send_message_to_user(username, message):
 	if MYLOGS:
 		logging.info("Message delivered")
 
+def send_exercise(username):
+	exercise = pick_an_exercise()
+	message = {
+		"type": "exercise",
+		"message": exercise,
+		}
+	message = json.dumps(message)
+	channel.send_message(username, message)
+	if MYLOGS:
+		logging.info(str("Exercise delivered to " + username))
+	
 def broadcast_user_connection_info(target_user, status):
 	for (role, username) in get_all_LOGGED_users():
 		if username != target_user:
@@ -304,7 +334,6 @@ class SignupPageHandler(MainHandler):
 						username_error,
 						password_missing_error_sw,
 						password_match_error_sw,
-						mail_error_sw,
 						)
 			else:
 				if MYLOGS:
@@ -358,13 +387,15 @@ class LogoutPageHandler(MainHandler):
 		self.redirect("/login")
 
 class WelcomePageHandler(MainHandler):
-	def write_welcome(self, templ, username, token):
+	def write_welcome(self, template, username, role, token):
 		self.render_page(
-					templ,
-					username=username,
-					token=token,
-					logged=get_all_LOGGED_users(),
-					messages=get_all_messages(),
+					template,
+					username = username,
+					role = role,
+					token = token,
+					logged = get_all_LOGGED_users(),
+					messages = get_all_messages(),
+					exercise = pick_an_exercise(),
 					)
 
 	def get(self):
@@ -380,7 +411,7 @@ class WelcomePageHandler(MainHandler):
 				token = get_token_from_LOGGED(username)
 			#~ template = select_template(role)
 			template = "welcome.html"
-			self.write_welcome(template, username, token)
+			self.write_welcome(template, username, role, token)
 		else:
 			self.redirect("/login")
 
@@ -396,6 +427,16 @@ class MessageHandler(MainHandler):
 			#~ self.redirect("/welcome")
 		else:
 			self.redirect("/login")
+
+class ExerciseRequestHandler(MainHandler):
+	def get(self):
+		cookie = self.request.cookies.get("schooltagging")
+		if user_in_database(cookie):
+			user_info = user_info_from_cookie(cookie)
+			username = user_info["username"]
+			if MYLOGS:
+				logging.info(str("Exercise request from " + username))
+			send_exercise(username)
 
 class ConnectedHandler(MainHandler):
 	def post(self):
@@ -419,4 +460,5 @@ app = webapp2.WSGIApplication([
     ('/message', MessageHandler),
     ('/_ah/channel/connected/', ConnectedHandler),
     ('/_ah/channel/disconnected/', DisconnectedHandler),
+    ('/exercise_request', ExerciseRequestHandler),
 	], debug=True)

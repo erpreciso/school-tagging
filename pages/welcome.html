@@ -2,6 +2,12 @@
 
 {% block payload %}
 <div id="content">
-	exercise block
+	{% if role == "teacher" %}
+	teacher block
+	{% elif role == "student" %}
+	<button id="ask_exercise">Ask an exercise</button>
+	<div id="exercise_area"></div>
+	{% endif %}
+	
 </div>
 {% endblock %}

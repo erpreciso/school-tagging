@@ -1,11 +1,9 @@
 $(document).ready(function() {
 	
 	$("#send_message").on("click", send_message);
-	//~ $("a").click(function(event) {
-	  //~ event.preventDefault();
-	  //~ onClose();
-	  //~ alert(event.target);
-		//~ });
+	$("#ask_exercise").on("click", ask_exercise);
+	
+	
 	});
 
 onOpened = function() {
@@ -18,11 +16,21 @@ onClose = function() {
 
 }
 
+function word_clicked (event) {
+	var triggered = event.target.id;
+	var base_color = $("#target #" + triggered).css("background-color");
+	$("#target").children().css("background-color", base_color);
+	$("#target #" + triggered).css("background-color", "yellow");
+}
+
 function send_message() {
 	var message = $("input[name*='message']").val();
 	$("input[name*='message']").val("");
 	$.post("/message", {"message": message});
-	//~ alert(message);
+}
+
+function ask_exercise() {
+	$.get("/exercise_request");
 }
 
 onMessage = function(message) {
@@ -48,6 +56,26 @@ onMessage = function(message) {
 	else if (data.type == "disconnected user") {
 		$("#" + data.username).remove();
 		//~ alert("disconn " + data.username);
+	}
+	else if (data.type == "exercise") {
+		$("#exercise").remove();
+		var instructions = "<div id='instructions'>Please click on the correct ";
+		instructions += data.message["to find"];
+		instructions += "</div>";
+		
+		var target = "<div id='target'>";
+		for (var i=0; i < data.message.words.length; i++) {
+			target += "<div class='word' id='" + i;
+			target += "'>" + data.message.words[i] + "</div> ";
+		}
+		target += "</div>";
+		
+		var exercise = "<div id='exercise'>";
+		exercise += instructions
+		exercise += target
+		exercise += "</div>";
+		$("#exercise_area").append(exercise);
+		$(".word").on("click", word_clicked);
 	}
 	//~ alert(JSON.stringify(message));
 }
