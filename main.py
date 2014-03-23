@@ -52,15 +52,22 @@ class Cookie():
 		if MYLOGS:
 			logging.info(str("Info extracted from cookie"))
 
-
-
+class MyLogs():
+	def __init__(self, *a):
+		message = " ".join([str(chunk) for chunk in a])
+		logging.info(str(message))
+		
 TODO = """
-when a channel is closed, remove the user from the LOGGED list.
-algorithm to send messages to be revisited to avoid dups.
+- when a channel is closed, remove the user from the LOGGED list.
+- algorithm to send messages to be revisited to avoid dups.
+- add all possible url to the handler (regular expressions?)
+- allow only a teacher per session
+- verify all channels are up by sending a pin sometime, 
+		to remove from logged not responding ones
+- when a channel is closed, remove the user from the LOGGED list.
+- algorithm to send messages to be revisited to avoid dups.
 
 """
-
-MYLOGS = True
 
 EXERCISES_POOL = [
 	{
@@ -141,8 +148,7 @@ def store_message(*a):
 		}
 	global MESSAGES
 	MESSAGES.append(message)
-	if MYLOGS:
-		logging.info(str("Message added to db --> " + str(message)))
+	MyLogs("Message added to db --> ", message)
 	return message
 
 def select_template(role):
@@ -158,8 +164,7 @@ def get_all_messages():
 def clear_messages():
 	global MESSAGES
 	MESSAGES = []
-	if MYLOGS:
-		logging.info("Messages list cleared")
+	MyLogs("Messages list cleared")
 
 def broadcast_clear_messages():
 	for (role, user) in get_all_LOGGED_users():
@@ -168,16 +173,14 @@ def broadcast_clear_messages():
 					}
 		message = json.dumps(message)
 		channel.send_message(user, message)
-	if MYLOGS:
-		logging.info("Clear messages list broadcasted")
+	MyLogs("Clear messages list broadcasted")
 
 def remove_from_LOGGED(username):
 	global LOGGED
 	for user in LOGGED:
 		if user["username"] == username:
 			LOGGED.remove(user)
-			if MYLOGS:
-				logging.info(str("Removed " + username + " from LOGGED"))
+			MyLogs("Removed ", username, " from LOGGED")
 
 def add_user_to_LOGGED(role, username, token):
 	if (role, username) not in get_all_LOGGED_users():
@@ -188,12 +191,10 @@ def add_user_to_LOGGED(role, username, token):
 				"token": token,
 				}
 		LOGGED.append(user)
-		if MYLOGS:
-			logging.info(str("User added to LOGGED list --> " + str(user)))
-			logging.info(str("Count of logged users --> " + str(len(LOGGED))))
+		MyLogs("User added to LOGGED list --> ", user)
+		MyLogs("Count of logged users --> ", len(LOGGED))
 	else:
-		if MYLOGS:
-			logging.info("User already in LOGGED list")
+		MyLogs("User already in LOGGED list")
 
 def get_all_LOGGED_users():
 	"""return tuple (role, username) """
@@ -216,12 +217,10 @@ def get_password_from_database(username):
 		if user["username"] == username:
 			password = user["hashpassword"]
 	if password:
-		if MYLOGS:
-			logging.info(str("Password retrieved for " + username))
+		MyLogs("Password retrieved for ", username)
 		return password
 	else:
-		if MYLOGS:
-			logging.info(str("Password not existing for " + username))
+		MyLogs("Password not existing for ", username)
 		return password
 	
 def add_user_to_database(role, username, password):
@@ -232,9 +231,8 @@ def add_user_to_database(role, username, password):
 			"role": role,
 			}
 	USERS.append(user)
-	if MYLOGS:
-		logging.info(str("User added to db --> " + str(user)))
-		logging.info(str("Count of registered users --> " + str(len(USERS))))
+	MyLogs("User added to db --> ", user)
+	MyLogs("Count of registered users --> ", len(USERS))
 
 def user_in_database(cookie):
 	if cookie:
@@ -243,17 +241,14 @@ def user_in_database(cookie):
 		for user in USERS:
 			if c.username == user["username"] and \
 				c.hashpassword == user['hashpassword']:
-				if MYLOGS:
-					logging.info("User in database, cookie verified")
+				MyLogs("User in database, cookie verified")
 				return True
-	if MYLOGS:
-		logging.info("User not in database, cookie verified")
+	MyLogs("User not in database, cookie verified")
 	return False
 
 def create_a_channel(username):
 	token = channel.create_channel(username)
-	if MYLOGS:
-		logging.info(str("Channel created for " + username))
+	MyLogs("Channel created for ", username)
 	return token
 
 def broadcast_message(message, sender):
@@ -261,23 +256,18 @@ def broadcast_message(message, sender):
 	message = store_message(sender, timestamp, message)
 	for (role, user) in get_all_LOGGED_users():
 		send_message_to_user(user, message)
-
-	if MYLOGS:
-		logging.info("Message broadcasted")
+	MyLogs("Message broadcasted")
 
 def send_message_to_user(username, message):
 	message = json.dumps(message)
 	channel.send_message(username, message)
-	if MYLOGS:
-		logging.info("Message delivered")
+	MyLogs("Message delivered")
 
 def broadcast_exercise_to_students(exercise):
 	for (role, user) in get_all_LOGGED_users():
 		send_exercise(user, exercise)
-	if MYLOGS:
-		logging.info("Exercise broadcasted")
-	
-	
+	MyLogs("Exercise broadcasted")
+
 def send_exercise(username, exercise):
 	message = {
 		"type": "exercise",
@@ -285,8 +275,7 @@ def send_exercise(username, exercise):
 		}
 	message = json.dumps(message)
 	channel.send_message(username, message)
-	if MYLOGS:
-		logging.info(str("Exercise delivered to " + username))
+	MyLogs("Exercise delivered to ", username)
 	
 def send_exercises_list(username):
 	exercises = get_all_exercises()
@@ -296,15 +285,13 @@ def send_exercises_list(username):
 		}
 	message = json.dumps(message)
 	channel.send_message(username, message)
-	if MYLOGS:
-		logging.info(str("Exercises list delivered to " + username))
+	MyLogs("Exercises list delivered to ", username)
 
 def broadcast_user_connection_info(target_user, status):
 	for (role, username) in get_all_LOGGED_users():
 		if username != target_user:
 			send_message_of_user_connection_info(target_user, status, role, username)
-	if MYLOGS:
-		logging.info("All messages of new connection sent")
+	MyLogs("All messages of new connection sent")
 
 def send_message_of_user_connection_info(target_user, status, role, recipient):
 	if status == "open":
@@ -318,8 +305,7 @@ def send_message_of_user_connection_info(target_user, status, role, recipient):
 		}
 	message = json.dumps(message)
 	channel.send_message(recipient, message)
-	if MYLOGS:
-		logging.info("Message that the user is " + status + " delivered to " + str(recipient))
+	MyLogs("Message that the user is ", status, " delivered to ", recipient)
 
 def make_salt():
 	return ''.join(random.choice(string.letters) for x in xrange(5))
@@ -356,11 +342,9 @@ class MainHandler(webapp2.RequestHandler):
 		cookie = Cookie(self.request.cookies.get("schooltagging"))
 		if cookie.value:
 			self.response.delete_cookie('schooltagging', path = '/')
-			if MYLOGS:
-				logging.info(str("Cookie deleted"))
+			MyLogs("Cookie deleted")
 		else:
-			if MYLOGS:
-				logging.info(str("Cookie not existing"))
+			MyLogs("Cookie not existing")
 		
 class SignupPageHandler(MainHandler):
 	def write_signup(self,
@@ -421,8 +405,7 @@ class SignupPageHandler(MainHandler):
 						password_match_error_sw,
 						)
 			else:
-				if MYLOGS:
-					logging.info("No errors, user allowed to be registered")
+				MyLogs("No errors, user allowed to be registered")
 				role = self.request.get("role")
 				password = make_pw_hash(username, password)
 				add_user_to_database(role, username, password)
@@ -522,16 +505,14 @@ class ExerciseListRequestHandler(MainHandler):
 	def get(self):
 		cookie = Cookie(self.get_my_cookie())
 		if user_in_database(cookie.value):
-			if MYLOGS:
-				logging.info(str("Exercise List request from " + cookie.username))
+			MyLogs("Exercise List request from ", cookie.username)
 			send_exercises_list(cookie.username)
 
 class ExerciseRequestHandler(MainHandler):
 	def post(self):
 		cookie = Cookie(self.get_my_cookie())
 		if user_in_database(cookie.value):
-			if MYLOGS:
-				logging.info(str("Exercise request from " + cookie.username))
+			MyLogs("Exercise request from ", cookie.username)
 			exercise_number = int(self.request.get("exercise_number"))
 			exercise = get_all_exercises()[exercise_number]
 			broadcast_exercise_to_students(exercise)
@@ -544,13 +525,13 @@ class ClearMessagesHandler(MainHandler):
 class ConnectedHandler(MainHandler):
 	def post(self):
 		client_id = self.request.get('from')
-		logging.info(str("connected ID --> " + str(client_id)))
+		MyLogs("connected ID --> ", client_id)
 		broadcast_user_connection_info(client_id, "open")
 
 class DisconnectedHandler(MainHandler):
 	def post(self):
 		client_id = self.request.get('from')
-		logging.info(str("Disconnected ID --> " + str(client_id)))
+		MyLogs("Disconnected ID --> ", client_id)
 		broadcast_user_connection_info(client_id, "close")
 		remove_from_LOGGED(client_id)
 
