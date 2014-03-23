@@ -15,6 +15,45 @@ from google.appengine.api import channel
 from google.appengine.api import users
 
 
+
+class Cookie():
+	value = ""
+	username = ""
+	hashpassword = ""
+	role = ""
+	password = ""
+	salt = ""
+
+	def __init__(self, value=""):
+		self.value = value
+		if value:
+			self.extract_value()
+
+	def set_value(self, role, username, hashpassword):
+		self.role = str(role)
+		self.username = str(username)
+		self.hashpassword = str(hashpassword)
+	
+	def stringify(self):
+		self.value = "|".join([self.role, self.username, self.hashpassword])
+
+	def send(self, http_self):
+		self.stringify()
+		http_self.response.set_cookie('schooltagging', self.value)
+		if MYLOGS:
+			logging.info(str("Cookie sent"))
+			
+	def extract_value(self):
+		self.role = self.value.split("|")[0]
+		self.username = self.value.split("|")[1]
+		self.password = self.value.split("|")[2]
+		self.salt = self.value.split("|")[3]
+		self.hashpassword = self.password + "|" + self.salt
+		if MYLOGS:
+			logging.info(str("Info extracted from cookie"))
+
+
+
 TODO = """
 when a channel is closed, remove the user from the LOGGED list.
 algorithm to send messages to be revisited to avoid dups.
@@ -197,48 +236,19 @@ def add_user_to_database(role, username, password):
 		logging.info(str("User added to db --> " + str(user)))
 		logging.info(str("Count of registered users --> " + str(len(USERS))))
 
-def user_info_from_cookie(cookie):
-	assert cookie.count("|") == 3
-	info = {
-		"role": cookie.split("|")[0],
-		"username": cookie.split("|")[1],
-		"hashpassword": cookie.split("|")[2],
-		"salt": cookie.split("|")[3],
-		}
-	if MYLOGS:
-		logging.info(str("Extracted info from cookie --> " + str(info)))
-	return info
-	
 def user_in_database(cookie):
 	if cookie:
-		info = user_info_from_cookie(cookie)
-		cookie_username = info["username"]
-		cookie_saltpassword = "%s|%s" % (info["hashpassword"], info["salt"])
+		c = Cookie(cookie)
+		c.extract_value()
 		for user in USERS:
-			if cookie_username == user["username"] and \
-				cookie_saltpassword == user['hashpassword']:
+			if c.username == user["username"] and \
+				c.hashpassword == user['hashpassword']:
 				if MYLOGS:
 					logging.info("User in database, cookie verified")
 				return True
 	if MYLOGS:
 		logging.info("User not in database, cookie verified")
 	return False
-
-def set_my_cookie(self, role, username, password):
-	cookie = "|".join([str(role),str(username),str(password)])
-	self.response.headers.add_header('Set-Cookie', 'schooltagging=' + cookie)
-	if MYLOGS:
-		logging.info(str("Setup Cookie --> " + cookie))
-
-def clear_my_cookie(self):
-	cookie = self.request.cookies.get("schooltagging")
-	if cookie:
-		self.response.delete_cookie('schooltagging', path = '/')
-		if MYLOGS:
-			logging.info(str("Cookie deleted"))
-	else:
-		if MYLOGS:
-			logging.info(str("Cookie not existing"))
 
 def create_a_channel(username):
 	token = channel.create_channel(username)
@@ -338,7 +348,20 @@ class MainHandler(webapp2.RequestHandler):
 		
 	def render_page(self, template, **kw):
 		self.writeout(self.render_str(template, **kw))
-
+	
+	def get_my_cookie(self):
+		return self.request.cookies.get("schooltagging")
+	
+	def clear_my_cookie(self):
+		cookie = Cookie(self.request.cookies.get("schooltagging"))
+		if cookie.value:
+			self.response.delete_cookie('schooltagging', path = '/')
+			if MYLOGS:
+				logging.info(str("Cookie deleted"))
+		else:
+			if MYLOGS:
+				logging.info(str("Cookie not existing"))
+		
 class SignupPageHandler(MainHandler):
 	def write_signup(self,
 				username="",
@@ -361,7 +384,7 @@ class SignupPageHandler(MainHandler):
 						)
 
 	def get(self):
-		clear_my_cookie(self)
+		self.clear_my_cookie()
 		self.write_signup()
 
 	def post(self):
@@ -404,7 +427,9 @@ class SignupPageHandler(MainHandler):
 				password = make_pw_hash(username, password)
 				add_user_to_database(role, username, password)
 				add_user_to_LOGGED(role, username, "")
-				set_my_cookie(self, role, username, password)
+				cookie = Cookie()
+				cookie.set_value(role, username, password)
+				cookie.send(self)
 				self.redirect("/welcome")
 				
 class LoginPageHandler(MainHandler):
@@ -417,7 +442,7 @@ class LoginPageHandler(MainHandler):
 				)
 
 	def get(self):
-		clear_my_cookie(self)
+		self.clear_my_cookie()
 		self.write_login()
 	
 	def post(self):
@@ -432,20 +457,22 @@ class LoginPageHandler(MainHandler):
 				salt = db_password.split('|')[1]
 				login_password = make_pw_hash(username, userpassword, salt)
 				if login_password == db_password:
-					set_my_cookie(self, role, username, login_password)
-					#~ add_user_to_LOGGED(role, username)
+					
+					cookie = Cookie()
+					cookie.set_value(role, username, login_password)
+					cookie.send(self)
+
 					self.redirect("/welcome")
 			self.write_login(login_error = "Invalid login")
 
 class LogoutPageHandler(MainHandler):
 	
 	def get(self):
-		cookie = self.request.cookies.get("schooltagging")
-		if cookie:
-			username = user_info_from_cookie(cookie)["username"]
-			broadcast_user_connection_info(username, "close")
-			clear_my_cookie(self)
-			remove_from_LOGGED(username)
+		cookie = Cookie(self.get_my_cookie())
+		if cookie.value:
+			broadcast_user_connection_info(cookie.username, "close")
+			self.clear_my_cookie()
+			remove_from_LOGGED(cookie.username)
 		self.redirect("/login")
 
 class WelcomePageHandler(MainHandler):
@@ -461,53 +488,50 @@ class WelcomePageHandler(MainHandler):
 					)
 
 	def get(self):
-		cookie = self.request.cookies.get("schooltagging")
-		if user_in_database(cookie):
-			user_info = user_info_from_cookie(cookie)
-			username = user_info["username"]
-			role = user_info["role"]
-			if not user_in_LOGGED(username, role) or get_token_from_LOGGED == "":
-				token = create_a_channel(username)
-				add_user_to_LOGGED(role, username, token)
-			else:
-				token = get_token_from_LOGGED(username)
-			#~ template = select_template(role)
-			template = "welcome.html"
-			self.write_welcome(template, username, role, token)
+		cookie = Cookie(self.get_my_cookie())
+		if cookie.value:
+			if user_in_database(cookie.value):
+				if not user_in_LOGGED(cookie.username, cookie.role) or \
+									get_token_from_LOGGED == "":
+					token = create_a_channel(cookie.username)
+					add_user_to_LOGGED(cookie.role, cookie.username, token)
+				else:
+					token = get_token_from_LOGGED(cookie.username)
+				template = "welcome.html"
+				self.write_welcome(
+									template,
+									cookie.username,
+									cookie.role,
+									token,
+									)
 		else:
 			self.redirect("/login")
 
 class MessageHandler(MainHandler):
 	def post(self):
-		cookie = self.request.cookies.get("schooltagging")
+		cookie = Cookie(self.get_my_cookie())
 		message = self.request.get("message")
-		if user_in_database(cookie):
+		if user_in_database(cookie.value):
 			if message:
-				user_info = user_info_from_cookie(cookie)
-				sender = user_info["username"]
-				broadcast_message(message, sender)
+				broadcast_message(message, cookie.username)
 			#~ self.redirect("/welcome")
 		else:
 			self.redirect("/login")
 
 class ExerciseListRequestHandler(MainHandler):
 	def get(self):
-		cookie = self.request.cookies.get("schooltagging")
-		if user_in_database(cookie):
-			user_info = user_info_from_cookie(cookie)
-			username = user_info["username"]
+		cookie = Cookie(self.get_my_cookie())
+		if user_in_database(cookie.value):
 			if MYLOGS:
-				logging.info(str("Exercise List request from " + username))
-			send_exercises_list(username)
+				logging.info(str("Exercise List request from " + cookie.username))
+			send_exercises_list(cookie.username)
 
 class ExerciseRequestHandler(MainHandler):
 	def post(self):
-		cookie = self.request.cookies.get("schooltagging")
-		if user_in_database(cookie):
-			user_info = user_info_from_cookie(cookie)
-			username = user_info["username"]
+		cookie = Cookie(self.get_my_cookie())
+		if user_in_database(cookie.value):
 			if MYLOGS:
-				logging.info(str("Exercise request from " + username))
+				logging.info(str("Exercise request from " + cookie.username))
 			exercise_number = int(self.request.get("exercise_number"))
 			exercise = get_all_exercises()[exercise_number]
 			broadcast_exercise_to_students(exercise)
