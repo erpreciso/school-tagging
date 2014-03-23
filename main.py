@@ -12,9 +12,70 @@ import logging
 import json
 from time import localtime, strftime
 from google.appengine.api import channel
-from google.appengine.api import users
+from google.appengine.ext import ndb
+from google.appengine.api import memcache
 
+class Logged(ndb.Model):
+	username = ndb.StringProperty()
+	role = ndb.StringProperty()
+	token = ndb.StringProperty()
+	addtime = ndb.DateTimeProperty(auto_now_add=True)
+	
+	def get_from_username(cls, username):
+		return cls.query(Logged.username == username).get()
+	
+	def add(self):
+		if self.username in Logged().all_usernames():
+			MyLogs("User already in Logged ndb:", self.username)
+		else:
+			self.put()
+			MyLogs("User added to Logged ndb:", self.username)
+	
+	def get_all_logged(cls):
+		"""return list of {role, username} """
+		all_logged = cls.query().fetch()
+		result = []
+		for logged in all_logged:
+			user = {
+				"role": logged.role,
+				"username": logged.username,
+				}
+			result.append(user)
+		return result
+		
+	def all_usernames(cls):
+		all_logged = cls.query().fetch()
+		return [logged.username for logged in all_logged]
+	
+	def remove(cls, username):
+		entity = Logged().get_from_username(username)
+		entity.key.delete()
+		MyLogs("Removed from Logged ndb:", username)
+		
 
+#~ def remove_from_LOGGED(username):
+	#~ global LOGGED
+	#~ for user in LOGGED:
+		#~ if user["username"] == username:
+			#~ LOGGED.remove(user)
+			#~ Logged().delete(username)
+			#~ MyLogs("Removed ", username, " from LOGGED")
+
+#~ def add_user_to_LOGGED(role, username, token):
+	#~ if (role, username) not in get_all_LOGGED_users():
+		#~ global LOGGED
+		#~ user = {
+				#~ "username": username,
+				#~ "role": role,
+				#~ "token": token,
+				#~ }
+		#~ LOGGED.append(user)
+		#~ 
+		#~ logged = Logged(username=username,role=role,token=token)
+		#~ logged.add()
+		#~ Logged().get_from_username(username)
+	#~ else:
+		#~ MyLogs("User already in LOGGED list")
 
 class Cookie():
 	value = ""
@@ -40,8 +101,7 @@ class Cookie():
 	def send(self, http_self):
 		self.stringify()
 		http_self.response.set_cookie('schooltagging', self.value)
-		if MYLOGS:
-			logging.info(str("Cookie sent"))
+		MyLogs("Cookie sent")
 			
 	def extract_value(self):
 		self.role = self.value.split("|")[0]
@@ -49,8 +109,7 @@ class Cookie():
 		self.password = self.value.split("|")[2]
 		self.salt = self.value.split("|")[3]
 		self.hashpassword = self.password + "|" + self.salt
-		if MYLOGS:
-			logging.info(str("Info extracted from cookie"))
+		MyLogs("Info extracted from cookie")
 
 class MyLogs():
 	def __init__(self, *a):
@@ -175,26 +234,7 @@ def broadcast_clear_messages():
 		channel.send_message(user, message)
 	MyLogs("Clear messages list broadcasted")
 
-def remove_from_LOGGED(username):
-	global LOGGED
-	for user in LOGGED:
-		if user["username"] == username:
-			LOGGED.remove(user)
-			MyLogs("Removed ", username, " from LOGGED")
 
-def add_user_to_LOGGED(role, username, token):
-	if (role, username) not in get_all_LOGGED_users():
-		global LOGGED
-		user = {
-				"username": username,
-				"role": role,
-				"token": token,
-				}
-		LOGGED.append(user)
-		MyLogs("User added to LOGGED list --> ", user)
-		MyLogs("Count of logged users --> ", len(LOGGED))
-	else:
-		MyLogs("User already in LOGGED list")
 
 def get_all_LOGGED_users():
 	"""return tuple (role, username) """
@@ -254,8 +294,8 @@ def create_a_channel(username):
 def broadcast_message(message, sender):
 	timestamp = strftime("%a, %d %b %H:%M:%S",localtime())
 	message = store_message(sender, timestamp, message)
-	for (role, user) in get_all_LOGGED_users():
-		send_message_to_user(user, message)
+	for user in Logged().get_all_logged():
+		send_message_to_user(user["username"], message)
 	MyLogs("Message broadcasted")
 
 def send_message_to_user(username, message):
@@ -455,7 +495,7 @@ class LogoutPageHandler(MainHandler):
 		if cookie.value:
 			broadcast_user_connection_info(cookie.username, "close")
 			self.clear_my_cookie()
-			remove_from_LOGGED(cookie.username)
+			Logged().remove(cookie.username)
 		self.redirect("/login")
 
 class WelcomePageHandler(MainHandler):
@@ -465,7 +505,7 @@ class WelcomePageHandler(MainHandler):
 					username = username,
 					role = role,
 					token = token,
-					logged = get_all_LOGGED_users(),
+					logged = Logged().get_all_logged(),
 					messages = get_all_messages(),
 					exercise = pick_an_exercise(),
 					)
@@ -474,12 +514,17 @@ class WelcomePageHandler(MainHandler):
 		cookie = Cookie(self.get_my_cookie())
 		if cookie.value:
 			if user_in_database(cookie.value):
-				if not user_in_LOGGED(cookie.username, cookie.role) or \
-									get_token_from_LOGGED == "":
+				if not cookie.username in Logged().all_usernames():
 					token = create_a_channel(cookie.username)
-					add_user_to_LOGGED(cookie.role, cookie.username, token)
+					new_logged = Logged(
+									username = cookie.username,
+									role = cookie.role,
+									token = token
+									)
+					new_logged.add()
 				else:
-					token = get_token_from_LOGGED(cookie.username)
+					logged = Logged().get_from_username(cookie.username)
+					token = logged.token
 				template = "welcome.html"
 				self.write_welcome(
 									template,
