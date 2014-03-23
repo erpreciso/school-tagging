@@ -21,6 +21,7 @@ function word_clicked (event) {
 	var base_color = $("#target #" + triggered).css("background-color");
 	$("#target").children().css("background-color", base_color);
 	$("#target #" + triggered).css("background-color", "yellow");
+	$.post("/word_clicked", {"word_number": triggered});
 }
 
 function sentence_clicked (event) {
@@ -51,6 +52,8 @@ function clear_messages() {
 
 function select_sentence () {
 	var chosen = $("#chosen_sentence").val();
+	$("#exercise_list").remove();
+	$("#select_sentence").remove()
 	send_exercise_request(chosen);
 }
 
@@ -85,8 +88,7 @@ onMessage = function(message) {
 		$("#" + data.username).remove();
 	}
 	else if (data.type == "exercise") {
-		//~ TODO if teacher, no instructions and no events, it's just a FYI
-		//~ ===============================================================
+		var role = $("#role").text();
 		$("#exercise").remove();
 		var instructions = "<div id='instructions'>Please click on the correct ";
 		instructions += data.message["to find"];
@@ -100,11 +102,15 @@ onMessage = function(message) {
 		target += "</div>";
 		
 		var exercise = "<div id='exercise'>";
-		exercise += instructions
-		exercise += target
+		if (role == "student") {
+			exercise += instructions;
+		}
+		exercise += target;
 		exercise += "</div>";
 		$("#exercise_area").append(exercise);
-		$(".word").on("click", word_clicked);
+		if (role == "student") {
+			$(".word").on("click", word_clicked);
+		}
 	}
 	else if (data.type == "exercises list") {
 		$("#exercise_list").remove();

@@ -4,9 +4,11 @@
 <div id="content">
 	{% if role == "student" %}
 	student block
+	
 	{% elif role == "teacher" %}
 	<button id="ask_exercises_list">Ask list of exercises</button>
 	{% endif %}
+	<div class="hidden" id="role">{{role}}</div>
 	<div id="exercise_area"></div>
 </div>
 {% endblock %}

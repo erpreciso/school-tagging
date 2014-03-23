@@ -173,6 +173,13 @@ class MyLogs():
 		logging.info(str(message))
 		
 TODO = """
+- create teacher dashboard
+-- list of students logged
+-- activity for each student
+--- exercise delivered
+--- response
+- remove teacher/student drop down in the login page
+- implement memcache also for messages
 - when a channel is closed, remove the user from the LOGGED list.
 - algorithm to send messages to be revisited to avoid dups.
 - add all possible url to the handler (regular expressions?)
@@ -383,10 +390,10 @@ class SignupPageHandler(MainHandler):
 						)
 
 	def get(self):
-		self.clear_my_cookie()
 		self.write_signup()
 
 	def post(self):
+		self.clear_my_cookie()
 		username=self.request.get("username")
 		password=self.request.get("password")
 		verify_password=self.request.get("verify")
@@ -443,7 +450,6 @@ class SignupPageHandler(MainHandler):
 				self.redirect("/welcome")
 				
 class LoginPageHandler(MainHandler):
-
 	def write_login(self, username = "", login_error = ""):
 		self.render_page(
 				"login.html",
@@ -452,10 +458,10 @@ class LoginPageHandler(MainHandler):
 				)
 
 	def get(self):
-		self.clear_my_cookie()
 		self.write_login()
 	
 	def post(self):
+		self.clear_my_cookie()
 		username = self.request.get("username")
 		userpassword = self.request.get("password")
 		role = self.request.get("role")
@@ -498,29 +504,31 @@ class WelcomePageHandler(MainHandler):
 
 	def get(self):
 		cookie = Cookie(self.get_my_cookie())
-		if not cookie.value:
-			self.redirect("/login")
-		if not Support().user_in_database(cookie.value):
-			self.redirect("/login")
-		all_logged = Support().get_all_logged()
-		if not cookie.username in [user["username"] for user in all_logged]:
-			token = Support().create_a_channel(cookie.username)
-			new_logged = Logged(
-							username = cookie.username,
-							role = cookie.role,
-							token = token
-							)
-			new_logged.add()
+		if cookie.value:
+			if Support().user_in_database(cookie.value):
+				all_logged = Support().get_all_logged()
+				if not cookie.username in [user["username"] for user in all_logged]:
+					token = Support().create_a_channel(cookie.username)
+					new_logged = Logged(
+									username = cookie.username,
+									role = cookie.role,
+									token = token
+									)
+					new_logged.add()
+				else:
+					logged = Support().get_from_username(cookie.username)
+					token = logged.token
+				template = "welcome.html"
+				self.write_welcome(
+									template,
+									cookie.username,
+									cookie.role,
+									token,
+									)
+			else:
+				self.redirect("/login")
 		else:
-			logged = Support().get_from_username(cookie.username)
-			token = logged.token
-		template = "welcome.html"
-		self.write_welcome(
-							template,
-							cookie.username,
-							cookie.role,
-							token,
-							)
+			self.redirect("/login")
 		
 class MessageHandler(MainHandler):
 	def post(self):
@@ -536,19 +544,33 @@ class MessageHandler(MainHandler):
 class ExerciseListRequestHandler(MainHandler):
 	def get(self):
 		cookie = Cookie(self.get_my_cookie())
-		if user_in_database(cookie.value):
+		if Support().user_in_database(cookie.value):
 			MyLogs("Exercise List request from ", cookie.username)
 			send_exercises_list(cookie.username)
+		else:
+			self.redirect("/login")
 
 class ExerciseRequestHandler(MainHandler):
 	def post(self):
 		cookie = Cookie(self.get_my_cookie())
-		if user_in_database(cookie.value):
+		if Support().user_in_database(cookie.value):
 			MyLogs("Exercise request from ", cookie.username)
 			exercise_number = int(self.request.get("exercise_number"))
 			exercise = get_all_exercises()[exercise_number]
 			broadcast_exercise_to_students(exercise)
+		else:
+			self.redirect("/login")
 
+class WordChosenHandler(MainHandler):
+	def post(self):
+		cookie = Cookie(self.get_my_cookie())
+		if Support().user_in_database(cookie.value):
+			word_number = int(self.request.get("word_number"))
+			MyLogs("word", word_number, "chosen from ", cookie.username)
+		else:
+			self.redirect("/login")
+	
+	
 class ClearMessagesHandler(MainHandler):
 	def get(self):
 		clear_messages()
@@ -579,4 +601,5 @@ app = webapp2.WSGIApplication([
     ('/exercise_list_request', ExerciseListRequestHandler),
     ('/exercise_request', ExerciseRequestHandler),
     ('/clear_messages', ClearMessagesHandler),
+    ("/word_clicked", WordChosenHandler),
 	], debug=True)
