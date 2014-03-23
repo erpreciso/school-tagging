@@ -85,7 +85,6 @@ onMessage = function(message) {
 		$("#" + data.username).remove();
 	}
 	else if (data.type == "exercise") {
-		
 		//~ TODO if teacher, no instructions and no events, it's just a FYI
 		//~ ===============================================================
 		$("#exercise").remove();

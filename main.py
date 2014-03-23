@@ -15,25 +15,13 @@ from google.appengine.api import channel
 from google.appengine.ext import ndb
 from google.appengine.api import memcache
 
-class Logged(ndb.Model):
-	username = ndb.StringProperty()
-	role = ndb.StringProperty()
-	token = ndb.StringProperty()
-	addtime = ndb.DateTimeProperty(auto_now_add=True)
+class Support():
+	def get_from_username(self, username):
+		return Logged.query(Logged.username == username).get()
 	
-	def get_from_username(cls, username):
-		return cls.query(Logged.username == username).get()
-	
-	def add(self):
-		if self.username in Logged().all_usernames():
-			MyLogs("User already in Logged ndb:", self.username)
-		else:
-			self.put()
-			MyLogs("User added to Logged ndb:", self.username)
-	
-	def get_all_logged(cls):
-		"""return list of {role, username} """
-		all_logged = cls.query().fetch()
+	def get_all_logged(self):
+		"""return list of {role, username} of logged """
+		all_logged = Logged.query().fetch()
 		result = []
 		for logged in all_logged:
 			user = {
@@ -41,42 +29,91 @@ class Logged(ndb.Model):
 				"username": logged.username,
 				}
 			result.append(user)
+		MyLogs("Return list of logged", result)
 		return result
-		
-	def all_usernames(cls):
-		all_logged = cls.query().fetch()
-		return [logged.username for logged in all_logged]
 	
-	def remove(cls, username):
-		entity = Logged().get_from_username(username)
+	def get_all_registered(self):
+		"""return list of {role, username, hashpassword} of registered"""
+		all_registered = RegisteredUser.query().fetch()
+		result = []
+		for registered in all_registered:
+			user = {
+				"role": registered.role,
+				"username": registered.username,
+				"hashpassword": registered.hashpassword,
+				}
+			result.append(user)
+		MyLogs("Return list of registered", result)
+		return result
+
+	def get_all_logged_usernames(self):
+		all_logged = Logged().query().fetch()
+		return [logged.username for logged in all_logged]
+
+	def get_all_registered_usernames(self):
+		all_registered = RegisteredUser().query().fetch()
+		return [registered.username for registered in all_registered]
+
+	def user_in_database(self, cookie):
+		if cookie:
+			c = Cookie(cookie)
+			c.extract_value()
+			for user in Support().get_all_registered():
+				MyLogs("Compare",user,"with",c.username,c.hashpassword)
+				if c.username == user["username"] and \
+					c.hashpassword == user["hashpassword"]:
+					MyLogs("User in database, cookie verified")
+					return True
+		MyLogs("User not in database, cookie verified")
+		return False
+	
+	def get_password_from_database(self, username):
+		password = None
+		for user in Support().get_all_registered():
+			if user["username"] == username:
+				password = user["hashpassword"]
+		if password:
+			MyLogs("Password retrieved for ", username)
+			return password
+		else:
+			MyLogs("Password not existing for ", username)
+			return password
+
+	def remove_logged(self, username):
+		entity = Support().get_from_username(username)
 		entity.key.delete()
 		MyLogs("Removed from Logged ndb:", username)
-		
 
-#~ def remove_from_LOGGED(username):
-	#~ global LOGGED
-	#~ for user in LOGGED:
-		#~ if user["username"] == username:
-			#~ LOGGED.remove(user)
-			#~ Logged().delete(username)
-			#~ MyLogs("Removed ", username, " from LOGGED")
+	def create_a_channel(self, username):
+		token = channel.create_channel(username)
+		MyLogs("Channel created for ", username)
+		return token
 
-#~ def add_user_to_LOGGED(role, username, token):
-	#~ if (role, username) not in get_all_LOGGED_users():
-		#~ global LOGGED
-		#~ user = {
-				#~ "username": username,
-				#~ "role": role,
-				#~ "token": token,
-				#~ }
-		#~ LOGGED.append(user)
-		#~ 
-		#~ logged = Logged(username=username,role=role,token=token)
-		#~ logged.add()
-		#~ Logged().get_from_username(username)
-	#~ else:
-		#~ MyLogs("User already in LOGGED list")
+class Logged(ndb.Model):
+	username = ndb.StringProperty()
+	role = ndb.StringProperty()
+	token = ndb.StringProperty()
+	addtime = ndb.DateTimeProperty(auto_now_add=True)
+	
+	def add(self):
+		if self.username in Support().get_all_logged_usernames():
+			MyLogs("User already in Logged ndb:", self.username)
+		else:
+			self.put()
+			MyLogs("User added to Logged ndb:", self.username)
 
+class RegisteredUser(ndb.Model):
+	username = ndb.StringProperty()
+	role = ndb.StringProperty()
+	hashpassword = ndb.StringProperty()
+	
+	def add(self):
+		if self.username in Support().get_all_logged_usernames():
+			MyLogs("User already in Registered ndb:", self.username)
+		else:
+			self.put()
+			MyLogs("User added to Registered ndb:", self.username)
+	
 class Cookie():
 	value = ""
 	username = ""
@@ -101,7 +138,7 @@ class Cookie():
 	def send(self, http_self):
 		self.stringify()
 		http_self.response.set_cookie('schooltagging', self.value)
-		MyLogs("Cookie sent")
+		MyLogs("Cookie sent", self.value)
 			
 	def extract_value(self):
 		self.role = self.value.split("|")[0]
@@ -109,7 +146,7 @@ class Cookie():
 		self.password = self.value.split("|")[2]
 		self.salt = self.value.split("|")[3]
 		self.hashpassword = self.password + "|" + self.salt
-		MyLogs("Info extracted from cookie")
+		#~ MyLogs("Info extracted from cookie")
 
 class MyLogs():
 	def __init__(self, *a):
@@ -152,36 +189,6 @@ EXERCISES_POOL = [
 	]
 
 MESSAGES = []
-
-LOGGED = []
-
-USERS = [
-	{
-		'username': u'tizio',
-		'role': u'student',
-		'hashpassword': 'b43eb7400b6faf49c758b0838c974a1efef2c58d4d1468ff2a5dbe306e826501|yfcBy',
-	},
-	{
-		'username': u'caio',
-		'role': u'student',
-		'hashpassword': 'e1d382f8d7d6ea53f3c0ca42c50f82d9ea2be6d4afd11675858789570a0226b0|zLGNf',
-	},
-	{
-		'username': u'sempronio',
-		'role': u'teacher',
-		'hashpassword': '42b13e20a38202b273fdb6ea29e240710acca6c7f7a627276cbc9253fefc3941|LxXVd',
-	},
-	{
-		'username': u'Anakin',
-		'role': u'student',
-		'hashpassword': 'e9cd536b7de0733b6af44f02bc16496fa21fc8dfcd321cd7d335ac2ac36826ff|LwKWk',
-	},
-	{
-		'username': u'Yoda',
-		'role': u'teacher',
-		'hashpassword': 'e4044eb18be6548f8f3af8344a1769572c2e2f43682afc26df2ea3824f6d65f0|BosOY',
-	},
-	]
 
 def pick_an_exercise():
 	exercise = EXERCISES_POOL[1]
@@ -226,86 +233,29 @@ def clear_messages():
 	MyLogs("Messages list cleared")
 
 def broadcast_clear_messages():
-	for (role, user) in get_all_LOGGED_users():
+	for user in Support().get_all_logged():
 		message = {
 					"type": "clear message history",
 					}
 		message = json.dumps(message)
-		channel.send_message(user, message)
+		channel.send_message(user["username"], message)
 	MyLogs("Clear messages list broadcasted")
-
-
-
-def get_all_LOGGED_users():
-	"""return tuple (role, username) """
-	return [(user["role"], user["username"]) for user in LOGGED]
-
-def user_in_LOGGED(username, role):
-	return (role, username) in get_all_LOGGED_users()
-
-def get_all_usernames_in_USERS():
-	return [user["username"] for user in USERS]
-
-def get_token_from_LOGGED(username):
-	for user in LOGGED:
-		if user["username"] == username:
-			return user["token"]
-
-def get_password_from_database(username):
-	password = None
-	for user in USERS:
-		if user["username"] == username:
-			password = user["hashpassword"]
-	if password:
-		MyLogs("Password retrieved for ", username)
-		return password
-	else:
-		MyLogs("Password not existing for ", username)
-		return password
-	
-def add_user_to_database(role, username, password):
-	global USERS
-	user = {
-			"username": username,
-			"hashpassword": password,
-			"role": role,
-			}
-	USERS.append(user)
-	MyLogs("User added to db --> ", user)
-	MyLogs("Count of registered users --> ", len(USERS))
-
-def user_in_database(cookie):
-	if cookie:
-		c = Cookie(cookie)
-		c.extract_value()
-		for user in USERS:
-			if c.username == user["username"] and \
-				c.hashpassword == user['hashpassword']:
-				MyLogs("User in database, cookie verified")
-				return True
-	MyLogs("User not in database, cookie verified")
-	return False
-
-def create_a_channel(username):
-	token = channel.create_channel(username)
-	MyLogs("Channel created for ", username)
-	return token
 
 def broadcast_message(message, sender):
 	timestamp = strftime("%a, %d %b %H:%M:%S",localtime())
 	message = store_message(sender, timestamp, message)
-	for user in Logged().get_all_logged():
+	for user in Support().get_all_logged():
 		send_message_to_user(user["username"], message)
 	MyLogs("Message broadcasted")
 
 def send_message_to_user(username, message):
 	message = json.dumps(message)
 	channel.send_message(username, message)
-	MyLogs("Message delivered")
+	MyLogs("Message", message, "delivered to", username)
 
 def broadcast_exercise_to_students(exercise):
-	for (role, user) in get_all_LOGGED_users():
-		send_exercise(user, exercise)
+	for user in Support().get_all_logged():
+		send_exercise(user["username"], exercise)
 	MyLogs("Exercise broadcasted")
 
 def send_exercise(username, exercise):
@@ -328,9 +278,14 @@ def send_exercises_list(username):
 	MyLogs("Exercises list delivered to ", username)
 
 def broadcast_user_connection_info(target_user, status):
-	for (role, username) in get_all_LOGGED_users():
-		if username != target_user:
-			send_message_of_user_connection_info(target_user, status, role, username)
+	for user in Support().get_all_logged():
+		if user["username"] != target_user:
+			send_message_of_user_connection_info(
+					target_user,
+					status,
+					user["role"],
+					user["username"],
+					)
 	MyLogs("All messages of new connection sent")
 
 def send_message_of_user_connection_info(target_user, status, role, recipient):
@@ -437,7 +392,7 @@ class SignupPageHandler(MainHandler):
 						password_match_error_sw,
 						)
 		else:
-			if username in get_all_usernames_in_USERS():
+			if username in Support().get_all_registered_usernames():
 				username_error = "That user already exists"
 				self.write_signup(username,
 						username_error,
@@ -447,11 +402,17 @@ class SignupPageHandler(MainHandler):
 			else:
 				MyLogs("No errors, user allowed to be registered")
 				role = self.request.get("role")
-				password = make_pw_hash(username, password)
-				add_user_to_database(role, username, password)
-				add_user_to_LOGGED(role, username, "")
+				hashpassword = make_pw_hash(username, password)
+				new_user = RegisteredUser(
+					username = username,
+					hashpassword = hashpassword,
+					role = role,
+					)
+				new_user.add()
+				#~ add_user_to_database(role, username, password)
+				#~ add_user_to_LOGGED(role, username, "")
 				cookie = Cookie()
-				cookie.set_value(role, username, password)
+				cookie.set_value(role, username, hashpassword)
 				cookie.send(self)
 				self.redirect("/welcome")
 				
@@ -475,7 +436,7 @@ class LoginPageHandler(MainHandler):
 		if username == "" or userpassword == "":
 			self.write_login(login_error = "Invalid login")
 		else:
-			db_password = get_password_from_database(username)
+			db_password = Support().get_password_from_database(username)
 			if db_password:
 				salt = db_password.split('|')[1]
 				login_password = make_pw_hash(username, userpassword, salt)
@@ -489,13 +450,12 @@ class LoginPageHandler(MainHandler):
 			self.write_login(login_error = "Invalid login")
 
 class LogoutPageHandler(MainHandler):
-	
 	def get(self):
 		cookie = Cookie(self.get_my_cookie())
 		if cookie.value:
 			broadcast_user_connection_info(cookie.username, "close")
 			self.clear_my_cookie()
-			Logged().remove(cookie.username)
+			Support().remove_logged(cookie.username)
 		self.redirect("/login")
 
 class WelcomePageHandler(MainHandler):
@@ -505,41 +465,43 @@ class WelcomePageHandler(MainHandler):
 					username = username,
 					role = role,
 					token = token,
-					logged = Logged().get_all_logged(),
+					logged = Support().get_all_logged(),
 					messages = get_all_messages(),
 					exercise = pick_an_exercise(),
 					)
 
 	def get(self):
 		cookie = Cookie(self.get_my_cookie())
-		if cookie.value:
-			if user_in_database(cookie.value):
-				if not cookie.username in Logged().all_usernames():
-					token = create_a_channel(cookie.username)
-					new_logged = Logged(
-									username = cookie.username,
-									role = cookie.role,
-									token = token
-									)
-					new_logged.add()
-				else:
-					logged = Logged().get_from_username(cookie.username)
-					token = logged.token
-				template = "welcome.html"
-				self.write_welcome(
-									template,
-									cookie.username,
-									cookie.role,
-									token,
-									)
-		else:
+		if not cookie.value:
 			self.redirect("/login")
-
+			
+		if not Support().user_in_database(cookie.value):
+			self.redirect("/login")
+		if not cookie.username in Support().get_all_logged_usernames():
+			token = Support().create_a_channel(cookie.username)
+			new_logged = Logged(
+							username = cookie.username,
+							role = cookie.role,
+							token = token
+							)
+			new_logged.add()
+		else:
+			logged = Support().get_from_username(cookie.username)
+			MyLogs("Token", logged.token)
+			token = logged.token
+		template = "welcome.html"
+		self.write_welcome(
+							template,
+							cookie.username,
+							cookie.role,
+							token,
+							)
+		
 class MessageHandler(MainHandler):
 	def post(self):
 		cookie = Cookie(self.get_my_cookie())
 		message = self.request.get("message")
-		if user_in_database(cookie.value):
+		if Support().user_in_database(cookie.value):
 			if message:
 				broadcast_message(message, cookie.username)
 			#~ self.redirect("/welcome")
@@ -578,7 +540,7 @@ class DisconnectedHandler(MainHandler):
 		client_id = self.request.get('from')
 		MyLogs("Disconnected ID --> ", client_id)
 		broadcast_user_connection_info(client_id, "close")
-		remove_from_LOGGED(client_id)
+		Support().remove_logged(client_id)
 
 app = webapp2.WSGIApplication([
     ('/', LoginPageHandler),
