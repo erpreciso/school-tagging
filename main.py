@@ -10,6 +10,7 @@ import string
 import hashlib
 import logging
 import json
+import sys
 from time import localtime, strftime
 from google.appengine.api import channel
 from google.appengine.ext import ndb
@@ -65,26 +66,6 @@ class Support():
 			MyLogs("Return list of registered from db", result)
 			return result
 
-	def get_all_logged_usernames(self):
-		data = memcache.get("all_logged_usernames")
-		if data is not None:
-			return data
-		else:
-			all_logged = Logged().query().fetch()
-			data = [logged.username for logged in all_logged]
-			memcache.add("all_logged_usernames", data)
-			return data
-
-	def get_all_registered_usernames(self):
-		data = memcache.get("all_registered_usernames")
-		if data is not None:
-			return data
-		else:
-			all_registered = RegisteredUser().query().fetch()
-			data = [registered.username for registered in all_registered]
-			memcache.add("all_registered_usernames", data)
-			return data
-
 	def user_in_database(self, cookie):
 		if cookie:
 			c = Cookie(cookie)
@@ -112,6 +93,7 @@ class Support():
 
 	def remove_logged(self, username):
 		entity = Support().get_from_username(username)
+		MyLogs("To be removed:", entity)
 		entity.key.delete()
 		MyLogs("Removed from Logged ndb:", username)
 
@@ -127,12 +109,13 @@ class Logged(ndb.Model):
 	addtime = ndb.DateTimeProperty(auto_now_add=True)
 	
 	def add(self):
-		if self.username in Support().get_all_logged_usernames():
+		all_logged = Support().get_all_logged()
+		if self.username in [user["username"] for user in all_logged]:
 			MyLogs("User already in Logged ndb:", self.username)
 		else:
 			self.put()
 			memcache.delete("all_logged")
-			memcache.delete("all_logged_usernames")
+			memcache.delete("all_registered")
 			MyLogs("User added to Logged ndb:", self.username)
 
 class RegisteredUser(ndb.Model):
@@ -141,12 +124,13 @@ class RegisteredUser(ndb.Model):
 	hashpassword = ndb.StringProperty()
 	
 	def add(self):
-		if self.username in Support().get_all_logged_usernames():
+		all_registered = Support().get_all_registered()
+		if self.username in [user["username"] for user in all_registered]:
 			MyLogs("User already in Registered ndb:", self.username)
 		else:
 			self.put()
 			memcache.delete("all_registered")
-			memcache.delete("all_registered_usernames")
+			memcache.delete("all_logged")
 			MyLogs("User added to Registered ndb:", self.username)
 	
 class Cookie():
@@ -197,6 +181,7 @@ TODO = """
 		to remove from logged not responding ones
 - when a channel is closed, remove the user from the LOGGED list.
 - algorithm to send messages to be revisited to avoid dups.
+- datastore writes too slow: to enhance memcache interface.
 
 """
 
@@ -427,7 +412,8 @@ class SignupPageHandler(MainHandler):
 						password_match_error_sw,
 						)
 		else:
-			if username in Support().get_all_registered_usernames():
+			all_registered = Support().get_all_registered()
+			if username in [user["username"] for user in all_registered]:
 				username_error = "That user already exists"
 				self.write_signup(username,
 						username_error,
@@ -444,8 +430,13 @@ class SignupPageHandler(MainHandler):
 					role = role,
 					)
 				new_user.add()
-				#~ add_user_to_database(role, username, password)
-				#~ add_user_to_LOGGED(role, username, "")
+				token = Support().create_a_channel(username)
+				new_logged = Logged(
+								username = username,
+								role = role,
+								token = token
+								)
+				new_logged.add()
 				cookie = Cookie()
 				cookie.set_value(role, username, hashpassword)
 				cookie.send(self)
@@ -509,10 +500,10 @@ class WelcomePageHandler(MainHandler):
 		cookie = Cookie(self.get_my_cookie())
 		if not cookie.value:
 			self.redirect("/login")
-			
 		if not Support().user_in_database(cookie.value):
 			self.redirect("/login")
-		if not cookie.username in Support().get_all_logged_usernames():
+		all_logged = Support().get_all_logged()
+		if not cookie.username in [user["username"] for user in all_logged]:
 			token = Support().create_a_channel(cookie.username)
 			new_logged = Logged(
 							username = cookie.username,
@@ -522,7 +513,6 @@ class WelcomePageHandler(MainHandler):
 			new_logged.add()
 		else:
 			logged = Support().get_from_username(cookie.username)
-			MyLogs("Token", logged.token)
 			token = logged.token
 		template = "welcome.html"
 		self.write_welcome(
