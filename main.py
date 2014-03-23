@@ -17,42 +17,73 @@ from google.appengine.api import memcache
 
 class Support():
 	def get_from_username(self, username):
-		return Logged.query(Logged.username == username).get()
+		data = memcache.get("%s:logged" % username)
+		if data is not None:
+			return data
+		else:
+			data = Logged.query(Logged.username == username).get()
+			if not memcache.add("%s:logged" % username, data):
+				MyLogs("Memcache set failed:", username, ":logged")
+			return data
 	
 	def get_all_logged(self):
 		"""return list of {role, username} of logged """
-		all_logged = Logged.query().fetch()
-		result = []
-		for logged in all_logged:
-			user = {
-				"role": logged.role,
-				"username": logged.username,
-				}
-			result.append(user)
-		MyLogs("Return list of logged", result)
-		return result
+		data = memcache.get("all_logged")
+		if data is not None:
+			MyLogs("Return list of logged from memcache", data)
+			return data
+		else:
+			all_logged = Logged.query().fetch()
+			result = []
+			for logged in all_logged:
+				user = {
+					"role": logged.role,
+					"username": logged.username,
+					}
+				result.append(user)
+			memcache.add("all_logged", result)
+			MyLogs("Return list of logged from db", result)
+			return result
 	
 	def get_all_registered(self):
 		"""return list of {role, username, hashpassword} of registered"""
-		all_registered = RegisteredUser.query().fetch()
-		result = []
-		for registered in all_registered:
-			user = {
-				"role": registered.role,
-				"username": registered.username,
-				"hashpassword": registered.hashpassword,
-				}
-			result.append(user)
-		MyLogs("Return list of registered", result)
-		return result
+		data = memcache.get("all_registered")
+		if data is not None:
+			MyLogs("Return list of registered from memcache", data)
+			return data
+		else:
+			all_registered = RegisteredUser.query().fetch()
+			result = []
+			for registered in all_registered:
+				user = {
+					"role": registered.role,
+					"username": registered.username,
+					"hashpassword": registered.hashpassword,
+					}
+				result.append(user)
+			memcache.add("all_registered", result)
+			MyLogs("Return list of registered from db", result)
+			return result
 
 	def get_all_logged_usernames(self):
-		all_logged = Logged().query().fetch()
-		return [logged.username for logged in all_logged]
+		data = memcache.get("all_logged_usernames")
+		if data is not None:
+			return data
+		else:
+			all_logged = Logged().query().fetch()
+			data = [logged.username for logged in all_logged]
+			memcache.add("all_logged_usernames", data)
+			return data
 
 	def get_all_registered_usernames(self):
-		all_registered = RegisteredUser().query().fetch()
-		return [registered.username for registered in all_registered]
+		data = memcache.get("all_registered_usernames")
+		if data is not None:
+			return data
+		else:
+			all_registered = RegisteredUser().query().fetch()
+			data = [registered.username for registered in all_registered]
+			memcache.add("all_registered_usernames", data)
+			return data
 
 	def user_in_database(self, cookie):
 		if cookie:
@@ -100,6 +131,8 @@ class Logged(ndb.Model):
 			MyLogs("User already in Logged ndb:", self.username)
 		else:
 			self.put()
+			memcache.delete("all_logged")
+			memcache.delete("all_logged_usernames")
 			MyLogs("User added to Logged ndb:", self.username)
 
 class RegisteredUser(ndb.Model):
@@ -112,6 +145,8 @@ class RegisteredUser(ndb.Model):
 			MyLogs("User already in Registered ndb:", self.username)
 		else:
 			self.put()
+			memcache.delete("all_registered")
+			memcache.delete("all_registered_usernames")
 			MyLogs("User added to Registered ndb:", self.username)
 	
 class Cookie():
