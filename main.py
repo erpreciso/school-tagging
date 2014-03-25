@@ -46,6 +46,18 @@ class Support():
 			MyLogs("Return list of logged from db", result)
 			return result
 	
+	def send_list_of_students(self, requester):
+		lst = [user["username"] for user in Support().get_all_logged() \
+						if user["role"] == "student"]
+		
+		message = {
+			"type": "students list",
+			"list": lst,
+			}
+		message = json.dumps(message)
+		channel.send_message(requester, message)
+		
+		
 	def get_all_registered(self):
 		"""return list of {role, username, hashpassword} of registered"""
 		data = memcache.get("all_registered")
@@ -558,6 +570,7 @@ class ExerciseRequestHandler(MainHandler):
 			exercise_number = int(self.request.get("exercise_number"))
 			exercise = get_all_exercises()[exercise_number]
 			broadcast_exercise_to_students(exercise)
+			Support().send_list_of_students(cookie.username)
 		else:
 			self.redirect("/login")
 

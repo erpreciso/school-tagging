@@ -53,20 +53,54 @@ function clear_messages() {
 function select_sentence () {
 	var chosen = $("#chosen_sentence").val();
 	$("#exercise_list").remove();
-	$("#select_sentence").remove()
-	send_exercise_request(chosen);
-}
-
-function send_exercise_request(exercise_number) {
-	$.post("/exercise_request", {"exercise_number": exercise_number});
+	$("#select_sentence").remove();
+	$("#exercise_area").append("<div id='dashboard'></div>");
+	$.post("/exercise_request", {"exercise_number": chosen});
 }
 
 function ask_exercises_list() {
 	$.get("/exercise_list_request");
 }
 
+
+
+function build_dashboard () {
+	//~ write the exercise
+		//~ the content
+		//~ the type, scope
+	//~ write the classroom stats
+	//~ for each student
+		//~ write the student detail
+			//~ exercise content (live)
+			//~ exercise status (live)
+			
+}
+
+function update_student_detail () {
+	//~ update the exercise content area in the student detail dashboard
+	//~ update the exercise status
+	//~ update the classroom stats
+}
+
+function update_classroom_stats () {
+		//~ update classroom stats based on input received from a single student
+}
+
 onMessage = function(message) {
 	var data = JSON.parse(message.data);
+	if (data.type == "students list") {
+		var dashboard = "<div id='student_list'>";
+		for (var i = 0; i < data.list.length; i++) {
+			var box = "<div class='student' id='";
+			box += data.list[i];
+			box += "'>" + data.list[i];
+			box += exercise;
+			box += "</div>";
+			dashboard += box;
+		}
+		dashboard += "</div>";
+		$("#exercise_area").append(dashboard);
+	}
 	if (data.type == "msg") {
 		var msg = "<div class='msg'>";
 		msg += data.timestamp + " | ";
