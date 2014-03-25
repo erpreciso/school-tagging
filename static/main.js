@@ -1,9 +1,13 @@
 $(document).ready(function() {
-	
+	var role = $("#role").text();
 	$("#send_message").on("click", send_message);
 	$("#clear_messages").on("click", clear_messages);
-	$("#ask_exercises_list").on("click", ask_exercises_list);
-	
+	//~ $("#build_dashboard").on("click", build_dashboard);
+	if (role == "teacher") {
+		build_dashboard();
+		get_logged_list();
+		get_exercise_list();
+	}
 	
 	});
 
@@ -32,8 +36,8 @@ function sentence_clicked (event) {
 	var button = "<button id='select_sentence'>Send exercise</button>";
 	$("#select_sentence").remove();
 	$("#chosen_sentence").remove();
-	$("#exercise_area").append(button);
-	$("#exercise_area").append("<div id='chosen_sentence'></div>");
+	$("#working_area").append(button);
+	$("#working_area").append("<div id='chosen_sentence'></div>");
 	$("#chosen_sentence")
 		.css("display", "none")
 		.val(triggered);
@@ -54,21 +58,58 @@ function select_sentence () {
 	var chosen = $("#chosen_sentence").val();
 	$("#exercise_list").remove();
 	$("#select_sentence").remove();
-	$("#exercise_area").append("<div id='dashboard'></div>");
+	$("#working_area").append("<div id='dashboard'></div>");
 	$.post("/exercise_request", {"exercise_number": chosen});
 }
 
-function ask_exercises_list() {
+function get_logged_list() {
+	$.get("/get_logged");
+}
+
+function build_student_detail(students_list) {
+	$("#student_detail").append(students_list);
+	//~ TODO
+}
+
+function get_exercise_list() {
 	$.get("/exercise_list_request");
 }
 
-function build_student_exercise_ui () {
-	//~ write the instructions
-	//~ write the exercise
-	//~ append on click function to select and send
+function build_exercises_list(exercises_list) {
+	var exercise = "<div id='exercise_list_title'>List of available exercises</div>";
+	for (var i = 0; i < exercises_list.length; i++) {
+		exercise += "<div class='sentence' id='" + i;
+		exercise += "'>" + exercises_list[i].sentence + "</div> ";
+	}
+	$("#exercise_list").append(exercise);
+	$(".sentence").on("click", sentence_clicked);
 }
 
-function build_dashboard () {
+function build_dashboard() {
+	//~ <dashboard>
+		//~ <exercise_list>
+		//~ <classroom_stats>
+		//~ <student_detail>
+	var dashboard = document.createElement("div");
+	$(dashboard).attr("id", "dashboard");
+	var exercise_list = document.createElement("div");
+	$(exercise_list)
+		.attr("id", "exercise_list")
+		.append('<div class="title">Exercise list area</div>');
+	var classroom_stats = document.createElement("div");
+	$(classroom_stats)
+		.attr("id", "classroom_stats")
+		.append('<div class="title">Classroom statistics area</div>');
+	var student_detail = document.createElement("div");
+	$(student_detail)
+		.attr("id", "student_detail")
+		.append('<div class="title">Student details area</div>');
+	$(dashboard).append(exercise_list);
+	$(dashboard).append(classroom_stats);
+	$(dashboard).append(student_detail);
+	
+	$("#working_area").append(dashboard);
+	
 	//~ write the exercise
 		//~ the content
 		//~ the type, scope
@@ -77,7 +118,12 @@ function build_dashboard () {
 		//~ write the student detail
 			//~ exercise content (live)
 			//~ exercise status (live)
-			
+}
+
+function build_student_exercise_ui () {
+	//~ write the instructions
+	//~ write the exercise
+	//~ append on click function to select and send
 }
 
 function update_student_detail () {
@@ -121,17 +167,18 @@ function update_connected_users_list (username, role, status) {
 onMessage = function(message) {
 	var data = JSON.parse(message.data);
 	if (data.type == "students list") {
-		var dashboard = "<div id='student_list'>";
-		for (var i = 0; i < data.list.length; i++) {
-			var box = "<div class='student' id='";
-			box += data.list[i];
-			box += "'>" + data.list[i];
-			box += exercise;
-			box += "</div>";
-			dashboard += box;
-		}
-		dashboard += "</div>";
-		$("#exercise_area").append(dashboard);
+		build_student_detail(data.list);
+		//~ var dashboard = "<div id='student_list'>";
+		//~ for (var i = 0; i < data.list.length; i++) {
+			//~ var box = "<div class='student' id='";
+			//~ box += data.list[i];
+			//~ box += "'>" + data.list[i];
+			//~ box += exercise;
+			//~ box += "</div>";
+			//~ dashboard += box;
+		//~ }
+		//~ dashboard += "</div>";
+		//~ $("#working_area").append(dashboard);
 	}
 	if (data.type == "msg") {
 		append_message(data.timestamp, data.username, data.message);
@@ -168,22 +215,24 @@ onMessage = function(message) {
 		}
 		exercise += target;
 		exercise += "</div>";
-		$("#exercise_area").append(exercise);
+		$("#working_area").append(exercise);
 		if (role == "student") {
 			$(".word").on("click", word_clicked);
 		}
 	}
 	else if (data.type == "exercises list") {
-		$("#exercise_list").remove();
-		var exercise = "<div id='exercise_list'>";
-		exercise += "<div id='exercise_list_title'>List of available exercises</div>";
-		for (var i = 0; i < data.message.length; i++) {
-			exercise += "<div class='sentence' id='" + i;
-			exercise += "'>" + data.message[i].sentence + "</div> ";
-		}
-		exercise += "</div>";
-		$("#exercise_area").append(exercise);
-		$(".sentence").on("click", sentence_clicked);
+		build_exercises_list(data.message);
+		//~ $("#exercise_list").remove();
+		//~ var exercise = "<div id='exercise_list'>";
+		//~ exercise += "<div id='exercise_list_title'>List of available exercises</div>";
+		//~ for (var i = 0; i < data.message.length; i++) {
+			//~ exercise += "<div class='sentence' id='" + i;
+			//~ exercise += "'>" + data.message[i].sentence + "</div> ";
+		//~ }
+		//~ exercise += "</div>";
+		//~ $("#working_area").append(exercise);
+		//~ $(".sentence").on("click", sentence_clicked);
+		
 	}
 	else if (data.type == "clear message history") {
 		clear_message_history();

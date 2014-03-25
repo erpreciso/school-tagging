@@ -56,6 +56,7 @@ class Support():
 			}
 		message = json.dumps(message)
 		channel.send_message(requester, message)
+		MyLogs("List sent to", requester)
 		
 		
 	def get_all_registered(self):
@@ -602,6 +603,17 @@ class DisconnectedHandler(MainHandler):
 		broadcast_user_connection_info(client_id, "close")
 		Support().remove_logged(client_id)
 
+class GetLoggedListHandler(MainHandler):
+	def get(self):
+		cookie = Cookie(self.get_my_cookie())
+		if Support().user_in_database(cookie.value):
+			MyLogs("Students List request from ", cookie.username)
+			Support().send_list_of_students(cookie.username)
+		else:
+			self.redirect("/login")
+		
+		
+		
 app = webapp2.WSGIApplication([
     ('/', LoginPageHandler),
     ('/signup', SignupPageHandler),
@@ -615,4 +627,5 @@ app = webapp2.WSGIApplication([
     ('/exercise_request', ExerciseRequestHandler),
     ('/clear_messages', ClearMessagesHandler),
     ("/word_clicked", WordChosenHandler),
+    ("/get_logged", GetLoggedListHandler),
 	], debug=True)
