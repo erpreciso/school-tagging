@@ -62,7 +62,11 @@ function ask_exercises_list() {
 	$.get("/exercise_list_request");
 }
 
-
+function build_student_exercise_ui () {
+	//~ write the instructions
+	//~ write the exercise
+	//~ append on click function to select and send
+}
 
 function build_dashboard () {
 	//~ write the exercise
@@ -86,6 +90,34 @@ function update_classroom_stats () {
 		//~ update classroom stats based on input received from a single student
 }
 
+function append_message (timestamp, username, message) {
+	var msg = "<div class='msg'>";
+		msg += timestamp + " | ";
+		msg += username + " | ";
+		msg += "<strong>" + message + "</strong>";
+		msg += "</div>";
+		$("#all_messages").append(msg);
+}
+
+function clear_message_history () {
+	$("#all_messages").empty();
+}
+
+function update_connected_users_list (username, role, status) {
+	if (status == "connected user") {
+		var user = "<div class='user' id='" + username;
+		user += "'><div><strong>";
+		user += role;
+		user += "</strong></div><div>";
+		user += username;
+		user += "</div></div>";
+		$("#userlist").append(user);
+	}
+	else if (status == "disconnected user") {
+		$("#" + username).remove();
+	}
+}
+
 onMessage = function(message) {
 	var data = JSON.parse(message.data);
 	if (data.type == "students list") {
@@ -102,24 +134,19 @@ onMessage = function(message) {
 		$("#exercise_area").append(dashboard);
 	}
 	if (data.type == "msg") {
-		var msg = "<div class='msg'>";
-		msg += data.timestamp + " | ";
-		msg += data.username + " | ";
-		msg += "<strong>" + data.message + "</strong>";
-		msg += "</div>";
-		$("#all_messages").append(msg);
+		append_message(data.timestamp, data.username, data.message);
 	}
 	else if (data.type == "connected user") {
-		var user = "<div class='user' id='" + data.username;
-		user += "'><div><strong>";
-		user += data.role;
-		user += "</strong></div><div>";
-		user += data.username;
-		user += "</div></div>";
-		$("#userlist").append(user);
+		update_connected_users_list(
+				data.username,
+				data.role,
+				"connected user");
 	}
 	else if (data.type == "disconnected user") {
-		$("#" + data.username).remove();
+		update_connected_users_list(
+				data.username,
+				data.role,
+				"disconnected user");
 	}
 	else if (data.type == "exercise") {
 		var role = $("#role").text();
@@ -159,7 +186,7 @@ onMessage = function(message) {
 		$(".sentence").on("click", sentence_clicked);
 	}
 	else if (data.type == "clear message history") {
-		$("#all_messages").empty();
+		clear_message_history();
 	}
 	//~ alert(JSON.stringify(message));
 }
