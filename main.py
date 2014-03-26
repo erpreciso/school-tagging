@@ -571,7 +571,6 @@ class ExerciseRequestHandler(MainHandler):
 			exercise_number = int(self.request.get("exercise_number"))
 			exercise = get_all_exercises()[exercise_number]
 			broadcast_exercise_to_students(exercise)
-			Support().send_list_of_students(cookie.username)
 		else:
 			self.redirect("/login")
 
