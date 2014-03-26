@@ -27,6 +27,18 @@ class Support():
 				MyLogs("Memcache set failed:", username, ":logged")
 			return data
 	
+	def get_role_from_registered(self, username):
+		role = None
+		for user in Support().get_all_registered():
+			if user["username"] == username:
+				role = user["role"]
+		if role:
+			MyLogs("Role retrieved for ", username)
+			return role
+		else:
+			MyLogs("Role not existing for ", username)
+			return role
+		
 	def get_the_teacher(self):
 		"""return the username of the teacher"""
 		all_logged = Support().get_all_logged()
@@ -71,8 +83,7 @@ class Support():
 		message = json.dumps(message)
 		channel.send_message(requester, message)
 		MyLogs("List sent to", requester)
-		
-		
+
 	def get_all_registered(self):
 		"""return list of {role, username, hashpassword} of registered"""
 		data = memcache.get("all_registered")
@@ -192,7 +203,6 @@ class Cookie():
 		self.password = self.value.split("|")[2]
 		self.salt = self.value.split("|")[3]
 		self.hashpassword = self.password + "|" + self.salt
-		#~ MyLogs("Info extracted from cookie")
 
 class MyLogs():
 	def __init__(self, *a):
@@ -514,7 +524,6 @@ class LoginPageHandler(MainHandler):
 		self.clear_my_cookie()
 		username = self.request.get("username")
 		userpassword = self.request.get("password")
-		role = self.request.get("role")
 		if username == "" or userpassword == "":
 			self.write_login(login_error = "Invalid login")
 		else:
@@ -524,6 +533,7 @@ class LoginPageHandler(MainHandler):
 				login_password = make_pw_hash(username, userpassword, salt)
 				if login_password == db_password:
 					
+					role = Support().get_role_from_registered(username)
 					cookie = Cookie()
 					cookie.set_value(role, username, login_password)
 					cookie.send(self)
@@ -555,6 +565,8 @@ class WelcomePageHandler(MainHandler):
 	def get(self):
 		cookie = Cookie(self.get_my_cookie())
 		if cookie.value:
+			#~ controlla sia loggato, altrimenti inseriscilo nei loggati
+			
 			if Support().user_in_database(cookie.value):
 				all_logged = Support().get_all_logged()
 				if not cookie.username in [user["username"] for user in all_logged]:
@@ -627,7 +639,6 @@ class WordChosenHandler(MainHandler):
 			send_message_to_teacher(message)
 		else:
 			self.redirect("/login")
-	
 	
 class ClearMessagesHandler(MainHandler):
 	def get(self):
