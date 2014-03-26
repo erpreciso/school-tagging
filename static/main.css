@@ -65,11 +65,18 @@ footer {
 
 #exercise #instructions {
 	font-size: 0.8em;
+	font-weight: bold;
 	}
 
 #exercise #target {
 	font-size: 1.5em;
 	color: red;
+	background-color: #ECEBED;
+	}
+
+.correct {
+	font-size: 1.2em;
+	color: green;
 	}
 
 .student_dashboard .name {

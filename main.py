@@ -205,6 +205,9 @@ TODO = """
 -- activity for each student
 --- exercise delivered
 --- response
+- don't send the exercise answer!
+- logged datastore is not working (dups, memcache)
+- recast exercises functions
 - remove teacher/student drop down in the login page
 - implement memcache also for messages
 - when a channel is closed, remove the user from the LOGGED list.
@@ -221,24 +224,34 @@ TODO = """
 
 EXERCISES_POOL = [
 	{
+		"id": 1,
 		"sentence": "Of course, no man is entirely in his right mind at any time.",
-		"to find": "article",
+		"to find": "verb",
+		"answer": 4,
 		},
 	{
+		"id": 2,
 		"sentence": "Early to rise and early to bed makes a male healthy and wealthy and dead.",
-		"to find": "pronom",
+		"to find": "article",
+		"answer": 8,
 		},
 	{
+		"id": 3,
 		"sentence": "Expect nothing. Live frugally on surprise.",
-		"to find": "pronom",
+		"to find": "adverb",
+		"answer": 3,
 		},
 	{
+		"id": 4,
 		"sentence": "I'd rather be a lightning rod than a seismograph.",
 		"to find": "pronom",
+		"answer": 0,
 		},
 	{
+		"id": 5,
 		"sentence": "Children are all foreigners.",
-		"to find": "pronom",
+		"to find": "subject",
+		"answer": 0,
 		},
 	]
 
@@ -249,6 +262,8 @@ def pick_an_exercise():
 	return {
 		"sentence": exercise["sentence"],
 		"to find": exercise["to find"],
+		"answer": exercise["answer"],
+		"id": exercise["id"],
 		"words": exercise["sentence"].split(" "),
 		}
 
@@ -256,6 +271,8 @@ def get_all_exercises():
 	return [{
 		"sentence": exercise["sentence"],
 		"to find": exercise["to find"],
+		"answer": exercise["answer"],
+		"id": exercise["id"],
 		"words": exercise["sentence"].split(" "),
 		} for exercise in EXERCISES_POOL]
 
@@ -607,7 +624,6 @@ class WordChosenHandler(MainHandler):
 					"choice": word_number,
 					},
 				}
-			#~ message = json.dumps(message)
 			send_message_to_teacher(message)
 		else:
 			self.redirect("/login")

@@ -27,7 +27,7 @@ function loghtml(){
 function word_clicked (event) {
 	var triggered = event.target.id;
 	var base_color = $("#target #" + triggered).css("background-color");
-	$("#target").children().css("background-color", base_color);
+	$("#target").children().css("background-color", "inherit");
 	$("#target #" + triggered).css("background-color", "yellow");
 	$.post("/word_clicked", {"word_number": triggered});
 }
@@ -161,12 +161,17 @@ function update_t_student_detail (p) {
 	if (p.action == "build") {
 		var students = $("#student_detail").children(".student_dashboard");
 		for (var i = 0; i < students.length; i++) {
-			//~ var name = $(students[i]).attr("id");
 			var words = $(document.createElement("div")).attr("id", "words");
 			for (var j=0; j < p.exercise.words.length; j++) {
 				var word = $(document.createElement("div"))
 					.attr("class", "word")
+					.attr("id", j)
 					.text(p.exercise.words[j] + " ");
+				if (j == p.exercise.answer) {
+					$(word)
+						.css("font-weight", "bold");
+						//~ .attr("class", "correct");
+				}
 				$(words).append(word);
 			}
 			var exercise_content = $(document.createElement("div"))
@@ -177,7 +182,21 @@ function update_t_student_detail (p) {
 	}
 	else if (p.action == "update") {
 		var student = p.content.student;
-		mylog(p);
+		var student_dashboard = $("#student_detail #" + p.content.student);
+		var triggered = p.content.choice;
+		var base = $("#student_detail #" + student + " .exercise .word")
+				.css("background-color");
+		$("#student_detail #" + student + " .exercise #words")
+				.children().css("background-color", "inherit");
+		var answer = $("#student_detail #" + student + " .exercise #" + triggered);
+		answer.css("background-color", "yellow");
+		if (answer.css("font-weight") == "bold") {
+			var correct = '<div class="correct">Correct!</div>';
+			$("#student_detail #" + student + " .exercise_status")
+				.append(correct);
+			}
+		
+		
 	}
 	//~ update the exercise content area in the student detail dashboard
 	//~ update the exercise status
@@ -218,14 +237,12 @@ function update_connected_users_list (username, role, status) {
 
 onMessage = function(message) {
 	var data = JSON.parse(message.data);
-	//~ mylog(data);
 	if (data.type == "students list") {
 		build_t_student_detail(data.list);
 	}
 	else if (data.type == "student choice") {
 		var param = {"action": "update", "content" : data.content};
 		update_t_student_detail(param);
-		//~ mylog(param);
 	}
 	else if (data.type == "msg") {
 		append_message(data.timestamp, data.username, data.message);
