@@ -156,6 +156,92 @@ class Logged(ndb.Model):
 			memcache.delete("all_registered")
 			MyLogs("User added to Logged ndb:", self.username)
 
+class AppUser(ndb.Model):
+	username = ndb.StringProperty()
+	role = ndb.StringProperty()
+	token = ndb.StringProperty()
+	hashpassword = ndb.StringProperty()
+	login_status = ndb.StringProperty()
+	connection_status = ndb.StringProperty()
+	addtime = ndb.DateTimeProperty(auto_now_add=True)
+
+def get_all_logged():
+	""" return list of logged [{all user info}] """
+	pass
+
+def get_user_info(username):
+	""" return user info from logged list
+	input=username string
+	return {
+				role,
+				username,
+				hashpassword,
+				token,
+				login_status,
+				addtime,
+			}
+	
+	"""
+	pass
+
+def valid_user(username, password):
+	""" check if the user is entitled to login.
+	input=username string and hashpassword (password|salt)
+	return True if user is valid.
+	
+	"""
+	pass
+
+def login(user):
+	""" login the user.
+	
+	input=user ndb object
+	change the user login_status from "registered" to "logged".
+	return True if success
+	
+	"""
+	pass
+
+def logout(user):
+	""" logout the user.
+	
+	input=user ndb object
+	change the user login_status from "logged" to "out".
+	delete token
+	return True if success
+	
+	"""
+	pass
+
+def signup(user):
+	""" signup the user.
+	input=user ndb objet
+	insert in the ndb the user with login_status "registered".
+	return True if success
+	
+	"""
+	pass
+
+def connect(username):
+	""" create a token for the user by opening a channel.
+	change the connection status to "connected"
+	input=username string
+	return the token, or None
+	
+	"""
+	pass
+
+def disconnect(username):
+	""" disconnect the user by closing his channel
+	delete the token
+	change the connection status to "not connected"
+	input=username string
+	return the token, or None
+	
+	"""
+	pass
+	
+	
 class RegisteredUser(ndb.Model):
 	username = ndb.StringProperty()
 	role = ndb.StringProperty()
@@ -420,6 +506,23 @@ class MainHandler(webapp2.RequestHandler):
 	def get_my_cookie(self):
 		return self.request.cookies.get("schooltagging")
 	
+	def valid_cookie(self):
+		""" get cookie info from the server response.
+		input=server response
+		return obj containing user info, or False
+		
+		"""
+		pass
+		
+	def clear_cookie(self):
+		""" clear my cookie if existing.
+		input=server response
+		return True if cookie existed and has been eliminated,
+		return False if cookie wasn't existing
+		
+		"""
+		pass
+
 	def clear_my_cookie(self):
 		cookie = Cookie(self.request.cookies.get("schooltagging"))
 		if cookie.value:
