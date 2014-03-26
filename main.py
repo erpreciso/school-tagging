@@ -241,7 +241,43 @@ def disconnect(username):
 	"""
 	pass
 	
+class Login():
+	""" create a Login obj to manage all login stuffs """
+	username = ""
+	password = ""
+	verify_password = "foobar"
+	hashpassword = ""
+	salt = ""
+	role = ""
+	connection_status = ""
+	token = ""
+	login_status = ""
+	re_username = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
+	re_password = r"^.{3,20}$"
 	
+	def passwords_match():
+		""" return True if the two inserted psw match. """
+		return password == verify_password
+
+	def valid_re_password(self):
+		""" return True if the psw matches the regular expression. """
+		re_password = re.compile(self.re_password)
+		if re_password.match(self.password):
+			MyLogs("Password RE OK")
+			return True
+		else:
+			return False
+	
+	def valid_password(self):
+		""" return True if the password matches the two rules above. """
+		return self.valid_re_password() and password_match
+
+	def valid_username():
+		""" return True if the inserted username matchs the re. """
+		pass
+
+
+
 class RegisteredUser(ndb.Model):
 	username = ndb.StringProperty()
 	role = ndb.StringProperty()
@@ -527,9 +563,10 @@ class MainHandler(webapp2.RequestHandler):
 		cookie = Cookie(self.request.cookies.get("schooltagging"))
 		if cookie.value:
 			self.response.delete_cookie('schooltagging', path = '/')
-			MyLogs("Cookie deleted")
+			#~ MyLogs("Cookie deleted")
 		else:
-			MyLogs("Cookie not existing")
+			#~ MyLogs("Cookie not existing")
+			pass
 		
 class SignupPageHandler(MainHandler):
 	def write_signup(self,
@@ -557,9 +594,14 @@ class SignupPageHandler(MainHandler):
 
 	def post(self):
 		self.clear_my_cookie()
-		username=self.request.get("username")
-		password=self.request.get("password")
-		verify_password=self.request.get("verify")
+	
+		login = Login()
+		login.username = self.request.get("username")
+		login.password = self.request.get("password")
+		login.verify_password = self.request.get("verify")
+		
+		MyLogs("Password status:", login.valid_password())
+		
 		username_error_sw = False
 		username_error=""
 		password_missing_error_sw = False
