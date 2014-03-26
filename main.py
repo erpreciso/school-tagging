@@ -27,6 +27,20 @@ class Support():
 				MyLogs("Memcache set failed:", username, ":logged")
 			return data
 	
+	def get_the_teacher(self):
+		"""return the username of the teacher"""
+		all_logged = Support().get_all_logged()
+		result = None
+		for logged in all_logged:
+			if logged["role"] == "teacher":
+				result = logged["username"]
+		if result:
+			MyLogs("Teacher is", result)
+			return result
+		else:
+			MyLogs("No teacher found")
+			return None
+		
 	def get_all_logged(self):
 		"""return list of {role, username} of logged """
 		data = memcache.get("all_logged")
@@ -292,6 +306,12 @@ def send_message_to_user(username, message):
 	message = json.dumps(message)
 	channel.send_message(username, message)
 	MyLogs("Message", message, "delivered to", username)
+
+def send_message_to_teacher(message):
+	teacher = Support().get_the_teacher()
+	assert teacher
+	send_message_to_user(teacher, message)
+	MyLogs("Message", message, "delivered to the teacher")
 
 def broadcast_exercise_to_students(exercise):
 	for user in Support().get_all_logged():
@@ -580,6 +600,15 @@ class WordChosenHandler(MainHandler):
 		if Support().user_in_database(cookie.value):
 			word_number = int(self.request.get("word_number"))
 			MyLogs("word", word_number, "chosen from ", cookie.username)
+			message = {
+				"type": "student choice",
+				"content": {
+					"student": cookie.username,
+					"choice": word_number,
+					},
+				}
+			#~ message = json.dumps(message)
+			send_message_to_teacher(message)
 		else:
 			self.redirect("/login")
 	
