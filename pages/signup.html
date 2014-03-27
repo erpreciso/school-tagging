@@ -12,13 +12,16 @@
 		<br>
 		<label>Username</label>
 		<input type="text" name="username" value="{{username}}">
-		<div class="error">{{username_error}}</div>
+		{% if username_error %}
+		<div class="error">Invalid username</div>
+		{% endif %}
 		<label>Password</label>
 		<input type="password" name="password">
-		<div class="error">{{password_missing_error}}</div>
+		{% if password_error %}
+		<div class="error">Invalid password</div>
+		{% endif %}
 		<label>Verify Password</label>
 		<input type="password" name="verify">
-		<div class="error">{{password_match_error}}</div>
 		<input type="submit" value="Register my data">
 	</form>
 	<hr>

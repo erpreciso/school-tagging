@@ -135,10 +135,7 @@ class Support():
 		entity.key.delete()
 		MyLogs("Removed from Logged ndb:", username)
 
-	def create_a_channel(self, username):
-		token = channel.create_channel(username)
-		MyLogs("Channel created for ", username)
-		return token
+	
 
 class Logged(ndb.Model):
 	username = ndb.StringProperty()
@@ -192,15 +189,7 @@ def valid_user(username, password):
 	"""
 	pass
 
-def login(user):
-	""" login the user.
-	
-	input=user ndb object
-	change the user login_status from "registered" to "logged".
-	return True if success
-	
-	"""
-	pass
+
 
 def logout(user):
 	""" logout the user.
@@ -213,14 +202,7 @@ def logout(user):
 	"""
 	pass
 
-def signup(user):
-	""" signup the user.
-	input=user ndb objet
-	insert in the ndb the user with login_status "registered".
-	return True if success
-	
-	"""
-	pass
+
 
 def connect(username):
 	""" create a token for the user by opening a channel.
@@ -255,28 +237,98 @@ class Login():
 	re_username = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 	re_password = r"^.{3,20}$"
 	
-	def passwords_match():
-		""" return True if the two inserted psw match. """
-		return password == verify_password
+	def __init__(self, salt=""):
+		self.salt = salt or self.make_salt()
 
-	def valid_re_password(self):
+	def make_salt(self):
+		return ''.join(random.choice(string.letters) for x in xrange(5))
+	
+	def make_hashpassword(self):
+		cript = self.username + self.password + self.salt
+		encr_password = hashlib.sha256(cript).hexdigest()
+		self.hashpassword = "%s|%s" % (encr_password, self.salt)
+	
+	#~ def valid_password(self, password):
+		#~ return self.hashpassword == make_pw_hash(self.username, password, self.salt)
+	
+	#~ def __setattr__(self, name, value):
+		#~ if name == "password":
+			#~ self.hashpassword = self.make_hashpassword()
+		
+	def two_passwords_match(self):
+		""" return True if the two inserted psw match. """
+		match = self.password == self.verify_password
+		if match:
+			return True
+		else:
+			MyLogs("The two passwords don't match")
+
+	def password_matches_re(self):
 		""" return True if the psw matches the regular expression. """
 		re_password = re.compile(self.re_password)
 		if re_password.match(self.password):
-			MyLogs("Password RE OK")
 			return True
 		else:
+			MyLogs("Password doesn't match the regex")
 			return False
 	
-	def valid_password(self):
-		""" return True if the password matches the two rules above. """
-		return self.valid_re_password() and password_match
+	def password_is_valid(self):
+		""" return True if the password matches the two rules above.
+		also setup the hashpassword.
+		
+		"""
+		result = self.password_matches_re() and self.two_passwords_match()
+		if result:
+			self.make_hashpassword()
+			return True
+		else:
+			MyLogs("Password rejected. See log above")
+			return False
 
-	def valid_username():
+	def username_is_valid(self):
 		""" return True if the inserted username matchs the re. """
+		re_username = re.compile(self.re_username)
+		if re_username.match(self.username):
+			return True
+		else:
+			MyLogs("Username rejected (it doesn't match the regex)")
+			return False
+	
+	def build_channel(self):
+		""" creates a channel and return the token. """
+		token = channel.create_channel(self.username)
+		if token:
+			self.token = token
+			return True
+		else:
+			MyLogs("Channel creation failure")
+			return False
+
+	def signup(self):
+		""" signup the login.
+		insert the user in the ndb with login_status "registered".
+		return the ndb key
+		
+		"""
+		
+		new_user = AppUser()
+		new_user.username = self.username
+		new_user.role = self.role
+		new_user.hashpassword = self.hashpassword
+		new_user.login_status = "registered"
+		key = new_user.put()
+		return key
+
+	def login(user):
+		""" login the user.
+		
+		input=user ndb object
+		change the user login_status from "registered" to "logged".
+		create the channel for the API
+		return True if success
+		
+		"""
 		pass
-
-
 
 class RegisteredUser(ndb.Model):
 	username = ndb.StringProperty()
@@ -511,17 +563,6 @@ def send_message_of_user_connection_info(target_user, status, role, recipient):
 	channel.send_message(recipient, message)
 	MyLogs("Message that the user is ", status, " delivered to ", recipient)
 
-def make_salt():
-	return ''.join(random.choice(string.letters) for x in xrange(5))
-
-def make_pw_hash(name, pw, salt = None):
-	if not salt:
-		salt = make_salt()
-	h = hashlib.sha256(name + pw + salt).hexdigest()
-	return "%s|%s" % (h,salt)
-
-def valid_pw(name, pw, h, salt):
-	return h == make_pw_hash(name, pw, salt)
 
 class MainHandler(webapp2.RequestHandler):
 	template_dir = os.path.join(os.path.dirname(__file__), 'pages')
@@ -570,24 +611,16 @@ class MainHandler(webapp2.RequestHandler):
 		
 class SignupPageHandler(MainHandler):
 	def write_signup(self,
-				username="",
-				username_error="",
-				password_missing_error_sw=False,
-				password_match_error_sw=False,
-				):
-		if password_missing_error_sw:
-			password_missing_error="That wasn't a valid password."
-		else:
-			password_missing_error=""
-		if password_match_error_sw:
-			password_match_error="Your passwords didn't match."
-		else:
-			password_match_error=""
-		self.render_page("signup.html",username = username,
-						username_error = username_error,
-						password_missing_error = password_missing_error,
-						password_match_error = password_match_error,
-						)
+			username = "",
+			valid_username = True,
+			valid_password = True,
+			):
+		self.render_page(
+				"signup.html",
+				username = username,
+				username_error = not valid_username,
+				password_error = not valid_password,
+				)
 
 	def get(self):
 		self.write_signup()
@@ -599,60 +632,29 @@ class SignupPageHandler(MainHandler):
 		login.username = self.request.get("username")
 		login.password = self.request.get("password")
 		login.verify_password = self.request.get("verify")
-		
-		MyLogs("Password status:", login.valid_password())
-		
-		username_error_sw = False
-		username_error=""
-		password_missing_error_sw = False
-		password_match_error_sw = False
-		username_re = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
-		if username == "" or username_re.match(username) == None:
-			username_error = "That's not a valid username."
-			username_error_sw = True
-		if password == "":
-			password_missing_error_sw = True
-		password_re = re.compile(r"^.{3,20}$")
-		if password_re.match(password) == None:
-			password_missing_error_sw = True
-		if password != verify_password:
-			password_match_error_sw = True
-		if password_match_error_sw or username_error_sw or password_missing_error_sw:
-			self.write_signup(username,
-						username_error,
-						password_missing_error_sw,
-						password_match_error_sw,
-						)
-		else:
-			all_registered = Support().get_all_registered()
-			if username in [user["username"] for user in all_registered]:
-				username_error = "That user already exists"
-				self.write_signup(username,
-						username_error,
-						password_missing_error_sw,
-						password_match_error_sw,
-						)
-			else:
-				MyLogs("No errors, user allowed to be registered")
-				role = self.request.get("role")
-				hashpassword = make_pw_hash(username, password)
-				new_user = RegisteredUser(
-					username = username,
-					hashpassword = hashpassword,
-					role = role,
-					)
-				new_user.add()
-				token = Support().create_a_channel(username)
-				new_logged = Logged(
-								username = username,
-								role = role,
-								token = token
-								)
-				new_logged.add()
+		login.role = self.request.get("role")
+
+		#~ if login.user_already_registered():
+			#~ write error that user is already in database
+
+		if login.username_is_valid() and login.password_is_valid():
+			#~ create the token
+
+			if login.signup():
+				login.login()
 				cookie = Cookie()
-				cookie.set_value(role, username, hashpassword)
+				cookie.set_value(login.role, login.username, login.hashpassword)
 				cookie.send(self)
 				self.redirect("/welcome")
+			else:
+				MyLogs("Signup didn't work")
+				self.writeout("OOOPS")
+
+		else:
+			#~ write login page with alerts that username or password are invalid
+			pass
+
+				
 				
 class LoginPageHandler(MainHandler):
 	def write_login(self, username = "", login_error = ""):
