@@ -310,7 +310,6 @@ class Login():
 		return the ndb key
 		
 		"""
-		
 		new_user = AppUser()
 		new_user.username = self.username
 		new_user.role = self.role
@@ -319,16 +318,37 @@ class Login():
 		key = new_user.put()
 		return key
 
-	def login(user):
+	def login(self):
 		""" login the user.
 		
 		input=user ndb object
 		change the user login_status from "registered" to "logged".
+		change it in the db
 		create the channel for the API
 		return True if success
 		
 		"""
-		pass
+		self.build_channel()
+		self.login_status = "logged"
+		self.update_db_attr("login_status")
+	
+	def get_user_from_db(self):
+		q = AppUser.query(AppUser.username == self.username)
+		if q.get():
+			ndbuser = q.get()
+			return ndbuser
+		else:
+			MyLogs("User", self.username, "not in ndb")
+			return None
+		
+	def update_db_attr(self, attribute):
+		appuser = self.get_user_from_db()
+		setattr(appuser, attribute, getattr(self, attribute))
+		if appuser.put():
+			return True
+		else:
+			MyLogs("Login status update not successful")
+			return False
 
 class RegisteredUser(ndb.Model):
 	username = ndb.StringProperty()
