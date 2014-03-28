@@ -631,54 +631,6 @@ class MainHandler(webapp2.RequestHandler):
 			return True
 		else:
 			return False
-		
-class SignupPageHandler(MainHandler):
-	
-	error = ""
-	
-	def write_signup(self):
-		self.render_page("signup.html", error=self.error)
-
-	def get(self):
-		self.write_signup()
-
-	def post(self):
-		self.clear_cookie()
-		error = None
-		login = Login()
-		login.username = self.request.get("username")
-		login.password = self.request.get("password")
-		login.verify_password = self.request.get("verify")
-		login.role = self.request.get("role")
-		if not login.username_already_existing():
-			MyLogs("username not yet existing. move ahead")
-			if login.username_is_valid():
-				MyLogs("username is valid. move ahead")
-				if login.password_is_valid():
-					MyLogs("password is valid. move ahead")
-					if login.signup():
-						MyLogs("signup succesful. move ahead")
-						if login.login():
-							MyLogs("also login success!cookie now, and go")
-							cookie = Cookie()
-							cookie.set_value(
-										login.role,
-										login.username,
-										login.hashpassword,
-										)
-							cookie.send(self)
-							self.redirect("/welcome")
-						else:
-							self.error = "Login didn't work. Try again"
-					else:
-						self.error = "Signup didn't work. Try again"
-				else:
-					self.error = "Password not valid"
-			else:
-				self.error = "Username not valid"
-		else:
-			self.error = "Username already existing"
-		self.write_signup()
 
 
 class LoginPageHandler(MainHandler):
@@ -838,13 +790,65 @@ class GetLoggedListHandler(MainHandler):
 			Support().send_list_of_students(cookie.username)
 		else:
 			self.redirect("/login")
+
+class LoginPageHandler(MainHandler):
+	
+	error = ""
+	
+	def write_signup(self):
+		self.render_page("signup.html", error=self.error)
 		
+	def get(self, action):
+		if action == "up":
+			self.write_signup()
 		
+	def post(self, action):
+		if action == "up":
+			self.signup()
 		
+	def signup(self):
+		self.clear_cookie()
+		error = None
+		login = Login()
+		login.username = self.request.get("username")
+		login.password = self.request.get("password")
+		login.verify_password = self.request.get("verify")
+		login.role = self.request.get("role")
+		if not login.username_already_existing():
+			MyLogs("username not yet existing. move ahead")
+			if login.username_is_valid():
+				MyLogs("username is valid. move ahead")
+				if login.password_is_valid():
+					MyLogs("password is valid. move ahead")
+					if login.signup():
+						MyLogs("signup succesful. move ahead")
+						if login.login():
+							MyLogs("also login success!cookie now, and go")
+							cookie = Cookie()
+							cookie.set_value(
+										login.role,
+										login.username,
+										login.hashpassword,
+										)
+							cookie.send(self)
+							self.redirect("/welcome")
+						else:
+							self.error = "Login didn't work. Try again"
+					else:
+						self.error = "Signup didn't work. Try again"
+				else:
+					self.error = "Password not valid"
+			else:
+				self.error = "Username not valid"
+		else:
+			self.error = "Username already existing"
+		self.write_signup()
+
 app = webapp2.WSGIApplication([
     ('/', LoginPageHandler),
-    ('/signup', SignupPageHandler),
-    ('/login', LoginPageHandler),
+    ('/check/(in|out|up)', LoginPageHandler),
+    #~ ('/signup', SignupPageHandler),
+    #~ ('/login', LoginPageHandler),
     ('/welcome', WelcomePageHandler),
     ('/logout', LogoutPageHandler),
     ('/message', MessageHandler),
