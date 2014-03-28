@@ -247,14 +247,7 @@ class Login():
 		cript = self.username + self.password + self.salt
 		encr_password = hashlib.sha256(cript).hexdigest()
 		self.hashpassword = "%s|%s" % (encr_password, self.salt)
-	
-	#~ def valid_password(self, password):
-		#~ return self.hashpassword == make_pw_hash(self.username, password, self.salt)
-	
-	#~ def __setattr__(self, name, value):
-		#~ if name == "password":
-			#~ self.hashpassword = self.make_hashpassword()
-		
+
 	def two_passwords_match(self):
 		""" return True if the two inserted psw match. """
 		match = self.password == self.verify_password
@@ -316,6 +309,7 @@ class Login():
 		new_user.hashpassword = self.hashpassword
 		new_user.login_status = "registered"
 		key = new_user.put()
+		memcache.add("%s:appuser" % self.username, new_user)
 		return key
 
 	def login(self):
@@ -328,30 +322,37 @@ class Login():
 		return True if success
 		
 		"""
-		self.build_channel()
-		self.login_status = "logged"
-		self.update_db_attr("login_status")
+		if self.build_channel():
+			self.login_status = "logged"
+			if self.update_attr("login_status"):
+				return True
+		return False
 	
 	def username_already_existing(self):
-		if self.get_user_from_db():
+		if self.get_user():
 			return True
 		else:
 			return False
 
-	def get_user_from_db(self):
-		q = AppUser.query(AppUser.username == self.username)
-		if q.get():
-			ndbuser = q.get()
-			return ndbuser
+	def get_user(self):
+		user = memcache.get("%s:appuser" % self.username)
+		if user is not None:
+			return user
 		else:
-			MyLogs("User", self.username, "not in ndb")
-			return None
+			q = AppUser.query(AppUser.username == self.username)
+			if q.get():
+				ndbuser = q.get()
+				memcache.add("%s:appuser" % self.username, ndbuser)
+				return ndbuser
+			else:
+				return None
 		
-	def update_db_attr(self, attribute):
-		appuser = self.get_user_from_db()
+	def update_attr(self, attribute):
+		appuser = self.get_user()
 		if appuser:
 			setattr(appuser, attribute, getattr(self, attribute))
-			if appuser.put():
+			if appuser.put() and \
+					memcache.replace("%s:appuser" % self.username, appuser):
 				return True
 		MyLogs("Login status update not successful")
 		return False
@@ -632,8 +633,11 @@ class MainHandler(webapp2.RequestHandler):
 			return False
 		
 class SignupPageHandler(MainHandler):
-	def write_signup(self, error=""):
-		self.render_page("signup.html", error=error)
+	
+	error = ""
+	
+	def write_signup(self):
+		self.render_page("signup.html", error=self.error)
 
 	def get(self):
 		self.write_signup()
@@ -646,24 +650,37 @@ class SignupPageHandler(MainHandler):
 		login.password = self.request.get("password")
 		login.verify_password = self.request.get("verify")
 		login.role = self.request.get("role")
-
-		if login.username_already_existing():
-			error = "Username already existing"
-		if not login.username_is_valid() and not login.password_is_valid():
-			error = "Username / Password not valid"
-		if not login.signup():
-			error = "Signup didn't work. Try again"
-		if not error:
-			login.login()
-			cookie = Cookie()
-			cookie.set_value(login.role, login.username, login.hashpassword)
-			cookie.send(self)
-			self.redirect("/welcome")
+		if not login.username_already_existing():
+			MyLogs("username not yet existing. move ahead")
+			if login.username_is_valid():
+				MyLogs("username is valid. move ahead")
+				if login.password_is_valid():
+					MyLogs("password is valid. move ahead")
+					if login.signup():
+						MyLogs("signup succesful. move ahead")
+						if login.login():
+							MyLogs("also login success!cookie now, and go")
+							cookie = Cookie()
+							cookie.set_value(
+										login.role,
+										login.username,
+										login.hashpassword,
+										)
+							cookie.send(self)
+							self.redirect("/welcome")
+						else:
+							self.error = "Login didn't work. Try again"
+					else:
+						self.error = "Signup didn't work. Try again"
+				else:
+					self.error = "Password not valid"
+			else:
+				self.error = "Username not valid"
 		else:
-			self.write_signup(error)
+			self.error = "Username already existing"
+		self.write_signup()
 
-				
-				
+
 class LoginPageHandler(MainHandler):
 	def write_login(self, username = "", login_error = ""):
 		self.render_page(
