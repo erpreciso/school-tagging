@@ -332,6 +332,12 @@ class Login():
 		self.login_status = "logged"
 		self.update_db_attr("login_status")
 	
+	def username_already_existing(self):
+		if self.get_user_from_db():
+			return True
+		else:
+			return False
+
 	def get_user_from_db(self):
 		q = AppUser.query(AppUser.username == self.username)
 		if q.get():
@@ -343,12 +349,12 @@ class Login():
 		
 	def update_db_attr(self, attribute):
 		appuser = self.get_user_from_db()
-		setattr(appuser, attribute, getattr(self, attribute))
-		if appuser.put():
-			return True
-		else:
-			MyLogs("Login status update not successful")
-			return False
+		if appuser:
+			setattr(appuser, attribute, getattr(self, attribute))
+			if appuser.put():
+				return True
+		MyLogs("Login status update not successful")
+		return False
 
 class RegisteredUser(ndb.Model):
 	username = ndb.StringProperty()
@@ -618,61 +624,43 @@ class MainHandler(webapp2.RequestHandler):
 		return False if cookie wasn't existing
 		
 		"""
-		pass
-
-	def clear_my_cookie(self):
 		cookie = Cookie(self.request.cookies.get("schooltagging"))
 		if cookie.value:
 			self.response.delete_cookie('schooltagging', path = '/')
-			#~ MyLogs("Cookie deleted")
+			return True
 		else:
-			#~ MyLogs("Cookie not existing")
-			pass
+			return False
 		
 class SignupPageHandler(MainHandler):
-	def write_signup(self,
-			username = "",
-			valid_username = True,
-			valid_password = True,
-			):
-		self.render_page(
-				"signup.html",
-				username = username,
-				username_error = not valid_username,
-				password_error = not valid_password,
-				)
+	def write_signup(self, error=""):
+		self.render_page("signup.html", error=error)
 
 	def get(self):
 		self.write_signup()
 
 	def post(self):
-		self.clear_my_cookie()
-	
+		self.clear_cookie()
+		error = None
 		login = Login()
 		login.username = self.request.get("username")
 		login.password = self.request.get("password")
 		login.verify_password = self.request.get("verify")
 		login.role = self.request.get("role")
 
-		#~ if login.user_already_registered():
-			#~ write error that user is already in database
-
-		if login.username_is_valid() and login.password_is_valid():
-			#~ create the token
-
-			if login.signup():
-				login.login()
-				cookie = Cookie()
-				cookie.set_value(login.role, login.username, login.hashpassword)
-				cookie.send(self)
-				self.redirect("/welcome")
-			else:
-				MyLogs("Signup didn't work")
-				self.writeout("OOOPS")
-
+		if login.username_already_existing():
+			error = "Username already existing"
+		if not login.username_is_valid() and not login.password_is_valid():
+			error = "Username / Password not valid"
+		if not login.signup():
+			error = "Signup didn't work. Try again"
+		if not error:
+			login.login()
+			cookie = Cookie()
+			cookie.set_value(login.role, login.username, login.hashpassword)
+			cookie.send(self)
+			self.redirect("/welcome")
 		else:
-			#~ write login page with alerts that username or password are invalid
-			pass
+			self.write_signup(error)
 
 				
 				
