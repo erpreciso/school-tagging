@@ -181,14 +181,6 @@ def get_user_info(username):
 	"""
 	pass
 
-def valid_user(username, password):
-	""" check if the user is entitled to login.
-	input=username string and hashpassword (password|salt)
-	return True if user is valid.
-	
-	"""
-	pass
-
 
 
 def logout(user):
@@ -335,6 +327,10 @@ class Login():
 			return False
 
 	def get_user(self):
+		""" return the user object from memcache or from ndb.
+		input=the login username.
+		
+		"""
 		user = memcache.get("%s:appuser" % self.username)
 		if user is not None:
 			return user
@@ -356,6 +352,27 @@ class Login():
 				return True
 		MyLogs("Login status update not successful")
 		return False
+
+	def valid_user(self):
+		""" check if the user is entitled to login.
+		input=username string and password not hashed
+		return True if user is valid.
+		
+		"""
+		user = self.get_user()
+		if user:
+			self.salt = user.hashpassword.split("|")[1]
+			self.make_hashpassword()
+			if self.hashpassword == user.hashpassword:
+				self.role = user.role
+				return True
+			else:
+				MyLogs("Password incorrect for user", self.username)
+				MyLogs("Correct one should be", user.hashpassword)
+		else:
+			MyLogs("Username not in database")
+			return False
+
 
 class RegisteredUser(ndb.Model):
 	username = ndb.StringProperty()
@@ -633,38 +650,6 @@ class MainHandler(webapp2.RequestHandler):
 			return False
 
 
-class LoginPageHandler(MainHandler):
-	def write_login(self, username = "", login_error = ""):
-		self.render_page(
-				"login.html",
-				username = username,
-				login_error = login_error,
-				)
-
-	def get(self):
-		self.write_login()
-	
-	def post(self):
-		self.clear_my_cookie()
-		username = self.request.get("username")
-		userpassword = self.request.get("password")
-		if username == "" or userpassword == "":
-			self.write_login(login_error = "Invalid login")
-		else:
-			db_password = Support().get_password_from_database(username)
-			if db_password:
-				salt = db_password.split('|')[1]
-				login_password = make_pw_hash(username, userpassword, salt)
-				if login_password == db_password:
-					
-					role = Support().get_role_from_registered(username)
-					cookie = Cookie()
-					cookie.set_value(role, username, login_password)
-					cookie.send(self)
-
-					self.redirect("/welcome")
-			self.write_login(login_error = "Invalid login")
-
 class LogoutPageHandler(MainHandler):
 	def get(self):
 		cookie = Cookie(self.get_my_cookie())
@@ -798,17 +783,43 @@ class LoginPageHandler(MainHandler):
 	def write_signup(self):
 		self.render_page("signup.html", error=self.error)
 		
+	def write_login(self):
+		self.render_page("login.html", error=self.error)
+	
 	def get(self, action):
 		if action == "up":
 			self.write_signup()
+		elif action == "in":
+			self.write_login()
 		
 	def post(self, action):
+		self.clear_cookie()
 		if action == "up":
 			self.signup()
+		elif action == "in":
+			self.login()
 		
+	def login(self):
+		login = Login()
+		login.username = self.request.get("username")
+		login.password = self.request.get("password")
+		if login.username_is_valid():
+			if login.valid_user():
+				cookie = Cookie()
+				cookie.set_value(
+							login.role,
+							login.username,
+							login.hashpassword,
+							)
+				cookie.send(self)
+				self.redirect("/welcome")
+			else:
+				self.error = "Invalid login"
+		else:
+			self.error = "Username not valid"
+		self.write_login()
+
 	def signup(self):
-		self.clear_cookie()
-		error = None
 		login = Login()
 		login.username = self.request.get("username")
 		login.password = self.request.get("password")

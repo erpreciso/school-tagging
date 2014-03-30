@@ -5,10 +5,12 @@
 	<h2>Login</h2>
     <form method="post">
 		<label>Username</label>
-		<input type="text" name="username" value="{{username}}">
+		<input type="text" name="username">
 		<label>Password</label>
 		<input type="password" name="password">
-		<div class="error">{{login_error}}</div>
+		{% if error %}
+		<div class="error">{{error}}</div>
+		{% endif %}
 		<input type="submit" value="Login">
 	</form>
 	<hr>
