@@ -320,7 +320,13 @@ class Login():
 						self.update_attr("token"):
 				return True
 		return False
-	
+	def logout(self):
+		self.login_status = "registered"
+		if self.update_attr("login_status"):
+			return True
+		else:
+			return False
+
 	def username_already_existing(self):
 		if self.get_user():
 			return True
@@ -652,15 +658,6 @@ class MainHandler(webapp2.RequestHandler):
 		else:
 			return False
 
-class LogoutPageHandler(MainHandler):
-	def get(self):
-		cookie = Cookie(self.get_my_cookie())
-		if cookie.value:
-			broadcast_user_connection_info(cookie.username, "close")
-			self.clear_my_cookie()
-			Support().remove_logged(cookie.username)
-		self.redirect("/login")
-
 class WelcomePageHandler(MainHandler):
 	
 	def write_welcome(self, cookie, token):
@@ -774,14 +771,18 @@ class LoginPageHandler(MainHandler):
 	
 	error = ""
 	
-	def write_check_page(self, action):
-		if action == "up":
-			self.render_page("signup.html", error=self.error)
-		elif action == "in":
-			self.render_page("login.html", error=self.error)
+	def write_check_page(self, template):
+		self.render_page(template, error=self.error)
 
 	def get(self, action):
-		self.write_check_page(action)
+		if action == "up":
+			template = "signup.html"
+		elif action == "in":
+			template = "login.html"
+		elif action == "out":
+			self.logout()
+			template = "login.html"
+		self.write_check_page(template)
 		
 	def post(self, action):
 		self.clear_cookie()
@@ -808,6 +809,7 @@ class LoginPageHandler(MainHandler):
 								)
 					cookie.send(self)
 					self.redirect("/welcome")
+					return
 				else:
 					self.error = "Login didn't work. Try again"
 			else:
@@ -840,6 +842,7 @@ class LoginPageHandler(MainHandler):
 										)
 							cookie.send(self)
 							self.redirect("/welcome")
+							return
 						else:
 							self.error = "Login didn't work. Try again"
 					else:
@@ -850,15 +853,31 @@ class LoginPageHandler(MainHandler):
 				self.error = "Username not valid"
 		else:
 			self.error = "Username already existing"
-		self.write_signup()
+		self.write_check_page("up")
 
+	def logout(self):
+		cookie = Cookie(self.get_my_cookie())
+		if cookie.value:
+			MyLogs("habeamus cookie. move ahead")
+			login = Login()
+			login.username = cookie.username
+			login.hashpassword = cookie.hashpassword
+			if login.valid_user():
+				MyLogs("cookie verified. move")
+				broadcast_user_connection_info(cookie.username, "close")
+				login.logout()
+				self.clear_cookie()
+			else:
+				MyLogs("Invalid cookie")
+		else:
+			MyLogs("cookie is not existing or has not value")
+		self.redirect("/check/in")
+		
+		
 app = webapp2.WSGIApplication([
     ('/', LoginPageHandler),
     ('/check/(in|out|up)', LoginPageHandler),
-    #~ ('/signup', SignupPageHandler),
-    #~ ('/login', LoginPageHandler),
     ('/welcome', WelcomePageHandler),
-    ('/logout', LogoutPageHandler),
     ('/message', MessageHandler),
     ('/_ah/channel/connected/', ConnectedHandler),
     ('/_ah/channel/disconnected/', DisconnectedHandler),
