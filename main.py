@@ -72,17 +72,7 @@ class Support():
 			MyLogs("Return list of logged from db", result)
 			return result
 	
-	def send_list_of_students(self, requester):
-		lst = [user["username"] for user in Support().get_all_logged() \
-						if user["role"] == "student"]
-		
-		message = {
-			"type": "students list",
-			"list": lst,
-			}
-		message = json.dumps(message)
-		channel.send_message(requester, message)
-		MyLogs("List sent to", requester)
+	
 
 	def get_all_registered(self):
 		"""return list of {role, username, hashpassword} of registered"""
@@ -161,6 +151,51 @@ class AppUser(ndb.Model):
 	login_status = ndb.StringProperty()
 	connection_status = ndb.StringProperty()
 	addtime = ndb.DateTimeProperty(auto_now_add=True)
+
+class Classroom():
+	teacher = None
+	students = []
+
+	def __init__(self):
+		self.populate()
+
+	def populate(self):
+		q = AppUser.query()
+		if q:
+			for user in q:
+				if user.role == "teacher":
+					self.teacher = user
+				elif user.role == "student" and user.login_status == "logged":
+					self.students.append(user)
+			return True
+		else:
+			return False
+	def logged_students(self):
+		result = []
+		for student in self.students:
+			if student.login_status == "logged":
+				result.append(student.username)
+		return result
+
+	#~ def get_logged(self):
+#~ 
+		#~ data = memcache.get("all_logged")
+		#~ if data is not None:
+			#~ MyLogs("Return list of logged from memcache", data)
+			#~ return data
+		#~ else:
+			#~ all_logged = Logged.query().fetch()
+			#~ result = []
+			#~ for logged in all_logged:
+				#~ user = {
+					#~ "role": logged.role,
+					#~ "username": logged.username,
+					#~ }
+				#~ result.append(user)
+			#~ memcache.add("all_logged", result)
+			#~ MyLogs("Return list of logged from db", result)
+			#~ return result
+	
 
 def get_all_logged():
 	""" return list of logged [{all user info}] """
@@ -443,39 +478,6 @@ TODO = """
 
 """
 
-EXERCISES_POOL = [
-	{
-		"id": 1,
-		"sentence": "Of course, no man is entirely in his right mind at any time.",
-		"to find": "verb",
-		"answer": 4,
-		},
-	{
-		"id": 2,
-		"sentence": "Early to rise and early to bed makes a male healthy and wealthy and dead.",
-		"to find": "article",
-		"answer": 8,
-		},
-	{
-		"id": 3,
-		"sentence": "Expect nothing. Live frugally on surprise.",
-		"to find": "adverb",
-		"answer": 3,
-		},
-	{
-		"id": 4,
-		"sentence": "I'd rather be a lightning rod than a seismograph.",
-		"to find": "pronom",
-		"answer": 0,
-		},
-	{
-		"id": 5,
-		"sentence": "Children are all foreigners.",
-		"to find": "subject",
-		"answer": 0,
-		},
-	]
-
 MESSAGES = []
 
 def pick_an_exercise():
@@ -488,14 +490,7 @@ def pick_an_exercise():
 		"words": exercise["sentence"].split(" "),
 		}
 
-def get_all_exercises():
-	return [{
-		"sentence": exercise["sentence"],
-		"to find": exercise["to find"],
-		"answer": exercise["answer"],
-		"id": exercise["id"],
-		"words": exercise["sentence"].split(" "),
-		} for exercise in EXERCISES_POOL]
+
 
 def store_message(*a):
 	message = {
@@ -565,15 +560,7 @@ def send_exercise(username, exercise):
 	channel.send_message(username, message)
 	MyLogs("Exercise delivered to ", username)
 	
-def send_exercises_list(username):
-	exercises = get_all_exercises()
-	message = {
-		"type": "exercises list",
-		"message": exercises,
-		}
-	message = json.dumps(message)
-	channel.send_message(username, message)
-	MyLogs("Exercises list delivered to ", username)
+
 
 class MainHandler(webapp2.RequestHandler):
 	template_dir = os.path.join(os.path.dirname(__file__), 'pages')
@@ -594,13 +581,27 @@ class MainHandler(webapp2.RequestHandler):
 	def get_my_cookie(self):
 		return self.request.cookies.get("schooltagging")
 	
-	def valid_cookie(self):
-		""" get cookie info from the server response.
-		input=server response
-		return obj containing user info, or False
+	def valid_user(self):
+		""" check if the request is coming from a valid user.
+		return the login object if valid, else False
 		
 		"""
-		pass
+		cookie = Cookie(self.get_my_cookie())
+		if cookie.value:
+			login = Login()
+			login.username = cookie.username
+			login.hashpassword = cookie.hashpassword
+			if login.valid_user():
+				if login.login():
+					MyLogs("user is valid. go")
+					return login
+				else:
+					MyLogs("login failed. try again")
+			else:
+				MyLogs("Invalid cookie")
+		else:
+			MyLogs("cookie is not existing or has not value")
+		return False
 		
 	def clear_cookie(self):
 		""" clear my cookie if existing.
@@ -618,37 +619,24 @@ class MainHandler(webapp2.RequestHandler):
 
 class WelcomePageHandler(MainHandler):
 	
-	def write_welcome(self, cookie, token):
+	def write_welcome(self, login):
 		self.render_page(
 					"welcome.html",
-					username = cookie.username,
-					role = cookie.role,
-					token = token,
+					username = login.username,
+					role = login.role,
+					token = login.token,
 					#~ logged = Support().get_all_logged(),
 					#~ messages = get_all_messages(),
 					#~ exercise = pick_an_exercise(),
 					)
 
 	def get(self):
-		cookie = Cookie(self.get_my_cookie())
-		if cookie.value:
-			MyLogs("habeamus cookie. move ahead")
-			login = Login()
-			login.username = cookie.username
-			login.hashpassword = cookie.hashpassword
-			if login.valid_user():
-				MyLogs("cookie verified. move")
-				if login.login():
-					MyLogs("login successful. go")
-					self.write_welcome(cookie, login.token)
-					return
-				else:
-					MyLogs("login failed. try again")
-			else:
-				MyLogs("Invalid cookie")
+		login = self.valid_user()
+		if login:
+			self.write_welcome(login)
+			return
 		else:
-			MyLogs("cookie is not existing or has not value")
-		self.redirect("/check/in")
+			self.redirect("/check/in")		
 		
 class MessageHandler(MainHandler):
 	def post(self):
@@ -661,14 +649,7 @@ class MessageHandler(MainHandler):
 		else:
 			self.redirect("/login")
 
-class ExerciseListRequestHandler(MainHandler):
-	def get(self):
-		cookie = Cookie(self.get_my_cookie())
-		if Support().user_in_database(cookie.value):
-			MyLogs("Exercise List request from ", cookie.username)
-			send_exercises_list(cookie.username)
-		else:
-			self.redirect("/login")
+
 
 class ExerciseRequestHandler(MainHandler):
 	def post(self):
@@ -726,14 +707,6 @@ class ConnectionHandler(MainHandler):
 		channel.send_message(recipient, message)
 		MyLogs("Message that the user is ", status, " delivered to ", recipient)
 
-class GetLoggedListHandler(MainHandler):
-	def get(self):
-		cookie = Cookie(self.get_my_cookie())
-		if Support().user_in_database(cookie.value):
-			MyLogs("Students List request from ", cookie.username)
-			Support().send_list_of_students(cookie.username)
-		else:
-			self.redirect("/login")
 
 class LoginPageHandler(MainHandler):
 	
@@ -841,16 +814,84 @@ class LoginPageHandler(MainHandler):
 			MyLogs("cookie is not existing or has not value")
 		self.redirect("/check/in")
 		
+class DashboardHandler(MainHandler):
+	def get(self, action):
+		login = self.valid_user()
+		if login:
+			if action == "get_logged":
+				classroom = Classroom()
+				message = {
+						"type": "students list",
+						"list": classroom.logged_students(),
+						}
+				message = json.dumps(message)
+				channel.send_message(login.username, message)
+			elif action == "exercise_list":
+				exercise = Exercise()
+				message = {
+					"type": "exercises list",
+					"message": exercise.generate_list(),
+					}
+				message = json.dumps(message)
+				MyLogs(message)
+				channel.send_message(login.username, message)
+		else:
+			self.redirect("/check/in")
 
+class Exercise():
+	list = [
+	{
+		"id": 1,
+		"sentence": "Of course, no man is entirely in his right mind at any time.",
+		"to find": "verb",
+		"answer": 4,
+		},
+	{
+		"id": 2,
+		"sentence": "Early to rise and early to bed makes a male healthy and wealthy and dead.",
+		"to find": "article",
+		"answer": 8,
+		},
+	{
+		"id": 3,
+		"sentence": "Expect nothing. Live frugally on surprise.",
+		"to find": "adverb",
+		"answer": 3,
+		},
+	{
+		"id": 4,
+		"sentence": "I'd rather be a lightning rod than a seismograph.",
+		"to find": "pronom",
+		"answer": 0,
+		},
+	{
+		"id": 5,
+		"sentence": "Children are all foreigners.",
+		"to find": "subject",
+		"answer": 0,
+		},
+	]
+
+
+	def generate_list(self):
+		return [{
+			"sentence": exercise["sentence"],
+			"to find": exercise["to find"],
+			"answer": exercise["answer"],
+			"id": exercise["id"],
+			"words": exercise["sentence"].split(" "),
+			} for exercise in self.list]
+		
+	
+	
 app = webapp2.WSGIApplication([
     ('/', LoginPageHandler),
     ('/check/(in|out|up)', LoginPageHandler),
     ('/welcome', WelcomePageHandler),
     ('/message', MessageHandler),
     ('/_ah/channel/(connected|disconnected)/', ConnectionHandler),
-    ('/exercise_list_request', ExerciseListRequestHandler),
     ('/exercise_request', ExerciseRequestHandler),
     ('/clear_messages', ClearMessagesHandler),
     ("/word_clicked", WordChosenHandler),
-    ("/get_logged", GetLoggedListHandler),
+    ("/dashboard/(get_logged|exercise_list)", DashboardHandler),
 	], debug=True)

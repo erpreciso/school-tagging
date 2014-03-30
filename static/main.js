@@ -67,7 +67,7 @@ function select_sentence () {
 }
 
 function get_logged_list() {
-	$.get("/get_logged");
+	$.get("/dashboard/get_logged");
 }
 
 function build_t_student_detail(students_list) {
@@ -94,7 +94,7 @@ function build_t_student_detail(students_list) {
 }
 
 function get_exercise_list() {
-	$.get("/exercise_list_request");
+	$.get("/dashboard/exercise_list");
 }
 
 function build_exercises_list(exercises_list) {
