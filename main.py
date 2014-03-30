@@ -181,39 +181,6 @@ def get_user_info(username):
 	"""
 	pass
 
-
-
-def logout(user):
-	""" logout the user.
-	
-	input=user ndb object
-	change the user login_status from "logged" to "out".
-	delete token
-	return True if success
-	
-	"""
-	pass
-
-
-
-def connect(username):
-	""" create a token for the user by opening a channel.
-	change the connection status to "connected"
-	input=username string
-	return the token, or None
-	
-	"""
-	pass
-
-def disconnect(username):
-	""" disconnect the user by closing his channel
-	delete the token
-	change the connection status to "not connected"
-	input=username string
-	return the token, or None
-	
-	"""
-	pass
 	
 class Login():
 	""" create a Login obj to manage all login stuffs """
@@ -229,9 +196,15 @@ class Login():
 	re_username = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 	re_password = r"^.{3,20}$"
 	
-	def __init__(self, salt=""):
+	def __init__(self, username="", salt=""):
 		self.salt = salt or self.make_salt()
-
+		if username:
+			self.username = username
+			user = self.get_user()
+			MyLogs(user)
+			self.connection_status = user.connection_status
+			
+			
 	def make_salt(self):
 		return ''.join(random.choice(string.letters) for x in xrange(5))
 	
@@ -320,7 +293,9 @@ class Login():
 						self.update_attr("token"):
 				return True
 		return False
+	
 	def logout(self):
+		self.disconnect()
 		self.login_status = "registered"
 		if self.update_attr("login_status"):
 			return True
@@ -359,6 +334,14 @@ class Login():
 				return True
 		MyLogs("attribute update", attribute,"not successful")
 		return False
+	
+	def connect(self):
+		self.connection_status = "connected"
+		self.update_attr("connection_status")
+		
+	def disconnect(self):
+		self.connection_status = "not connected"
+		self.update_attr("connection_status")
 
 	def valid_user(self):
 		""" check if the user is entitled to login.
@@ -592,31 +575,6 @@ def send_exercises_list(username):
 	channel.send_message(username, message)
 	MyLogs("Exercises list delivered to ", username)
 
-def broadcast_user_connection_info(target_user, status):
-	for user in Support().get_all_logged():
-		if user["username"] != target_user:
-			send_message_of_user_connection_info(
-					target_user,
-					status,
-					user["role"],
-					user["username"],
-					)
-	MyLogs("All messages of new connection sent")
-
-def send_message_of_user_connection_info(target_user, status, role, recipient):
-	if status == "open":
-		type = "connected user"
-	elif status == "close":
-		type = "disconnected user"
-	message = {
-		"type": type,
-		"username": target_user,
-		"role": role,
-		}
-	message = json.dumps(message)
-	channel.send_message(recipient, message)
-	MyLogs("Message that the user is ", status, " delivered to ", recipient)
-
 class MainHandler(webapp2.RequestHandler):
 	template_dir = os.path.join(os.path.dirname(__file__), 'pages')
 	jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
@@ -745,18 +703,28 @@ class ClearMessagesHandler(MainHandler):
 		clear_messages()
 		broadcast_clear_messages()
 		
-class ConnectedHandler(MainHandler):
-	def post(self):
-		client_id = self.request.get('from')
-		MyLogs("connected ID --> ", client_id)
-		broadcast_user_connection_info(client_id, "open")
+class ConnectionHandler(MainHandler):
+	def post(self, action):
+		username = self.request.get('from')
+		login = Login(username=username)
+		if action == "connected":
+			login.connect()
+		elif action == "disconnected":
+			login.disconnect()
 
-class DisconnectedHandler(MainHandler):
-	def post(self):
-		client_id = self.request.get('from')
-		MyLogs("Disconnected ID --> ", client_id)
-		broadcast_user_connection_info(client_id, "close")
-		Support().remove_logged(client_id)
+	def send_message_of_user_connection_info(target_user, status, role, recipient):
+		if status == "open":
+			type = "connected user"
+		elif status == "close":
+			type = "disconnected user"
+		message = {
+			"type": type,
+			"username": target_user,
+			"role": role,
+			}
+		message = json.dumps(message)
+		channel.send_message(recipient, message)
+		MyLogs("Message that the user is ", status, " delivered to ", recipient)
 
 class GetLoggedListHandler(MainHandler):
 	def get(self):
@@ -864,7 +832,7 @@ class LoginPageHandler(MainHandler):
 			login.hashpassword = cookie.hashpassword
 			if login.valid_user():
 				MyLogs("cookie verified. move")
-				broadcast_user_connection_info(cookie.username, "close")
+				#~ broadcast_user_connection_info(cookie.username, "close")
 				login.logout()
 				self.clear_cookie()
 			else:
@@ -873,14 +841,13 @@ class LoginPageHandler(MainHandler):
 			MyLogs("cookie is not existing or has not value")
 		self.redirect("/check/in")
 		
-		
+
 app = webapp2.WSGIApplication([
     ('/', LoginPageHandler),
     ('/check/(in|out|up)', LoginPageHandler),
     ('/welcome', WelcomePageHandler),
     ('/message', MessageHandler),
-    ('/_ah/channel/connected/', ConnectedHandler),
-    ('/_ah/channel/disconnected/', DisconnectedHandler),
+    ('/_ah/channel/(connected|disconnected)/', ConnectionHandler),
     ('/exercise_list_request', ExerciseListRequestHandler),
     ('/exercise_request', ExerciseRequestHandler),
     ('/clear_messages', ClearMessagesHandler),
