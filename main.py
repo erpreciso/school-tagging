@@ -16,133 +16,6 @@ from google.appengine.api import channel
 from google.appengine.ext import ndb
 from google.appengine.api import memcache
 
-class Support():
-	def get_from_username(self, username):
-		data = memcache.get("%s:logged" % username)
-		if data is not None:
-			return data
-		else:
-			data = Logged.query(Logged.username == username).get()
-			if not memcache.add("%s:logged" % username, data):
-				MyLogs("Memcache set failed:", username, ":logged")
-			return data
-	
-	def get_role_from_registered(self, username):
-		role = None
-		for user in Support().get_all_registered():
-			if user["username"] == username:
-				role = user["role"]
-		if role:
-			MyLogs("Role retrieved for ", username)
-			return role
-		else:
-			MyLogs("Role not existing for ", username)
-			return role
-		
-	def get_the_teacher(self):
-		"""return the username of the teacher"""
-		all_logged = Support().get_all_logged()
-		result = None
-		for logged in all_logged:
-			if logged["role"] == "teacher":
-				result = logged["username"]
-		if result:
-			MyLogs("Teacher is", result)
-			return result
-		else:
-			MyLogs("No teacher found")
-			return None
-		
-	def get_all_logged(self):
-		"""return list of {role, username} of logged """
-		data = memcache.get("all_logged")
-		if data is not None:
-			MyLogs("Return list of logged from memcache", data)
-			return data
-		else:
-			all_logged = Logged.query().fetch()
-			result = []
-			for logged in all_logged:
-				user = {
-					"role": logged.role,
-					"username": logged.username,
-					}
-				result.append(user)
-			memcache.add("all_logged", result)
-			MyLogs("Return list of logged from db", result)
-			return result
-	
-	
-
-	def get_all_registered(self):
-		"""return list of {role, username, hashpassword} of registered"""
-		data = memcache.get("all_registered")
-		if data is not None:
-			MyLogs("Return list of registered from memcache", data)
-			return data
-		else:
-			all_registered = RegisteredUser.query().fetch()
-			result = []
-			for registered in all_registered:
-				user = {
-					"role": registered.role,
-					"username": registered.username,
-					"hashpassword": registered.hashpassword,
-					}
-				result.append(user)
-			memcache.add("all_registered", result)
-			MyLogs("Return list of registered from db", result)
-			return result
-
-	def user_in_database(self, cookie):
-		if cookie:
-			c = Cookie(cookie)
-			c.extract_value()
-			for user in Support().get_all_registered():
-				MyLogs("Compare",user,"with",c.username,c.hashpassword)
-				if c.username == user["username"] and \
-					c.hashpassword == user["hashpassword"]:
-					MyLogs("User in database, cookie verified")
-					return True
-		MyLogs("User not in database, cookie verified")
-		return False
-	
-	def get_password_from_database(self, username):
-		password = None
-		for user in Support().get_all_registered():
-			if user["username"] == username:
-				password = user["hashpassword"]
-		if password:
-			MyLogs("Password retrieved for ", username)
-			return password
-		else:
-			MyLogs("Password not existing for ", username)
-			return password
-
-	def remove_logged(self, username):
-		entity = Support().get_from_username(username)
-		MyLogs("To be removed:", entity)
-		entity.key.delete()
-		MyLogs("Removed from Logged ndb:", username)
-
-	
-
-class Logged(ndb.Model):
-	username = ndb.StringProperty()
-	role = ndb.StringProperty()
-	token = ndb.StringProperty()
-	addtime = ndb.DateTimeProperty(auto_now_add=True)
-	
-	def add(self):
-		all_logged = Support().get_all_logged()
-		if self.username in [user["username"] for user in all_logged]:
-			MyLogs("User already in Logged ndb:", self.username)
-		else:
-			self.put()
-			memcache.delete("all_logged")
-			memcache.delete("all_registered")
-			MyLogs("User added to Logged ndb:", self.username)
-
 class AppUser(ndb.Model):
 	username = ndb.StringProperty()
 	role = ndb.StringProperty()
@@ -151,16 +24,32 @@ class AppUser(ndb.Model):
 	login_status = ndb.StringProperty()
 	connection_status = ndb.StringProperty()
 	addtime = ndb.DateTimeProperty(auto_now_add=True)
+	
+	def safe_put(self):
+		if memcache.flush_all():
+			MyLogs("flushed memcache")
+		self.put()
 
 class Classroom():
 	teacher = None
 	students = []
 
+	def send_connection(username, action):
+		if action == "open":
+			
+		#~ TODO send message to everyone about the new connection
+			
+			
 	def __init__(self):
 		self.populate()
 
 	def populate(self):
-		q = AppUser.query()
+		allusersquery = memcache.get("allusersquery")
+		if allusersquery is not None:
+			q = allusersquery
+		else:
+			q = AppUser.query()
+			memcache.add("allusersquery", q)
 		if q:
 			for user in q:
 				if user.role == "teacher":
@@ -170,6 +59,7 @@ class Classroom():
 			return True
 		else:
 			return False
+
 	def logged_students(self):
 		result = []
 		for student in self.students:
@@ -177,46 +67,6 @@ class Classroom():
 				result.append(student.username)
 		return result
 
-	#~ def get_logged(self):
-#~ 
-		#~ data = memcache.get("all_logged")
-		#~ if data is not None:
-			#~ MyLogs("Return list of logged from memcache", data)
-			#~ return data
-		#~ else:
-			#~ all_logged = Logged.query().fetch()
-			#~ result = []
-			#~ for logged in all_logged:
-				#~ user = {
-					#~ "role": logged.role,
-					#~ "username": logged.username,
-					#~ }
-				#~ result.append(user)
-			#~ memcache.add("all_logged", result)
-			#~ MyLogs("Return list of logged from db", result)
-			#~ return result
-	
-
-def get_all_logged():
-	""" return list of logged [{all user info}] """
-	pass
-
-def get_user_info(username):
-	""" return user info from logged list
-	input=username string
-	return {
-				role,
-				username,
-				hashpassword,
-				token,
-				login_status,
-				addtime,
-			}
-	
-	"""
-	pass
-
-	
 class Login():
 	""" create a Login obj to manage all login stuffs """
 	username = ""
@@ -238,8 +88,7 @@ class Login():
 			user = self.get_user()
 			MyLogs(user)
 			self.connection_status = user.connection_status
-			
-			
+	
 	def make_salt(self):
 		return ''.join(random.choice(string.letters) for x in xrange(5))
 	
@@ -308,7 +157,7 @@ class Login():
 		new_user.role = self.role
 		new_user.hashpassword = self.hashpassword
 		new_user.login_status = "registered"
-		key = new_user.put()
+		key = new_user.safe_put()
 		memcache.add("%s:appuser" % self.username, new_user)
 		return key
 
@@ -364,7 +213,7 @@ class Login():
 		appuser = self.get_user()
 		if appuser:
 			setattr(appuser, attribute, getattr(self, attribute))
-			if appuser.put() and \
+			if appuser.safe_put() and \
 					memcache.replace("%s:appuser" % self.username, appuser):
 				return True
 		MyLogs("attribute update", attribute,"not successful")
@@ -373,6 +222,8 @@ class Login():
 	def connect(self):
 		self.connection_status = "connected"
 		self.update_attr("connection_status")
+		classroom = Classroom()
+		classroom.send_connection(login.username, "open")
 		
 	def disconnect(self):
 		self.connection_status = "not connected"
@@ -401,22 +252,6 @@ class Login():
 			MyLogs("Username not in database")
 			return False
 
-
-class RegisteredUser(ndb.Model):
-	username = ndb.StringProperty()
-	role = ndb.StringProperty()
-	hashpassword = ndb.StringProperty()
-	
-	def add(self):
-		all_registered = Support().get_all_registered()
-		if self.username in [user["username"] for user in all_registered]:
-			MyLogs("User already in Registered ndb:", self.username)
-		else:
-			self.put()
-			memcache.delete("all_registered")
-			memcache.delete("all_logged")
-			MyLogs("User added to Registered ndb:", self.username)
-	
 class Cookie():
 	value = ""
 	username = ""
@@ -503,13 +338,6 @@ def store_message(*a):
 	MESSAGES.append(message)
 	MyLogs("Message added to db --> ", message)
 	return message
-
-def select_template(role):
-	assert role in ["student", "teacher"]
-	if role == "student":
-		return "student.html"
-	elif role == "teacher":
-		return "teacher.html"
 				
 def get_all_messages():
 	return [message for message in MESSAGES]
@@ -794,7 +622,7 @@ class LoginPageHandler(MainHandler):
 				self.error = "Username not valid"
 		else:
 			self.error = "Username already existing"
-		self.write_check_page("up")
+		self.write_check_page("login.html")
 
 	def logout(self):
 		cookie = Cookie(self.get_my_cookie())
@@ -840,38 +668,37 @@ class DashboardHandler(MainHandler):
 
 class Exercise():
 	list = [
-	{
-		"id": 1,
-		"sentence": "Of course, no man is entirely in his right mind at any time.",
-		"to find": "verb",
-		"answer": 4,
-		},
-	{
-		"id": 2,
-		"sentence": "Early to rise and early to bed makes a male healthy and wealthy and dead.",
-		"to find": "article",
-		"answer": 8,
-		},
-	{
-		"id": 3,
-		"sentence": "Expect nothing. Live frugally on surprise.",
-		"to find": "adverb",
-		"answer": 3,
-		},
-	{
-		"id": 4,
-		"sentence": "I'd rather be a lightning rod than a seismograph.",
-		"to find": "pronom",
-		"answer": 0,
-		},
-	{
-		"id": 5,
-		"sentence": "Children are all foreigners.",
-		"to find": "subject",
-		"answer": 0,
-		},
-	]
-
+		{
+			"id": 1,
+			"sentence": "Of course, no man is entirely in his right mind at any time.",
+			"to find": "verb",
+			"answer": 4,
+			},
+		{
+			"id": 2,
+			"sentence": "Early to rise and early to bed makes a male healthy and wealthy and dead.",
+			"to find": "article",
+			"answer": 8,
+			},
+		{
+			"id": 3,
+			"sentence": "Expect nothing. Live frugally on surprise.",
+			"to find": "adverb",
+			"answer": 3,
+			},
+		{
+			"id": 4,
+			"sentence": "I'd rather be a lightning rod than a seismograph.",
+			"to find": "pronom",
+			"answer": 0,
+			},
+		{
+			"id": 5,
+			"sentence": "Children are all foreigners.",
+			"to find": "subject",
+			"answer": 0,
+			},
+		]
 
 	def generate_list(self):
 		return [{
