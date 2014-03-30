@@ -316,7 +316,8 @@ class Login():
 		"""
 		if self.build_channel():
 			self.login_status = "logged"
-			if self.update_attr("login_status"):
+			if self.update_attr("login_status") and \
+						self.update_attr("token"):
 				return True
 		return False
 	
@@ -350,7 +351,7 @@ class Login():
 			if appuser.put() and \
 					memcache.replace("%s:appuser" % self.username, appuser):
 				return True
-		MyLogs("Login status update not successful")
+		MyLogs("attribute update", attribute,"not successful")
 		return False
 
 	def valid_user(self):
@@ -361,10 +362,13 @@ class Login():
 		"""
 		user = self.get_user()
 		if user:
-			self.salt = user.hashpassword.split("|")[1]
-			self.make_hashpassword()
+			if self.hashpassword == "":
+				self.salt = user.hashpassword.split("|")[1]
+				self.make_hashpassword()
 			if self.hashpassword == user.hashpassword:
 				self.role = user.role
+				self.token = user.token
+				self.connection_status = user.connection_status
 				return True
 			else:
 				MyLogs("Password incorrect for user", self.username)
@@ -607,7 +611,6 @@ def send_message_of_user_connection_info(target_user, status, role, recipient):
 	channel.send_message(recipient, message)
 	MyLogs("Message that the user is ", status, " delivered to ", recipient)
 
-
 class MainHandler(webapp2.RequestHandler):
 	template_dir = os.path.join(os.path.dirname(__file__), 'pages')
 	jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
@@ -649,7 +652,6 @@ class MainHandler(webapp2.RequestHandler):
 		else:
 			return False
 
-
 class LogoutPageHandler(MainHandler):
 	def get(self):
 		cookie = Cookie(self.get_my_cookie())
@@ -660,46 +662,38 @@ class LogoutPageHandler(MainHandler):
 		self.redirect("/login")
 
 class WelcomePageHandler(MainHandler):
-	def write_welcome(self, template, username, role, token):
+	
+	def write_welcome(self, cookie, token):
 		self.render_page(
-					template,
-					username = username,
-					role = role,
+					"welcome.html",
+					username = cookie.username,
+					role = cookie.role,
 					token = token,
-					logged = Support().get_all_logged(),
-					messages = get_all_messages(),
-					exercise = pick_an_exercise(),
+					#~ logged = Support().get_all_logged(),
+					#~ messages = get_all_messages(),
+					#~ exercise = pick_an_exercise(),
 					)
 
 	def get(self):
 		cookie = Cookie(self.get_my_cookie())
 		if cookie.value:
-			#~ controlla sia loggato, altrimenti inseriscilo nei loggati
-			
-			if Support().user_in_database(cookie.value):
-				all_logged = Support().get_all_logged()
-				if not cookie.username in [user["username"] for user in all_logged]:
-					token = Support().create_a_channel(cookie.username)
-					new_logged = Logged(
-									username = cookie.username,
-									role = cookie.role,
-									token = token
-									)
-					new_logged.add()
+			MyLogs("habeamus cookie. move ahead")
+			login = Login()
+			login.username = cookie.username
+			login.hashpassword = cookie.hashpassword
+			if login.valid_user():
+				MyLogs("cookie verified. move")
+				if login.login():
+					MyLogs("login successful. go")
+					self.write_welcome(cookie, login.token)
+					return
 				else:
-					logged = Support().get_from_username(cookie.username)
-					token = logged.token
-				template = "welcome.html"
-				self.write_welcome(
-									template,
-									cookie.username,
-									cookie.role,
-									token,
-									)
+					MyLogs("login failed. try again")
 			else:
-				self.redirect("/login")
+				MyLogs("Invalid cookie")
 		else:
-			self.redirect("/login")
+			MyLogs("cookie is not existing or has not value")
+		self.redirect("/check/in")
 		
 class MessageHandler(MainHandler):
 	def post(self):
@@ -780,17 +774,14 @@ class LoginPageHandler(MainHandler):
 	
 	error = ""
 	
-	def write_signup(self):
-		self.render_page("signup.html", error=self.error)
-		
-	def write_login(self):
-		self.render_page("login.html", error=self.error)
-	
-	def get(self, action):
+	def write_check_page(self, action):
 		if action == "up":
-			self.write_signup()
+			self.render_page("signup.html", error=self.error)
 		elif action == "in":
-			self.write_login()
+			self.render_page("login.html", error=self.error)
+
+	def get(self, action):
+		self.write_check_page(action)
 		
 	def post(self, action):
 		self.clear_cookie()
@@ -804,20 +795,26 @@ class LoginPageHandler(MainHandler):
 		login.username = self.request.get("username")
 		login.password = self.request.get("password")
 		if login.username_is_valid():
+			MyLogs("username is valid. move ahead")
 			if login.valid_user():
-				cookie = Cookie()
-				cookie.set_value(
-							login.role,
-							login.username,
-							login.hashpassword,
-							)
-				cookie.send(self)
-				self.redirect("/welcome")
+				MyLogs("user in database and entitled to login. move")
+				if login.login():
+					MyLogs("also login success!cookie now, and go")
+					cookie = Cookie()
+					cookie.set_value(
+								login.role,
+								login.username,
+								login.hashpassword,
+								)
+					cookie.send(self)
+					self.redirect("/welcome")
+				else:
+					self.error = "Login didn't work. Try again"
 			else:
 				self.error = "Invalid login"
 		else:
 			self.error = "Username not valid"
-		self.write_login()
+		self.write_check_page("in")
 
 	def signup(self):
 		login = Login()
