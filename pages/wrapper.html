@@ -45,9 +45,8 @@ school-tagging application
 		<div id="userlist">
 			<div>Who's logged in</div>
 		{% for user in logged %}
-			<div class="user" id="{{user.username}}">
-				<div><strong>{{user.role}}</strong></div>
-				<div>{{user.username}}</div>
+			<div class="user" id="{{user}}">
+				<div><strong>{{user}}</strong></div>
 			</div>
 		{% endfor %}
 		</div>

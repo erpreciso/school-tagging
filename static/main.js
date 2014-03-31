@@ -223,11 +223,7 @@ function clear_message_history () {
 function update_connected_users_list (username, role, status) {
 	if (status == "connected user") {
 		var user = "<div class='user' id='" + username;
-		user += "'><div><strong>";
-		user += role;
-		user += "</strong></div><div>";
-		user += username;
-		user += "</div></div>";
+		user += "'><strong>" + username + "</strong></div>";
 		$("#userlist").append(user);
 	}
 	else if (status == "disconnected user") {

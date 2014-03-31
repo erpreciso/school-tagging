@@ -26,21 +26,32 @@ class AppUser(ndb.Model):
 	addtime = ndb.DateTimeProperty(auto_now_add=True)
 	
 	def safe_put(self):
-		if memcache.flush_all():
-			MyLogs("flushed memcache")
-		self.put()
+		if not memcache.flush_all():
+			MyLogs("safe_put:memcache error: not flushed")
+		#~ else:
+			#~ MyLogs("safe_put:memcache flushed")
+		return self.put()
 
 class Classroom():
 	teacher = None
 	students = []
 
-	def send_connection(username, action):
+	def send_connection(self, login, action):
 		if action == "open":
-			
-		#~ TODO send message to everyone about the new connection
-			
+			type = "connected user"
+		elif action == "close":
+			type = "disconnected user"
+		message = {
+			"type": type,
+			"username": login.username,
+			"role": login.role,
+			}
+		message = json.dumps(message)
+		channel.send_message(self.teacher.username, message)
 			
 	def __init__(self):
+		self.teacher = None
+		self.students = []
 		self.populate()
 
 	def populate(self):
@@ -54,8 +65,10 @@ class Classroom():
 			for user in q:
 				if user.role == "teacher":
 					self.teacher = user
-				elif user.role == "student" and user.login_status == "logged":
-					self.students.append(user)
+				elif user.role == "student" and \
+						user.login_status == "logged" and \
+						user not in self.students:
+							self.students.append(user)
 			return True
 		else:
 			return False
@@ -86,7 +99,6 @@ class Login():
 		if username:
 			self.username = username
 			user = self.get_user()
-			MyLogs(user)
 			self.connection_status = user.connection_status
 	
 	def make_salt(self):
@@ -213,21 +225,25 @@ class Login():
 		appuser = self.get_user()
 		if appuser:
 			setattr(appuser, attribute, getattr(self, attribute))
-			if appuser.safe_put() and \
-					memcache.replace("%s:appuser" % self.username, appuser):
+			if appuser.safe_put():
 				return True
-		MyLogs("attribute update", attribute,"not successful")
+			else:
+				MyLogs("update_attr", attribute, ":safe put didn't work")
+		else:
+			MyLogs("update_attr", attribute, ":error. user not retrieved")
 		return False
 	
 	def connect(self):
 		self.connection_status = "connected"
 		self.update_attr("connection_status")
 		classroom = Classroom()
-		classroom.send_connection(login.username, "open")
+		classroom.send_connection(self, "open")
 		
 	def disconnect(self):
 		self.connection_status = "not connected"
 		self.update_attr("connection_status")
+		classroom = Classroom()
+		classroom.send_connection(self, "close")
 
 	def valid_user(self):
 		""" check if the user is entitled to login.
@@ -421,14 +437,14 @@ class MainHandler(webapp2.RequestHandler):
 			login.hashpassword = cookie.hashpassword
 			if login.valid_user():
 				if login.login():
-					MyLogs("user is valid. go")
+					MyLogs("valid_user:user is valid. go")
 					return login
 				else:
-					MyLogs("login failed. try again")
+					MyLogs("valid_user:login failed. try again")
 			else:
-				MyLogs("Invalid cookie")
+				MyLogs("valid_user:Invalid cookie")
 		else:
-			MyLogs("cookie is not existing or has not value")
+			MyLogs("valid_user:cookie is not existing or has not value")
 		return False
 		
 	def clear_cookie(self):
@@ -448,12 +464,13 @@ class MainHandler(webapp2.RequestHandler):
 class WelcomePageHandler(MainHandler):
 	
 	def write_welcome(self, login):
+		classroom = Classroom()
 		self.render_page(
 					"welcome.html",
 					username = login.username,
 					role = login.role,
 					token = login.token,
-					#~ logged = Support().get_all_logged(),
+					logged = classroom.logged_students(),
 					#~ messages = get_all_messages(),
 					#~ exercise = pick_an_exercise(),
 					)
@@ -521,19 +538,7 @@ class ConnectionHandler(MainHandler):
 		elif action == "disconnected":
 			login.disconnect()
 
-	def send_message_of_user_connection_info(target_user, status, role, recipient):
-		if status == "open":
-			type = "connected user"
-		elif status == "close":
-			type = "disconnected user"
-		message = {
-			"type": type,
-			"username": target_user,
-			"role": role,
-			}
-		message = json.dumps(message)
-		channel.send_message(recipient, message)
-		MyLogs("Message that the user is ", status, " delivered to ", recipient)
+	
 
 
 class LoginPageHandler(MainHandler):
@@ -585,7 +590,7 @@ class LoginPageHandler(MainHandler):
 				self.error = "Invalid login"
 		else:
 			self.error = "Username not valid"
-		self.write_check_page("in")
+		self.write_check_page("login.html")
 
 	def signup(self):
 		login = Login()
@@ -661,9 +666,9 @@ class DashboardHandler(MainHandler):
 					"message": exercise.generate_list(),
 					}
 				message = json.dumps(message)
-				MyLogs(message)
 				channel.send_message(login.username, message)
 		else:
+			MyLogs("user seems not valid")
 			self.redirect("/check/in")
 
 class Exercise():
