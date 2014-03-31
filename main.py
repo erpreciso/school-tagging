@@ -263,7 +263,6 @@ class Login():
 				return True
 			else:
 				MyLogs("Password incorrect for user", self.username)
-				MyLogs("Correct one should be", user.hashpassword)
 		else:
 			MyLogs("Username not in database")
 			return False
@@ -329,80 +328,71 @@ TODO = """
 
 """
 
-MESSAGES = []
 
-def pick_an_exercise():
-	exercise = EXERCISES_POOL[1]
-	return {
-		"sentence": exercise["sentence"],
-		"to find": exercise["to find"],
-		"answer": exercise["answer"],
-		"id": exercise["id"],
-		"words": exercise["sentence"].split(" "),
-		}
-
-
-
-def store_message(*a):
-	message = {
-		"username": a[0],
-		"timestamp": a[1],
-		"message": a[2],
-		"type": "msg",
-		}
-	global MESSAGES
-	MESSAGES.append(message)
-	MyLogs("Message added to db --> ", message)
-	return message
-				
-def get_all_messages():
-	return [message for message in MESSAGES]
-
-def clear_messages():
-	global MESSAGES
+class MessageTODO():
+	class ClearMessagesHandler(MainHandler):
+		def get(self):
+			clear_messages()
+			broadcast_clear_messages()
+	class MessageHandler(MainHandler):
+		def post(self):
+			cookie = Cookie(self.get_my_cookie())
+			message = self.request.get("message")
+			if Support().user_in_database(cookie.value):
+				if message:
+					broadcast_message(message, cookie.username)
+				#~ self.redirect("/welcome")
+			else:
+				self.redirect("/login")
 	MESSAGES = []
-	MyLogs("Messages list cleared")
-
-def broadcast_clear_messages():
-	for user in Support().get_all_logged():
+	def store_message(*a):
 		message = {
-					"type": "clear message history",
-					}
+			"username": a[0],
+			"timestamp": a[1],
+			"message": a[2],
+			"type": "msg",
+			}
+		global MESSAGES
+		MESSAGES.append(message)
+		MyLogs("Message added to db --> ", message)
+		return message
+					
+	def get_all_messages():
+		return [message for message in MESSAGES]
+	
+	def clear_messages():
+		global MESSAGES
+		MESSAGES = []
+		MyLogs("Messages list cleared")
+	
+	def broadcast_clear_messages():
+		for user in Support().get_all_logged():
+			message = {
+						"type": "clear message history",
+						}
+			message = json.dumps(message)
+			channel.send_message(user["username"], message)
+		MyLogs("Clear messages list broadcasted")
+	
+	def broadcast_message(message, sender):
+		timestamp = strftime("%a, %d %b %H:%M:%S",localtime())
+		message = store_message(sender, timestamp, message)
+		for user in Support().get_all_logged():
+			send_message_to_user(user["username"], message)
+		MyLogs("Message broadcasted")
+	
+	def send_message_to_user(username, message):
 		message = json.dumps(message)
-		channel.send_message(user["username"], message)
-	MyLogs("Clear messages list broadcasted")
+		channel.send_message(username, message)
+		MyLogs("Message", message, "delivered to", username)
+	
+	def send_message_to_teacher(message):
+		teacher = Support().get_the_teacher()
+		assert teacher
+		send_message_to_user(teacher, message)
+		MyLogs("Message", message, "delivered to the teacher")
+	
 
-def broadcast_message(message, sender):
-	timestamp = strftime("%a, %d %b %H:%M:%S",localtime())
-	message = store_message(sender, timestamp, message)
-	for user in Support().get_all_logged():
-		send_message_to_user(user["username"], message)
-	MyLogs("Message broadcasted")
-
-def send_message_to_user(username, message):
-	message = json.dumps(message)
-	channel.send_message(username, message)
-	MyLogs("Message", message, "delivered to", username)
-
-def send_message_to_teacher(message):
-	teacher = Support().get_the_teacher()
-	assert teacher
-	send_message_to_user(teacher, message)
-	MyLogs("Message", message, "delivered to the teacher")
-
-def broadcast_exercise_to_students(exercise):
-	for user in Support().get_all_logged():
-		send_exercise(user["username"], exercise)
-	MyLogs("Exercise broadcasted")
-
-def send_exercise(username, exercise):
-	message = {
-		"type": "exercise",
-		"message": exercise,
-		}
-	message = json.dumps(message)
-	channel.send_message(username, message)
-	MyLogs("Exercise delivered to ", username)
 	
 
 
@@ -437,7 +427,6 @@ class MainHandler(webapp2.RequestHandler):
 			login.hashpassword = cookie.hashpassword
 			if login.valid_user():
 				if login.login():
-					MyLogs("valid_user:user is valid. go")
 					return login
 				else:
 					MyLogs("valid_user:login failed. try again")
@@ -483,29 +472,11 @@ class WelcomePageHandler(MainHandler):
 		else:
 			self.redirect("/check/in")		
 		
-class MessageHandler(MainHandler):
-	def post(self):
-		cookie = Cookie(self.get_my_cookie())
-		message = self.request.get("message")
-		if Support().user_in_database(cookie.value):
-			if message:
-				broadcast_message(message, cookie.username)
-			#~ self.redirect("/welcome")
-		else:
-			self.redirect("/login")
 
 
 
-class ExerciseRequestHandler(MainHandler):
-	def post(self):
-		cookie = Cookie(self.get_my_cookie())
-		if Support().user_in_database(cookie.value):
-			MyLogs("Exercise request from ", cookie.username)
-			exercise_number = int(self.request.get("exercise_number"))
-			exercise = get_all_exercises()[exercise_number]
-			broadcast_exercise_to_students(exercise)
-		else:
-			self.redirect("/login")
+
+
 
 class WordChosenHandler(MainHandler):
 	def post(self):
@@ -524,10 +495,7 @@ class WordChosenHandler(MainHandler):
 		else:
 			self.redirect("/login")
 	
-class ClearMessagesHandler(MainHandler):
-	def get(self):
-		clear_messages()
-		broadcast_clear_messages()
+
 		
 class ConnectionHandler(MainHandler):
 	def post(self, action):
@@ -648,6 +616,18 @@ class LoginPageHandler(MainHandler):
 		self.redirect("/check/in")
 		
 class DashboardHandler(MainHandler):
+	def post(self, action):
+		login = self.valid_user()
+		if login:
+			if action == "exercise_request":
+				exercise_number = int(self.request.get("exercise_number"))
+				exercise = Exercise()
+				exercise.select(exercise_number)
+				exercise.send_to_classroom()
+		else:
+			MyLogs("user seems not valid")
+			self.redirect("/check/in")
+
 	def get(self, action):
 		login = self.valid_user()
 		if login:
@@ -671,7 +651,9 @@ class DashboardHandler(MainHandler):
 			MyLogs("user seems not valid")
 			self.redirect("/check/in")
 
+
 class Exercise():
+	selected = None
 	list = [
 		{
 			"id": 1,
@@ -713,17 +695,27 @@ class Exercise():
 			"id": exercise["id"],
 			"words": exercise["sentence"].split(" "),
 			} for exercise in self.list]
-		
 	
+	def select(self, number):
+		self.selected = self.generate_list()[number]
 	
+	def send_to_classroom(self):
+		classroom = Classroom()
+		message = {
+			"type": "exercise",
+			"message": self.selected,
+			}
+		message = json.dumps(message)
+		for student in classroom.logged_students():
+			channel.send_message(student, message)
+
 app = webapp2.WSGIApplication([
     ('/', LoginPageHandler),
     ('/check/(in|out|up)', LoginPageHandler),
     ('/welcome', WelcomePageHandler),
-    ('/message', MessageHandler),
+    #~ ('/message', MessageHandler),
     ('/_ah/channel/(connected|disconnected)/', ConnectionHandler),
-    ('/exercise_request', ExerciseRequestHandler),
-    ('/clear_messages', ClearMessagesHandler),
+    #~ ('/clear_messages', ClearMessagesHandler),
     ("/word_clicked", WordChosenHandler),
-    ("/dashboard/(get_logged|exercise_list)", DashboardHandler),
+    ("/dashboard/(get_logged|exercise_list|exercise_request)", DashboardHandler),
 	], debug=True)

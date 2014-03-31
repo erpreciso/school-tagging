@@ -48,22 +48,35 @@ function sentence_clicked (event) {
 	$("#select_sentence").on("click", select_sentence);
 }
 
-function send_message() {
-	var message = $("input[name*='message']").val();
-	$("input[name*='message']").val("");
-	$.post("/message", {"message": message});
-}
-
-function clear_messages() {
-	$.get("/clear_messages");
-}
+//~ function send_message() {
+	//~ var message = $("input[name*='message']").val();
+	//~ $("input[name*='message']").val("");
+	//~ $.post("/message", {"message": message});
+//~ }
+//~ 
+//~ function clear_messages() {
+	//~ $.get("/clear_messages");
+//~ }
+//~ 
+//~ function append_message (timestamp, username, message) {
+	//~ var msg = "<div class='msg'>";
+		//~ msg += timestamp + " | ";
+		//~ msg += username + " | ";
+		//~ msg += "<strong>" + message + "</strong>";
+		//~ msg += "</div>";
+		//~ $("#all_messages").append(msg);
+//~ }
+//~ 
+//~ function clear_message_history () {
+	//~ $("#all_messages").empty();
+//~ }
 
 function select_sentence () {
 	var chosen = $("#chosen_sentence").val();
 	$("#exercise_list").remove();
 	$("#select_sentence").remove();
 	$("#working_area").append("<div id='dashboard'></div>");
-	$.post("/exercise_request", {"exercise_number": chosen});
+	$.post("/dashboard/exercise_request", {"exercise_number": chosen});
 }
 
 function get_logged_list() {
@@ -205,19 +218,6 @@ function update_t_student_detail (p) {
 
 function update_t_classroom_stats () {
 		//~ update classroom stats based on input received from a single student
-}
-
-function append_message (timestamp, username, message) {
-	var msg = "<div class='msg'>";
-		msg += timestamp + " | ";
-		msg += username + " | ";
-		msg += "<strong>" + message + "</strong>";
-		msg += "</div>";
-		$("#all_messages").append(msg);
-}
-
-function clear_message_history () {
-	$("#all_messages").empty();
 }
 
 function update_connected_users_list (username, role, status) {
