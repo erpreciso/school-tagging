@@ -241,7 +241,9 @@ class Login():
 		
 	def disconnect(self):
 		self.connection_status = "not connected"
+		self.login_status = "registered"
 		self.update_attr("connection_status")
+		self.update_attr("login_status")
 		classroom = Classroom()
 		classroom.send_connection(self, "close")
 
@@ -325,73 +327,74 @@ TODO = """
 - when a channel is closed, remove the user from the LOGGED list.
 - algorithm to send messages to be revisited to avoid dups.
 - datastore writes too slow: to enhance memcache interface.
+- think about a creative way to login
 
 """
 
 
 class MessageTODO():
-	class ClearMessagesHandler(MainHandler):
-		def get(self):
-			clear_messages()
-			broadcast_clear_messages()
-	class MessageHandler(MainHandler):
-		def post(self):
-			cookie = Cookie(self.get_my_cookie())
-			message = self.request.get("message")
-			if Support().user_in_database(cookie.value):
-				if message:
-					broadcast_message(message, cookie.username)
+	#~ class ClearMessagesHandler(MainHandler):
+		#~ def get(self):
+			#~ clear_messages()
+			#~ broadcast_clear_messages()
+	#~ class MessageHandler(MainHandler):
+		#~ def post(self):
+			#~ cookie = Cookie(self.get_my_cookie())
+			#~ message = self.request.get("message")
+			#~ if Support().user_in_database(cookie.value):
+				#~ if message:
+					#~ broadcast_message(message, cookie.username)
 				#~ self.redirect("/welcome")
-			else:
-				self.redirect("/login")
-	MESSAGES = []
-	def store_message(*a):
-		message = {
-			"username": a[0],
-			"timestamp": a[1],
-			"message": a[2],
-			"type": "msg",
-			}
-		global MESSAGES
-		MESSAGES.append(message)
-		MyLogs("Message added to db --> ", message)
-		return message
-					
-	def get_all_messages():
-		return [message for message in MESSAGES]
-	
-	def clear_messages():
-		global MESSAGES
-		MESSAGES = []
-		MyLogs("Messages list cleared")
-	
-	def broadcast_clear_messages():
-		for user in Support().get_all_logged():
-			message = {
-						"type": "clear message history",
-						}
-			message = json.dumps(message)
-			channel.send_message(user["username"], message)
-		MyLogs("Clear messages list broadcasted")
-	
-	def broadcast_message(message, sender):
-		timestamp = strftime("%a, %d %b %H:%M:%S",localtime())
-		message = store_message(sender, timestamp, message)
-		for user in Support().get_all_logged():
-			send_message_to_user(user["username"], message)
-		MyLogs("Message broadcasted")
-	
-	def send_message_to_user(username, message):
-		message = json.dumps(message)
-		channel.send_message(username, message)
-		MyLogs("Message", message, "delivered to", username)
-	
-	def send_message_to_teacher(message):
-		teacher = Support().get_the_teacher()
-		assert teacher
-		send_message_to_user(teacher, message)
-		MyLogs("Message", message, "delivered to the teacher")
-	
+			#~ else:
+				#~ self.redirect("/login")
+	#~ MESSAGES = []
+	#~ def store_message(*a):
+		#~ message = {
+			#~ "username": a[0],
+			#~ "timestamp": a[1],
+			#~ "message": a[2],
+			#~ "type": "msg",
+			#~ }
+		#~ global MESSAGES
+		#~ MESSAGES.append(message)
+		#~ MyLogs("Message added to db --> ", message)
+		#~ return message
+					#~ 
+	#~ def get_all_messages():
+		#~ return [message for message in MESSAGES]
+	#~ 
+	#~ def clear_messages():
+		#~ global MESSAGES
+		#~ MESSAGES = []
+		#~ MyLogs("Messages list cleared")
+	#~ 
+	#~ def broadcast_clear_messages():
+		#~ for user in Support().get_all_logged():
+			#~ message = {
+						#~ "type": "clear message history",
+						#~ }
+			#~ message = json.dumps(message)
+			#~ channel.send_message(user["username"], message)
+		#~ MyLogs("Clear messages list broadcasted")
+	#~ 
+	#~ def broadcast_message(message, sender):
+		#~ timestamp = strftime("%a, %d %b %H:%M:%S",localtime())
+		#~ message = store_message(sender, timestamp, message)
+		#~ for user in Support().get_all_logged():
+			#~ send_message_to_user(user["username"], message)
+		#~ MyLogs("Message broadcasted")
+	#~ 
+	#~ def send_message_to_user(username, message):
+		#~ message = json.dumps(message)
+		#~ channel.send_message(username, message)
+		#~ MyLogs("Message", message, "delivered to", username)
+	#~ 
+	#~ def send_message_to_teacher(message):
+		#~ teacher = Support().get_the_teacher()
+		#~ assert teacher
+		#~ send_message_to_user(teacher, message)
+		#~ MyLogs("Message", message, "delivered to the teacher")
+	pass
 
 	
 

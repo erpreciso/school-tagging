@@ -1,7 +1,7 @@
 $(document).ready(function() {
 	var role = $("#role").text();
-	$("#send_message").on("click", send_message);
-	$("#clear_messages").on("click", clear_messages);
+	//~ $("#send_message").on("click", send_message);
+	//~ $("#clear_messages").on("click", clear_messages);
 	$("#show_html").on("click", loghtml);
 	if (role == "teacher") {
 		build_t_dashboard();
