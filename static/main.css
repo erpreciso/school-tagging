@@ -79,6 +79,12 @@ footer {
 	color: green;
 	}
 
+.responding {
+	font-size: 1.2em;
+	color: blue;
+	font-style: italic;
+	}
+
 .student_dashboard .name {
 	color: #070273;
 	}
@@ -141,5 +147,11 @@ h2 {
 
 #connection_status {
 	display: inline;
+	font-weight: bold;
+	}
+	
+#students_count, #respondents_count, #winners_count {
+	display: inline;
+	color: red;
 	font-weight: bold;
 	}

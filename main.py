@@ -98,6 +98,7 @@ class Login():
 		if username:
 			self.username = username
 			user = self.get_user()
+			self.role = user.role
 			self.connection_status = user.connection_status
 	
 	def make_salt(self):
@@ -312,6 +313,8 @@ TODO = """
 -- activity for each student
 --- exercise delivered
 --- response
+- when logout, update the dashboard
+- create process for new exercise
 - don't send the exercise answer!
 - logged datastore is not working (dups, memcache)
 - recast exercises functions

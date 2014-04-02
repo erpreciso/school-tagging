@@ -55,10 +55,10 @@ function sentence_t_clicked (event) {
 
 function select_t_sentence () {
 	var chosen = $("#chosen_sentence").val();
-	$("#exercise_list").remove();
-	$("#select_sentence").remove();
-	$("#working_area").append("<div id='dashboard'></div>");
+	//~ $("#exercise_list").remove();
+	//~ $("#select_sentence").remove();
 	$.post("/dashboard/exercise_request", {"exercise_number": chosen});
+	
 }
 
 function get_t_logged_list() {
@@ -154,13 +154,47 @@ function build_ts_exercise (exercise) {
 	else if (role == "teacher") {
 		var param = {"action": "build", "exercise": exercise};
 		update_t_student_detail(param);
+		build_t_classroom_stats();
 	}
 }
+
+function build_t_classroom_stats() {
+	var exercise_status = document.createElement("div");
+	$(exercise_status).attr("id", "exercise_status");
+	var n = $("#student_detail").children(".student_dashboard").length.toString();
+	var students_count_stat = document.createElement("div");
+	$(students_count_stat)
+		.attr("id", "students_count_stat")
+		.text("Students connected: ");
+	$(students_count_stat).append('<div id="students_count">' + n + '</div>');
+	var respondents_count_stat = document.createElement("div");
+	$(respondents_count_stat)
+		.attr("id", "respondents_count_stat")
+		.text("Students responding: ");
+	$(respondents_count_stat).append('<div id="respondents_count">0</div>');
+	var winners_count_stat = document.createElement("div");
+	$(winners_count_stat)
+		.attr("id", "winners_count_stat")
+		.text("Students correct: ");
+	$(winners_count_stat).append('<div id="winners_count">0</div>');
+	$(exercise_status)
+		.append(students_count_stat)
+		.append(respondents_count_stat)
+		.append(winners_count_stat);
+	$("#classroom_stats").append(exercise_status);
+}
+
+function update_t_classroom_stats () {
+		//~ update classroom stats based on input received from a single student
+		
+}
+
 
 function update_t_student_detail (p) {
 	if (p.action == "build") {
 		var students = $("#student_detail").children(".student_dashboard");
 		for (var i = 0; i < students.length; i++) {
+			$(students[i]).children(".exercise_content").empty();
 			var words = $(document.createElement("div")).attr("id", "words");
 			for (var j=0; j < p.exercise.words.length; j++) {
 				var word = $(document.createElement("div"))
@@ -189,11 +223,32 @@ function update_t_student_detail (p) {
 		$("#student_detail #" + student + " .exercise #words")
 				.children().css("background-color", "inherit");
 		var answer = $("#student_detail #" + student + " .exercise #" + triggered);
+		
 		answer.css("background-color", "yellow");
+		if ($("#student_detail #" + student + " .exercise_status")
+												.children().length == 0) {
+				var respondents = Number($("#respondents_count").text());
+				respondents += 1;
+				$("#respondents_count").text(respondents.toString());
+				var responding = '<div class="responding">responding...</div>';
+				$("#student_detail #" + student + " .exercise_status")
+					.append(responding);
+				}
 		if (answer.css("font-weight") == "bold") {
-			var correct = '<div class="correct">Correct!</div>';
-			$("#student_detail #" + student + " .exercise_status")
-				.append(correct);
+			if ($("#student_detail #" + student + " .exercise_status")
+								.children(".responding").length > 0) {
+				$("#student_detail #" + student + " .exercise_status")
+					.children(".responding").remove();
+				}
+			if ($("#student_detail #" + student + " .exercise_status")
+								.children(".correct").length == 0) {
+				var winners = Number($("#winners_count").text());
+				winners += 1;
+				$("#winners_count").text(winners.toString());
+				var correct = '<div class="correct">Correct!</div>';
+				$("#student_detail #" + student + " .exercise_status")
+					.append(correct);
+				}
 			}
 		
 		
@@ -203,9 +258,6 @@ function update_t_student_detail (p) {
 	//~ update the classroom stats
 }
 
-function update_t_classroom_stats () {
-		//~ update classroom stats based on input received from a single student
-}
 
 function update_ts_connected_users_list (username, status) {
 	if (status == "connected user") {
