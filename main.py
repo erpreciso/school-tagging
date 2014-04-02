@@ -44,6 +44,7 @@ class Classroom():
 		message = {
 			"type": type,
 			"username": login.username,
+			"role": login.role,
 			}
 		message = json.dumps(message)
 		channel.send_message(self.teacher.username, message)
@@ -308,27 +309,14 @@ class MyLogs():
 		logging.info(str(message))
 		
 TODO = """
-- create teacher dashboard
--- list of students logged
--- activity for each student
---- exercise delivered
---- response
 - when logout, update the dashboard
 - create process for new exercise
 - don't send the exercise answer!
-- logged datastore is not working (dups, memcache)
 - recast exercises functions
-- remove teacher/student drop down in the login page
-- implement memcache also for messages
-- when a channel is closed, remove the user from the LOGGED list.
-- algorithm to send messages to be revisited to avoid dups.
 - add all possible url to the handler (regular expressions?)
 - allow only a teacher per session
 - verify all channels are up by sending a pin sometime, 
 		to remove from logged not responding ones
-- when a channel is closed, remove the user from the LOGGED list.
-- algorithm to send messages to be revisited to avoid dups.
-- datastore writes too slow: to enhance memcache interface.
 - think about a creative way to login
 
 """
@@ -432,11 +420,10 @@ class ConnectionHandler(MainHandler):
 	def post(self, action):
 		username = self.request.get('from')
 		login = Login(username=username)
-		if login.role == "student":
-			if action == "connected":
-				login.connect()
-			elif action == "disconnected":
-				login.disconnect()
+		if action == "connected":
+			login.connect()
+		elif action == "disconnected":
+			login.disconnect()
 
 class LoginPageHandler(MainHandler):
 	

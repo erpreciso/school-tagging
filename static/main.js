@@ -184,11 +184,29 @@ function build_t_classroom_stats() {
 	$("#classroom_stats").append(exercise_status);
 }
 
-function update_t_classroom_stats () {
-		//~ update classroom stats based on input received from a single student
-		
+function update_t_logged (n) {
+	if ($("#students_count").length > 0) {
+		var logged = Number($("#students_count").text());
+		logged += n;
+		$("#students_count").text(logged);
+	}
 }
 
+function update_t_respondents (n) {
+	if ($("#respondents_count").length > 0) {
+		var respondents = Number($("#respondents_count").text());
+		respondents += n;
+		$("#respondents_count").text(respondents);
+	}
+}
+
+function update_t_winners (n) {
+	if ($("#winners_count").length > 0) {
+		var winners = Number($("#winners_count").text());
+		winners += n;
+		$("#winners_count").text(winners);
+	}
+}
 
 function update_t_student_detail (p) {
 	if (p.action == "build") {
@@ -259,14 +277,18 @@ function update_t_student_detail (p) {
 }
 
 
-function update_ts_connected_users_list (username, status) {
-	if (status == "connected user") {
-		var user = "<div class='user' id='logged_" + username;
-		user += "'><strong>" + username + "</strong></div>";
-		$("#userlist").append(user);
-	}
-	else if (status == "disconnected user") {
-		$("#logged_" + username).remove();
+function update_ts_connected_users_list (username, role, status) {
+	if (role != "teacher") {
+		if (status == "connected user") {
+			var user = "<div class='user' id='logged_" + username;
+			user += "'><strong>" + username + "</strong></div>";
+			$("#userlist").append(user);
+			update_t_logged(1);
+		}
+		else if (status == "disconnected user") {
+			$("#logged_" + username).remove();
+			update_t_logged(-1);
+		}
 	}
 }
 
@@ -283,6 +305,7 @@ onMessage = function(message) {
 	else if (data.type == "connected user") {
 		update_ts_connected_users_list(
 				data.username,
+				data.role,
 				"connected user");
 		if (role == "teacher") {
 			update_t_student_dashboards("build", [data.username]);
@@ -291,6 +314,7 @@ onMessage = function(message) {
 	else if (data.type == "disconnected user") {
 		update_ts_connected_users_list(
 				data.username,
+				data.role,
 				"disconnected user");
 		if (role == "teacher") {
 			update_t_student_dashboards("remove", [data.username]);
