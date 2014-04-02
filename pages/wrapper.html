@@ -26,24 +26,6 @@ school-tagging application
 -->
 	{% endblock %}
 	<footer>
-<!--
-		<div id="message_board">
-			<h2>Message Board</h2>
-			<input type="text" name="message" placeholder="type message">
-			<button id="send_message">Send message</button>
-			<button id="clear_messages">Clear history</button>
-			<h2>Message History</h2>
-			<div id="all_messages">
-			{% for message in messages %}
-				<div class="msg">
-					{{message["timestamp"]}} 
-					| {{message["username"]}} 
-					| <strong>{{message["message"]}}</strong>
-				</div>
-			{% endfor %}
-			</div>
-		</div>
--->
 		<div id="userlist">
 			<div>Who's logged in</div>
 		{% for user in logged %}

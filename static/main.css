@@ -138,16 +138,3 @@ h2 {
 	background-color: #F2F2F2;
 	font-size: 0.8em;
 	}
-
-.msg {
-	font-size: 0.8em;
-	color: #626165;
-	display: block;
-	background-color: #E4E4E4
-	}
-
-#message_board {
-	display: block;
-	background-color: #EFEFEF;
-	font-size: 0.8em;
-	}

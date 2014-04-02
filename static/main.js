@@ -1,7 +1,5 @@
 $(document).ready(function() {
 	var role = $("#role").text();
-	//~ $("#send_message").on("click", send_message);
-	//~ $("#clear_messages").on("click", clear_messages);
 	$("#show_html").on("click", loghtml);
 	if (role == "teacher") {
 		build_t_dashboard();
@@ -47,29 +45,6 @@ function sentence_clicked (event) {
 		.val(triggered);
 	$("#select_sentence").on("click", select_sentence);
 }
-
-//~ function send_message() {
-	//~ var message = $("input[name*='message']").val();
-	//~ $("input[name*='message']").val("");
-	//~ $.post("/message", {"message": message});
-//~ }
-//~ 
-//~ function clear_messages() {
-	//~ $.get("/clear_messages");
-//~ }
-//~ 
-//~ function append_message (timestamp, username, message) {
-	//~ var msg = "<div class='msg'>";
-		//~ msg += timestamp + " | ";
-		//~ msg += username + " | ";
-		//~ msg += "<strong>" + message + "</strong>";
-		//~ msg += "</div>";
-		//~ $("#all_messages").append(msg);
-//~ }
-//~ 
-//~ function clear_message_history () {
-	//~ $("#all_messages").empty();
-//~ }
 
 function select_sentence () {
 	var chosen = $("#chosen_sentence").val();
