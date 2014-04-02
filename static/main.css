@@ -138,3 +138,8 @@ h2 {
 	background-color: #F2F2F2;
 	font-size: 0.8em;
 	}
+
+#connection_status {
+	display: inline;
+	font-weight: bold;
+	}

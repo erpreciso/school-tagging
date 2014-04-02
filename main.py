@@ -407,12 +407,6 @@ class WelcomePageHandler(MainHandler):
 			return
 		else:
 			self.redirect("/check/in")		
-		
-
-
-
-
-
 
 class WordChosenHandler(MainHandler):
 	def post(self):
@@ -430,8 +424,6 @@ class WordChosenHandler(MainHandler):
 			send_message_to_teacher(message)
 		else:
 			self.redirect("/login")
-	
-
 		
 class ConnectionHandler(MainHandler):
 	def post(self, action):
@@ -441,9 +433,6 @@ class ConnectionHandler(MainHandler):
 			login.connect()
 		elif action == "disconnected":
 			login.disconnect()
-
-	
-
 
 class LoginPageHandler(MainHandler):
 	
@@ -586,7 +575,6 @@ class DashboardHandler(MainHandler):
 		else:
 			MyLogs("user seems not valid")
 			self.redirect("/check/in")
-
 
 class Exercise():
 	selected = None

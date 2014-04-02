@@ -3,14 +3,21 @@ $(document).ready(function() {
 	$("#show_html").on("click", loghtml);
 	if (role == "teacher") {
 		build_t_dashboard();
-		get_logged_list();
-		get_exercise_list();
+		get_t_logged_list();
+		get_t_exercise_list();
 	}
 });
 
-onOpened = function() {}
+onOpened = function() {
+	$("#connection_status").text("ONLINE")
+	.css("color", "green");
+	}
 
-onClose = function() {}
+onClose = function() {
+	$("#connection_status")
+		.text("OFFLINE")
+		.css("color", "red");
+	}
 
 function mylog(message) {
 	if (window.console && window.console.log) {
@@ -54,7 +61,7 @@ function select_sentence () {
 	$.post("/dashboard/exercise_request", {"exercise_number": chosen});
 }
 
-function get_logged_list() {
+function get_t_logged_list() {
 	$.get("/dashboard/get_logged");
 }
 
@@ -81,7 +88,7 @@ function build_t_student_detail(students_list) {
 	}
 }
 
-function get_exercise_list() {
+function get_t_exercise_list() {
 	$.get("/dashboard/exercise_list");
 }
 
@@ -215,9 +222,6 @@ onMessage = function(message) {
 		var param = {"action": "update", "content" : data.content};
 		update_t_student_detail(param);
 	}
-	else if (data.type == "msg") {
-		append_message(data.timestamp, data.username, data.message);
-	}
 	else if (data.type == "connected user") {
 		update_connected_users_list(
 				data.username,
@@ -235,9 +239,6 @@ onMessage = function(message) {
 	}
 	else if (data.type == "exercises list") {
 		build_exercises_list(data.message);
-	}
-	else if (data.type == "clear message history") {
-		clear_message_history();
 	}
 	//~ alert(JSON.stringify(message));
 }
