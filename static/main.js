@@ -29,15 +29,15 @@ function loghtml(){
 	mylog($("body").html());
 }
 
-function word_clicked (event) {
+function send_s_word_clicked (event) {
 	var triggered = event.target.id;
 	var base_color = $("#target #" + triggered).css("background-color");
 	$("#target").children().css("background-color", "inherit");
 	$("#target #" + triggered).css("background-color", "yellow");
-	$.post("/word_clicked", {"word_number": triggered});
+	$.post("/exercise/word_clicked", {"word_number": triggered});
 }
 
-function sentence_clicked (event) {
+function sentence_t_clicked (event) {
 	var triggered = event.target.id;
 	var base_color = $("#exercise_list #" + triggered).css("background-color");
 	$("#exercise_list").children($(".sentence")).css("background-color", base_color);
@@ -50,10 +50,10 @@ function sentence_clicked (event) {
 	$("#chosen_sentence")
 		.css("display", "none")
 		.val(triggered);
-	$("#select_sentence").on("click", select_sentence);
+	$("#select_sentence").on("click", select_t_sentence);
 }
 
-function select_sentence () {
+function select_t_sentence () {
 	var chosen = $("#chosen_sentence").val();
 	$("#exercise_list").remove();
 	$("#select_sentence").remove();
@@ -65,26 +65,31 @@ function get_t_logged_list() {
 	$.get("/dashboard/get_logged");
 }
 
-function build_t_student_detail(students_list) {
+function update_t_student_dashboards(action, students_list) {
 	for (var i = 0; i < students_list.length; i++) {
-		var student_dashboard = $(document.createElement("div"))
-			.attr("class", "student_dashboard")
-			.attr("id", students_list[i]);
-		var name = $(document.createElement("div"))
-			.attr("class", "name")
-			.text(students_list[i]);
-		var exercise_content = $(document.createElement("div"))
-			.attr("class", "exercise_content");
-		var exercise_status = $(document.createElement("div"))
-			.attr("class", "exercise_status");
-		var response_time = $(document.createElement("div"))
-			.attr("class", "response_time");
-		$(student_dashboard)
-			.append(name)
-			.append(exercise_content)
-			.append(exercise_status)
-			.append(response_time);
-		$("#student_detail").append(student_dashboard);
+		if (action == "build") {
+			var student_dashboard = $(document.createElement("div"))
+				.attr("class", "student_dashboard")
+				.attr("id", students_list[i]);
+			var name = $(document.createElement("div"))
+				.attr("class", "name")
+				.text(students_list[i]);
+			var exercise_content = $(document.createElement("div"))
+				.attr("class", "exercise_content");
+			var exercise_status = $(document.createElement("div"))
+				.attr("class", "exercise_status");
+			var response_time = $(document.createElement("div"))
+				.attr("class", "response_time");
+			$(student_dashboard)
+				.append(name)
+				.append(exercise_content)
+				.append(exercise_status)
+				.append(response_time);
+			$("#student_detail").append(student_dashboard);
+		}
+		else if (action == "remove") {
+			$("#" + students_list[0]).remove();
+		}
 	}
 }
 
@@ -92,14 +97,14 @@ function get_t_exercise_list() {
 	$.get("/dashboard/exercise_list");
 }
 
-function build_exercises_list(exercises_list) {
+function build_t_exercises_list(exercises_list) {
 	var exercise = "<div id='exercise_list_title'>List of available exercises</div>";
 	for (var i = 0; i < exercises_list.length; i++) {
 		exercise += "<div class='sentence' id='" + i;
 		exercise += "'>" + exercises_list[i].sentence + "</div> ";
 	}
 	$("#exercise_list").append(exercise);
-	$(".sentence").on("click", sentence_clicked);
+	$(".sentence").on("click", sentence_t_clicked);
 }
 
 function build_t_dashboard() {
@@ -144,7 +149,7 @@ function build_ts_exercise (exercise) {
 		exercise += target;
 		exercise += "</div>";
 		$("#working_area").append(exercise);
-		$(".word").on("click", word_clicked);
+		$(".word").on("click", send_s_word_clicked);
 	}
 	else if (role == "teacher") {
 		var param = {"action": "build", "exercise": exercise};
@@ -202,43 +207,48 @@ function update_t_classroom_stats () {
 		//~ update classroom stats based on input received from a single student
 }
 
-function update_connected_users_list (username, role, status) {
+function update_ts_connected_users_list (username, status) {
 	if (status == "connected user") {
-		var user = "<div class='user' id='" + username;
+		var user = "<div class='user' id='logged_" + username;
 		user += "'><strong>" + username + "</strong></div>";
 		$("#userlist").append(user);
 	}
 	else if (status == "disconnected user") {
-		$("#" + username).remove();
+		$("#logged_" + username).remove();
 	}
 }
 
 onMessage = function(message) {
 	var data = JSON.parse(message.data);
+	var role = $("#role").text();
 	if (data.type == "students list") {
-		build_t_student_detail(data.list);
+		update_t_student_dashboards("build", data.list);
 	}
 	else if (data.type == "student choice") {
 		var param = {"action": "update", "content" : data.content};
 		update_t_student_detail(param);
 	}
 	else if (data.type == "connected user") {
-		update_connected_users_list(
+		update_ts_connected_users_list(
 				data.username,
-				data.role,
 				"connected user");
+		if (role == "teacher") {
+			update_t_student_dashboards("build", [data.username]);
+		}
 	}
 	else if (data.type == "disconnected user") {
-		update_connected_users_list(
+		update_ts_connected_users_list(
 				data.username,
-				data.role,
 				"disconnected user");
+		if (role == "teacher") {
+			update_t_student_dashboards("remove", [data.username]);
+		}
 	}
 	else if (data.type == "exercise") {
 		build_ts_exercise(data.message);
 	}
 	else if (data.type == "exercises list") {
-		build_exercises_list(data.message);
+		build_t_exercises_list(data.message);
 	}
 	//~ alert(JSON.stringify(message));
 }

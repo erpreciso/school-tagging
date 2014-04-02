@@ -44,7 +44,6 @@ class Classroom():
 		message = {
 			"type": type,
 			"username": login.username,
-			"role": login.role,
 			}
 		message = json.dumps(message)
 		channel.send_message(self.teacher.username, message)
@@ -396,8 +395,6 @@ class WelcomePageHandler(MainHandler):
 					role = login.role,
 					token = login.token,
 					logged = classroom.logged_students(),
-					#~ messages = get_all_messages(),
-					#~ exercise = pick_an_exercise(),
 					)
 
 	def get(self):
@@ -408,31 +405,35 @@ class WelcomePageHandler(MainHandler):
 		else:
 			self.redirect("/check/in")		
 
-class WordChosenHandler(MainHandler):
-	def post(self):
-		cookie = Cookie(self.get_my_cookie())
-		if Support().user_in_database(cookie.value):
-			word_number = int(self.request.get("word_number"))
-			MyLogs("word", word_number, "chosen from ", cookie.username)
-			message = {
-				"type": "student choice",
-				"content": {
-					"student": cookie.username,
-					"choice": word_number,
-					},
-				}
-			send_message_to_teacher(message)
-		else:
-			self.redirect("/login")
+class ExerciseHandler(MainHandler):
+	def post(self, action):
+		login = self.valid_user()
+		if login:
+			if action == "word_clicked":
+				classroom = Classroom()
+				word_number = int(self.request.get("word_number"))
+				message = {
+					"type": "student choice",
+					"content": {
+						"student": login.username,
+						"choice": word_number,
+						},
+					}
+				message = json.dumps(message)
+				channel.send_message(classroom.teacher.username, message)
+			else:
+				self.redirect("/check/in")
+	
 		
 class ConnectionHandler(MainHandler):
 	def post(self, action):
 		username = self.request.get('from')
 		login = Login(username=username)
-		if action == "connected":
-			login.connect()
-		elif action == "disconnected":
-			login.disconnect()
+		if login.role == "student":
+			if action == "connected":
+				login.connect()
+			elif action == "disconnected":
+				login.disconnect()
 
 class LoginPageHandler(MainHandler):
 	
@@ -549,6 +550,7 @@ class DashboardHandler(MainHandler):
 				exercise = Exercise()
 				exercise.select(exercise_number)
 				exercise.send_to_classroom()
+				exercise.send_to_teacher()
 		else:
 			MyLogs("user seems not valid")
 			self.redirect("/check/in")
@@ -566,12 +568,7 @@ class DashboardHandler(MainHandler):
 				channel.send_message(login.username, message)
 			elif action == "exercise_list":
 				exercise = Exercise()
-				message = {
-					"type": "exercises list",
-					"message": exercise.generate_list(),
-					}
-				message = json.dumps(message)
-				channel.send_message(login.username, message)
+				exercise.send_list(login)
 		else:
 			MyLogs("user seems not valid")
 			self.redirect("/check/in")
@@ -611,17 +608,30 @@ class Exercise():
 			},
 		]
 
-	def generate_list(self):
-		return [{
+	def send_list(self, login):
+		lst = [{
 			"sentence": exercise["sentence"],
 			"to find": exercise["to find"],
 			"answer": exercise["answer"],
 			"id": exercise["id"],
 			"words": exercise["sentence"].split(" "),
 			} for exercise in self.list]
-	
+		message = {
+					"type": "exercises list",
+					"message": lst,
+					}
+		message = json.dumps(message)
+		channel.send_message(login.username, message)
+
 	def select(self, number):
-		self.selected = self.generate_list()[number]
+		lst = [{
+			"sentence": exercise["sentence"],
+			"to find": exercise["to find"],
+			"answer": exercise["answer"],
+			"id": exercise["id"],
+			"words": exercise["sentence"].split(" "),
+			} for exercise in self.list]
+		self.selected = lst[number]
 	
 	def send_to_classroom(self):
 		classroom = Classroom()
@@ -633,11 +643,20 @@ class Exercise():
 		for student in classroom.logged_students():
 			channel.send_message(student, message)
 
+	def send_to_teacher(self):
+		classroom = Classroom()
+		message = {
+			"type": "exercise",
+			"message": self.selected,
+			}
+		message = json.dumps(message)
+		channel.send_message(classroom.teacher.username, message)
+
 app = webapp2.WSGIApplication([
     ('/', LoginPageHandler),
     ('/check/(in|out|up)', LoginPageHandler),
     ('/welcome', WelcomePageHandler),
     ('/_ah/channel/(connected|disconnected)/', ConnectionHandler),
-    ("/word_clicked", WordChosenHandler),
+    ("/exercise/(word_clicked|foobar)", ExerciseHandler),
     ("/dashboard/(get_logged|exercise_list|exercise_request)", DashboardHandler),
 	], debug=True)
