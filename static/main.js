@@ -56,7 +56,7 @@ function sentence_t_clicked (event) {
 function select_t_sentence () {
 	var chosen = $("#chosen_sentence").val();
 	//~ $("#exercise_list").remove();
-	//~ $("#select_sentence").remove();
+	$("#select_sentence").remove();
 	$.post("/dashboard/exercise_request", {"exercise_number": chosen});
 	
 }
@@ -155,7 +155,21 @@ function build_ts_exercise (exercise) {
 		var param = {"action": "build", "exercise": exercise};
 		update_t_student_detail(param);
 		build_t_classroom_stats();
+		var button = $(document.createElement("button"))
+			.attr("id", "save_and_ask_new")
+			.text("Save results and ask new exercise");
+		$("#working_area").append(button);
+		$(button).on("click", save_and_new_t);
 	}
+}
+
+function save_and_new_t () {
+	//~ create an object to be sent to the server to be stored
+	//~ create a new dashboard and a new exercise area
+	$("#working_area").empty();
+	build_t_dashboard();
+	get_t_logged_list();
+	get_t_exercise_list();
 }
 
 function build_t_classroom_stats() {
@@ -204,7 +218,7 @@ function update_t_winners (n) {
 	if ($("#winners_count").length > 0) {
 		var winners = Number($("#winners_count").text());
 		winners += n;
-		$("#winners_count").text(winners);
+		$("#winners_count").text(winners,toString());
 	}
 }
 
@@ -245,9 +259,7 @@ function update_t_student_detail (p) {
 		answer.css("background-color", "yellow");
 		if ($("#student_detail #" + student + " .exercise_status")
 												.children().length == 0) {
-				var respondents = Number($("#respondents_count").text());
-				respondents += 1;
-				$("#respondents_count").text(respondents.toString());
+				update_t_respondents(1);
 				var responding = '<div class="responding">responding...</div>';
 				$("#student_detail #" + student + " .exercise_status")
 					.append(responding);
@@ -260,9 +272,7 @@ function update_t_student_detail (p) {
 				}
 			if ($("#student_detail #" + student + " .exercise_status")
 								.children(".correct").length == 0) {
-				var winners = Number($("#winners_count").text());
-				winners += 1;
-				$("#winners_count").text(winners.toString());
+				update_t_winners(1);
 				var correct = '<div class="correct">Correct!</div>';
 				$("#student_detail #" + student + " .exercise_status")
 					.append(correct);
@@ -271,9 +281,6 @@ function update_t_student_detail (p) {
 		
 		
 	}
-	//~ update the exercise content area in the student detail dashboard
-	//~ update the exercise status
-	//~ update the classroom stats
 }
 
 

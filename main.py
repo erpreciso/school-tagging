@@ -309,10 +309,11 @@ class MyLogs():
 		logging.info(str(message))
 		
 TODO = """
-- when logout, update the dashboard
-- create process for new exercise
+- create process to clean all and have a new exercise
+- process to save exercise results in datastore and send a new exercise
+-- new page with session results
+-- counter of exercises submitted at the moment
 - don't send the exercise answer!
-- recast exercises functions
 - add all possible url to the handler (regular expressions?)
 - allow only a teacher per session
 - verify all channels are up by sending a pin sometime, 
