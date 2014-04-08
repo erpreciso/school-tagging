@@ -321,7 +321,7 @@ TODO = """
 
 """
 
-LANGUAGE = "IT"
+LANGUAGE = "EN"
 
 class MainHandler(webapp2.RequestHandler):
 	template_dir = os.path.join(os.path.dirname(__file__), 'pages')
@@ -563,13 +563,16 @@ class DashboardHandler(MainHandler):
 			elif action == "exercise_list":
 				exercise = Exercise()
 				exercise.send_list(login)
+			elif action == "exercise_list_type_2":
+				exercise = Exercise()
+				exercise.send_list_type_2(login)
 		else:
 			MyLogs("user seems not valid")
 			self.redirect("/check/in")
 
 class Exercise():
 	selected = None
-	list = [
+	list_1 = [
 		{
 			"id": 1,
 			"sentence": "Of course, no man is entirely in his right mind at any time.",
@@ -600,16 +603,57 @@ class Exercise():
 			"to find": "subject",
 			"answer": 0,
 			},
-		]
-
+	]
+	
+	list_2 = [
+		{
+			"id": 1,
+			"sentence": "Il gatto ha mangiato il topo",
+			"target": 0,
+			"options": ["pronome", "articolo", "aggettivo"],
+			"answer": 1,
+		},
+		{
+			"id": 1,
+			"sentence": "Alessandro prende la sua bicicletta",
+			"target": 3,
+			"options": ["pronome", "articolo", "aggettivo"],
+			"answer": 2,
+		},
+		{
+			"id": 1,
+			"sentence": "Non è il tuo zaino, è il mio",
+			"target": 7,
+			"options": ["pronome", "articolo", "aggettivo"],
+			"answer": 0,
+		},
+	]
 	def send_list(self, login):
 		lst = [{
+			"type": 1,
 			"sentence": exercise["sentence"],
 			"to find": exercise["to find"],
 			"answer": exercise["answer"],
 			"id": exercise["id"],
 			"words": exercise["sentence"].split(" "),
-			} for exercise in self.list]
+			} for exercise in self.list_1]
+		message = {
+					"type": "exercises list",
+					"message": lst,
+					}
+		message = json.dumps(message)
+		channel.send_message(login.username, message)
+		
+	def send_list_type_2(self, login):
+		lst = [{
+			"type": 2,
+			"sentence": exercise["sentence"],
+			"target": exercise["target"],
+			"answer": exercise["answer"],
+			"options": exercise["options"],
+			"id": exercise["id"],
+			"words": exercise["sentence"].split(" "),
+			} for exercise in self.list_2]
 		message = {
 					"type": "exercises list",
 					"message": lst,
@@ -624,7 +668,7 @@ class Exercise():
 			"answer": exercise["answer"],
 			"id": exercise["id"],
 			"words": exercise["sentence"].split(" "),
-			} for exercise in self.list]
+			} for exercise in self.list_1]
 		self.selected = lst[number]
 	
 	def send_to_classroom(self):
@@ -646,10 +690,11 @@ class Exercise():
 		message = json.dumps(message)
 		channel.send_message(classroom.teacher.username, message)
 
-app = webapp2.WSGIApplication([
+routes = [
     ('/check/(in|out|up)', LoginPageHandler),
     ('/_ah/channel/(connected|disconnected)/', ConnectionHandler),
     ("/exercise/(word_clicked|foobar)", ExerciseHandler),
-    ("/dashboard/(get_logged|exercise_list|exercise_request)", DashboardHandler),
+    ("/dashboard/(get_logged|exercise_list|exercise_list_type_2|exercise_request)", DashboardHandler),
     ('(.*)', WelcomePageHandler),
-	], debug=True)
+	]
+app = webapp2.WSGIApplication(routes=routes, debug=True)

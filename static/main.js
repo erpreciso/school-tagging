@@ -4,7 +4,7 @@ $(document).ready(function() {
 	if (role == "teacher") {
 		build_t_dashboard();
 		get_t_logged_list();
-		get_t_exercise_list();
+		build_t_exercise_options();
 	}
 });
 
@@ -31,7 +31,6 @@ function loghtml(){
 
 function send_s_word_clicked (event) {
 	var triggered = event.target.id;
-	var base_color = $("#target #" + triggered).css("background-color");
 	$("#target").children().css("background-color", "inherit");
 	$("#target #" + triggered).css("background-color", "yellow");
 	$.post("/exercise/word_clicked", {"word_number": triggered});
@@ -39,8 +38,7 @@ function send_s_word_clicked (event) {
 
 function sentence_t_clicked (event) {
 	var triggered = event.target.id;
-	var base_color = $("#exercise_list #" + triggered).css("background-color");
-	$("#exercise_list").children($(".sentence")).css("background-color", base_color);
+	$("#exercise_list").children().css("background-color", "inherit");
 	$("#exercise_list #" + triggered).css("background-color", "yellow");
 	var button = "<button id='select_sentence'>Send exercise</button>";
 	$("#select_sentence").remove();
@@ -97,15 +95,40 @@ function get_t_exercise_list() {
 	$.get("/dashboard/exercise_list");
 }
 
+function get_t_exercise_list_type_2() {
+	$.get("/dashboard/exercise_list_type_2");
+}
+
 function build_t_exercises_list(exercises_list) {
+	$("#exercise_list").empty();
+	build_t_exercise_options();
 	var exercise = "<div id='exercise_list_title'>List of available exercises</div>";
 	for (var i = 0; i < exercises_list.length; i++) {
 		exercise += "<div class='sentence' id='" + i;
 		exercise += "'>" + exercises_list[i].sentence + "</div> ";
 	}
 	$("#exercise_list").append(exercise);
+	var type = $(document.createElement("div"))
+			.attr("class", "hidden")
+			.attr("id", "exercise_type")
+			.text(exercises_list[0].type);
+	$("#exercise_list").append(type);
 	$(".sentence").on("click", sentence_t_clicked);
 }
+
+function build_t_exercise_options() {
+	var button_1 = $(document.createElement("button"))
+			.attr("id", "get_exercise_type_1")
+			.text("Get exercise type FIND THE ELEMENT");
+	$("#exercise_list").append(button_1);
+	$(button_1).on("click", get_t_exercise_list);
+	var button_2 = $(document.createElement("button"))
+			.attr("id", "get_exercise_type_2")
+			.text("Get exercise type FIND THE CORRECT TYPE");
+	$("#exercise_list").append(button_2);
+	$(button_2).on("click", get_t_exercise_list_type_2);
+}
+
 
 function build_t_dashboard() {
 	var dashboard = document.createElement("div");
@@ -113,15 +136,15 @@ function build_t_dashboard() {
 	var exercise_list = document.createElement("div");
 	$(exercise_list)
 		.attr("id", "exercise_list")
-		.append('<div class="title">Exercise list area</div>');
+		.append('<div class="title">Exercise list</div>');
 	var classroom_stats = document.createElement("div");
 	$(classroom_stats)
 		.attr("id", "classroom_stats")
-		.append('<div class="title">Classroom statistics area</div>');
+		.append('<div class="title">Classroom statistics</div>');
 	var student_detail = document.createElement("div");
 	$(student_detail)
 		.attr("id", "student_detail")
-		.append('<div class="title">Student details area</div>');
+		.append('<div class="title">Students</div>');
 	$(dashboard).append(exercise_list);
 	$(dashboard).append(classroom_stats);
 	$(dashboard).append(student_detail);
