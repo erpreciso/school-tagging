@@ -1,0 +1,57 @@
+{
+	"type_1": [
+		{
+			"id": 1,
+			"sentence": "Of course, no man is entirely in his right mind at any time.",
+			"to find": "verb",
+			"answer": 4
+			},
+		{
+			"id": 2,
+			"sentence": "Early to rise and early to bed makes a male healthy and wealthy and dead.",
+			"to find": "article",
+			"answer": 8
+			},
+		{
+			"id": 3,
+			"sentence": "Expect nothing. Live frugally on surprise.",
+			"to find": "adverb",
+			"answer": 3
+			},
+		{
+			"id": 4,
+			"sentence": "I'd rather be a lightning rod than a seismograph.",
+			"to find": "pronom",
+			"answer": 0
+			},
+		{
+			"id": 5,
+			"sentence": "Children are all foreigners.",
+			"to find": "subject",
+			"answer": 0
+			}
+		],
+	"type_2": [
+		{
+			"id": 1,
+			"sentence": "Il gatto ha mangiato il topo",
+			"target": 0,
+			"options": ["pronome", "articolo", "aggettivo"],
+			"answer": 1
+			},
+		{
+			"id": 1,
+			"sentence": "Alessandro prende la sua bicicletta",
+			"target": 3,
+			"options": ["pronome", "articolo", "aggettivo"],
+			"answer": 2
+			},
+		{
+			"id": 1,
+			"sentence": "Non è il tuo zaino, è il mio",
+			"target": 7,
+			"options": ["pronome", "articolo", "aggettivo"],
+			"answer": 0
+			}
+		]
+	}

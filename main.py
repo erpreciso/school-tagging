@@ -572,62 +572,11 @@ class DashboardHandler(MainHandler):
 
 class Exercise():
 	selected = None
-	list_1 = [
-		{
-			"id": 1,
-			"sentence": "Of course, no man is entirely in his right mind at any time.",
-			"to find": "verb",
-			"answer": 4,
-			},
-		{
-			"id": 2,
-			"sentence": "Early to rise and early to bed makes a male healthy and wealthy and dead.",
-			"to find": "article",
-			"answer": 8,
-			},
-		{
-			"id": 3,
-			"sentence": "Expect nothing. Live frugally on surprise.",
-			"to find": "adverb",
-			"answer": 3,
-			},
-		{
-			"id": 4,
-			"sentence": "I'd rather be a lightning rod than a seismograph.",
-			"to find": "pronom",
-			"answer": 0,
-			},
-		{
-			"id": 5,
-			"sentence": "Children are all foreigners.",
-			"to find": "subject",
-			"answer": 0,
-			},
-	]
+	list = None
 	
-	list_2 = [
-		{
-			"id": 1,
-			"sentence": "Il gatto ha mangiato il topo",
-			"target": 0,
-			"options": ["pronome", "articolo", "aggettivo"],
-			"answer": 1,
-		},
-		{
-			"id": 1,
-			"sentence": "Alessandro prende la sua bicicletta",
-			"target": 3,
-			"options": ["pronome", "articolo", "aggettivo"],
-			"answer": 2,
-		},
-		{
-			"id": 1,
-			"sentence": "Non è il tuo zaino, è il mio",
-			"target": 7,
-			"options": ["pronome", "articolo", "aggettivo"],
-			"answer": 0,
-		},
-	]
+	def __init__(self):
+		self.list = json.loads(open("lists/exercises.json").read())
+
 	def send_list(self, login):
 		lst = [{
 			"type": 1,
@@ -636,7 +585,7 @@ class Exercise():
 			"answer": exercise["answer"],
 			"id": exercise["id"],
 			"words": exercise["sentence"].split(" "),
-			} for exercise in self.list_1]
+			} for exercise in self.list]
 		message = {
 					"type": "exercises list",
 					"message": lst,
