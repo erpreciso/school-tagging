@@ -389,7 +389,7 @@ class WelcomePageHandler(MainHandler):
 					logged = classroom.logged_students(),
 					)
 
-	def get(self):
+	def get(self, foo):
 		login = self.valid_user()
 		if login:
 			self.write_welcome(login)
@@ -644,10 +644,9 @@ class Exercise():
 		channel.send_message(classroom.teacher.username, message)
 
 app = webapp2.WSGIApplication([
-    ('/', LoginPageHandler),
     ('/check/(in|out|up)', LoginPageHandler),
-    ('/welcome', WelcomePageHandler),
     ('/_ah/channel/(connected|disconnected)/', ConnectionHandler),
     ("/exercise/(word_clicked|foobar)", ExerciseHandler),
     ("/dashboard/(get_logged|exercise_list|exercise_request)", DashboardHandler),
+    ('(.)', WelcomePageHandler),
 	], debug=True)
