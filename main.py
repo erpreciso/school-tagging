@@ -314,7 +314,6 @@ TODO = """
 -- new page with session results
 -- counter of exercises submitted at the moment
 - don't send the exercise answer!
-- add all possible url to the handler (regular expressions?)
 - allow only a teacher per session
 - verify all channels are up by sending a pin sometime, 
 		to remove from logged not responding ones
@@ -322,6 +321,7 @@ TODO = """
 
 """
 
+LANGUAGE = "IT"
 
 class MainHandler(webapp2.RequestHandler):
 	template_dir = os.path.join(os.path.dirname(__file__), 'pages')
@@ -387,6 +387,7 @@ class WelcomePageHandler(MainHandler):
 					role = login.role,
 					token = login.token,
 					logged = classroom.logged_students(),
+					language = LANGUAGE,
 					)
 
 	def get(self, foo):
@@ -431,7 +432,9 @@ class LoginPageHandler(MainHandler):
 	error = ""
 	
 	def write_check_page(self, template):
-		self.render_page(template, error=self.error)
+		self.render_page(template,
+					error=self.error,
+					language = LANGUAGE)
 
 	def get(self, action):
 		if action == "up":
@@ -648,5 +651,5 @@ app = webapp2.WSGIApplication([
     ('/_ah/channel/(connected|disconnected)/', ConnectionHandler),
     ("/exercise/(word_clicked|foobar)", ExerciseHandler),
     ("/dashboard/(get_logged|exercise_list|exercise_request)", DashboardHandler),
-    ('(.)', WelcomePageHandler),
+    ('(.*)', WelcomePageHandler),
 	], debug=True)
