@@ -1,11 +1,5 @@
 $(document).ready(function() {
-	var role = $("#role").text();
 	$("#show_html").on("click", loghtml);
-	if (role == "teacher") {
-		build_t_dashboard();
-		get_t_logged_list();
-		build_t_exercise_options();
-	}
 });
 
 onOpened = function() {

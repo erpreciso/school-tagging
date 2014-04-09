@@ -321,8 +321,6 @@ TODO = """
 
 """
 
-LANGUAGE = "EN"
-
 class MainHandler(webapp2.RequestHandler):
 	template_dir = os.path.join(os.path.dirname(__file__), 'pages')
 	jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
@@ -381,14 +379,13 @@ class WelcomePageHandler(MainHandler):
 	
 	def write_welcome(self, login):
 		classroom = Classroom()
-		self.render_page(
-					"welcome.html",
-					username = login.username,
-					role = login.role,
-					token = login.token,
-					logged = classroom.logged_students(),
-					language = LANGUAGE,
-					)
+		if login.role == "teacher":
+			self.render_page(
+						"teacher.html",
+						username = login.username,
+						token = login.token,
+						logged = classroom.logged_students(),
+						)
 
 	def get(self, foo):
 		login = self.valid_user()
@@ -549,7 +546,9 @@ class DashboardHandler(MainHandler):
 			MyLogs("user seems not valid")
 			self.redirect("/check/in")
 
-	def get(self, action):
+	def get(self, action, param):
+		MyLogs(action)
+		#~ MyLogs(param)
 		login = self.valid_user()
 		if login:
 			if action == "get_logged":
@@ -562,10 +561,11 @@ class DashboardHandler(MainHandler):
 				channel.send_message(login.username, message)
 			elif action == "exercise_list":
 				exercise = Exercise()
-				exercise.send_list(login)
-			elif action == "exercise_list_type_2":
+				#~ exercise.send_list(login)
+				MyLogs(param)
+			elif action == "exercises_types":
 				exercise = Exercise()
-				exercise.send_list_type_2(login)
+				exercise.send_types_list(login)
 		else:
 			MyLogs("user seems not valid")
 			self.redirect("/check/in")
@@ -593,18 +593,13 @@ class Exercise():
 		message = json.dumps(message)
 		channel.send_message(login.username, message)
 		
-	def send_list_type_2(self, login):
-		lst = [{
-			"type": 2,
-			"sentence": exercise["sentence"],
-			"target": exercise["target"],
-			"answer": exercise["answer"],
-			"options": exercise["options"],
-			"id": exercise["id"],
-			"words": exercise["sentence"].split(" "),
-			} for exercise in self.list_2]
+	def send_types_list(self, login):
+		lst = [
+			{"id": "type_1", "name": "find the element"},
+			{"id": "type_2", "name": "recognize the word"},
+			]
 		message = {
-					"type": "exercises list",
+					"type": "exercises_types",
 					"message": lst,
 					}
 		message = json.dumps(message)
@@ -643,7 +638,7 @@ routes = [
     ('/check/(in|out|up)', LoginPageHandler),
     ('/_ah/channel/(connected|disconnected)/', ConnectionHandler),
     ("/exercise/(word_clicked|foobar)", ExerciseHandler),
-    ("/dashboard/(get_logged|exercise_list|exercise_list_type_2|exercise_request)", DashboardHandler),
-    ('(.*)', WelcomePageHandler),
+    ("/dashboard/<action>", DashboardHandler),
+    ('/welcome(/*.*)', WelcomePageHandler),
 	]
 app = webapp2.WSGIApplication(routes=routes, debug=True)
