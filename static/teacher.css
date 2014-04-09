@@ -32,3 +32,8 @@
 	color: blue;
 	margin: 2px;
 	}
+
+#exercises_list .sentence {
+	font-size: 0.6em;
+	color: blue;
+	}

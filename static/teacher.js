@@ -37,22 +37,18 @@ function build_types_choice(data) {
 }
 
 function build_exercises_list(exercises_list) {
-	$("#exercise_list").remove();
+	//~ $("#exercises_list").remove();
 	var list = $(document.createElement("div"))
-		.attr("id", "exercise_list");
-	var exercise = "<div id='exercise_list_title'>List of available exercises</div>";
+		.attr("id", "exercises_list");
 	for (var i = 0; i < exercises_list.length; i++) {
-		exercise += "<div class='sentence' id='" + i;
-		exercise += "'>" + exercises_list[i].sentence + "</div> ";
+		var sentence = $(document.createElement("div"))
+			.attr("class", "sentence")
+			.attr("id", i)
+			.text(exercises_list[i].sentence);
+		$(list).append(sentence);
 	}
-	$("#exercise_list").append(exercise);
-	var type = $(document.createElement("div"))
-			.attr("class", "hidden")
-			.attr("id", "exercise_type")
-			.text(exercises_list[0].type);
-	$(list).append(type);
 	$("#exercises_menu").append(list);
-	$(".sentence").on("click", sentence_t_clicked);
+	//~ $(".sentence").on("click", sentence_t_clicked);
 }
 
 function button_fired (event) {
