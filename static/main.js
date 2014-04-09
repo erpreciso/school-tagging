@@ -93,22 +93,7 @@ function get_t_exercise_list_type_2() {
 	$.get("/dashboard/exercise_list_type_2");
 }
 
-function build_t_exercises_list(exercises_list) {
-	$("#exercise_list").empty();
-	build_t_exercise_options();
-	var exercise = "<div id='exercise_list_title'>List of available exercises</div>";
-	for (var i = 0; i < exercises_list.length; i++) {
-		exercise += "<div class='sentence' id='" + i;
-		exercise += "'>" + exercises_list[i].sentence + "</div> ";
-	}
-	$("#exercise_list").append(exercise);
-	var type = $(document.createElement("div"))
-			.attr("class", "hidden")
-			.attr("id", "exercise_type")
-			.text(exercises_list[0].type);
-	$("#exercise_list").append(type);
-	$(".sentence").on("click", sentence_t_clicked);
-}
+
 
 function build_t_exercise_options() {
 	var button_1 = $(document.createElement("button"))
@@ -346,9 +331,6 @@ onMessage = function(message) {
 	}
 	else if (data.type == "exercise") {
 		build_ts_exercise(data.message);
-	}
-	else if (data.type == "exercises list") {
-		build_t_exercises_list(data.message);
 	}
 	//~ alert(JSON.stringify(message));
 }

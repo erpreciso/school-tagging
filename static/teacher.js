@@ -8,7 +8,7 @@ function ask_info(what, data) {
 		$.get("/dashboard/get_logged");
 	}
 	else if (what == "exercises_types") {
-		$.get("/dashboard/exercises_types");
+		$.get("/dashboard/exercises_types/list");
 	}
 	else if (what == "exercises_list") {
 		$.get("/dashboard/exercises_list/" + data);
@@ -20,6 +20,10 @@ onMessage = function (message) {
 	if (data.type == "exercises_types") {
 		build_types_choice(data.message);
 	}
+	else if (data.type == "exercises_list") {
+		build_exercises_list(data.message);
+	}
+	//~ mylog(data);
 }
 
 function build_types_choice(data) {
@@ -30,6 +34,25 @@ function build_types_choice(data) {
 		$("#exercises_menu").append(b);
 		$(b).on("click", {id: data[i].id}, button_fired);
 	}
+}
+
+function build_exercises_list(exercises_list) {
+	$("#exercise_list").remove();
+	var list = $(document.createElement("div"))
+		.attr("id", "exercise_list");
+	var exercise = "<div id='exercise_list_title'>List of available exercises</div>";
+	for (var i = 0; i < exercises_list.length; i++) {
+		exercise += "<div class='sentence' id='" + i;
+		exercise += "'>" + exercises_list[i].sentence + "</div> ";
+	}
+	$("#exercise_list").append(exercise);
+	var type = $(document.createElement("div"))
+			.attr("class", "hidden")
+			.attr("id", "exercise_type")
+			.text(exercises_list[0].type);
+	$(list).append(type);
+	$("#exercises_menu").append(list);
+	$(".sentence").on("click", sentence_t_clicked);
 }
 
 function button_fired (event) {

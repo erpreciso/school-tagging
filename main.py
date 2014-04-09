@@ -387,7 +387,7 @@ class WelcomePageHandler(MainHandler):
 						logged = classroom.logged_students(),
 						)
 
-	def get(self, foo):
+	def get(self):
 		login = self.valid_user()
 		if login:
 			self.write_welcome(login)
@@ -429,9 +429,7 @@ class LoginPageHandler(MainHandler):
 	error = ""
 	
 	def write_check_page(self, template):
-		self.render_page(template,
-					error=self.error,
-					language = LANGUAGE)
+		self.render_page(template, error=self.error)
 
 	def get(self, action):
 		if action == "up":
@@ -547,7 +545,7 @@ class DashboardHandler(MainHandler):
 			self.redirect("/check/in")
 
 	def get(self, action, param):
-		MyLogs(action)
+		#~ MyLogs(action)
 		#~ MyLogs(param)
 		login = self.valid_user()
 		if login:
@@ -559,10 +557,9 @@ class DashboardHandler(MainHandler):
 						}
 				message = json.dumps(message)
 				channel.send_message(login.username, message)
-			elif action == "exercise_list":
+			elif action == "exercises_list":
 				exercise = Exercise()
-				#~ exercise.send_list(login)
-				MyLogs(param)
+				exercise.send_list(login, param)
 			elif action == "exercises_types":
 				exercise = Exercise()
 				exercise.send_types_list(login)
@@ -577,7 +574,9 @@ class Exercise():
 	def __init__(self):
 		self.list = json.loads(open("lists/exercises.json").read())
 
-	def send_list(self, login):
+	def send_list(self, login, type):
+		assert type == "type_1"
+		ex_list = self.list[type]
 		lst = [{
 			"type": 1,
 			"sentence": exercise["sentence"],
@@ -585,9 +584,9 @@ class Exercise():
 			"answer": exercise["answer"],
 			"id": exercise["id"],
 			"words": exercise["sentence"].split(" "),
-			} for exercise in self.list]
+			} for exercise in ex_list]
 		message = {
-					"type": "exercises list",
+					"type": "exercises_list",
 					"message": lst,
 					}
 		message = json.dumps(message)
@@ -634,11 +633,25 @@ class Exercise():
 		message = json.dumps(message)
 		channel.send_message(classroom.teacher.username, message)
 
-routes = [
-    ('/check/(in|out|up)', LoginPageHandler),
-    ('/_ah/channel/(connected|disconnected)/', ConnectionHandler),
-    ("/exercise/(word_clicked|foobar)", ExerciseHandler),
-    ("/dashboard/<action>", DashboardHandler),
-    ('/welcome(/*.*)', WelcomePageHandler),
-	]
-app = webapp2.WSGIApplication(routes=routes, debug=True)
+#~ routes = [
+    #~ ('/check/(in|out|up)', LoginPageHandler),
+    #~ ('/_ah/channel/(connected|disconnected)/', ConnectionHandler),
+    #~ ("/exercise/(word_clicked|foobar)", ExerciseHandler),
+    #~ (r'/dashboard/<action>', DashboardHandler),
+    #~ ('/welcome(/*.*)', WelcomePageHandler),
+	#~ ]
+#~ app = webapp2.WSGIApplication(routes=routes, debug=True)
+app = webapp2.WSGIApplication([
+	webapp2.Route(
+			r'/dashboard/<action>/<param>',
+			handler=DashboardHandler,
+			name="dashboard"),
+	webapp2.Route(
+			r'/check/<action>',
+			handler=LoginPageHandler,
+			name="login"),
+	webapp2.Route(
+			r'/welcome',
+			handler=WelcomePageHandler,
+			name="welcome"),
+			])
