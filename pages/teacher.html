@@ -12,6 +12,16 @@
 	</div>
 	<div id="dashboard">
 		<div class="section_header">Dashboard</div>
+		<div id="students_data">
+			{%for student in logged %}
+			<div class="student_dashboard" id="{{student}}">
+				<div class="name">{{student}}</div>
+				<div class="exercise_content"></div>
+				<div class="exercise_status"></div>
+				<div class="response_time"></div>
+			</div>
+			{% endfor %}
+		</div>
 	</div>
 </div>
 {% endblock %}

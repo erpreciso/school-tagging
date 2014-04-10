@@ -26,10 +26,44 @@ onMessage = function (message) {
 		build_exercises_list(list, exercise_type);
 	}
 	else if (data_arrived.type == "exercise") {
-		mylog(data_arrived);
+		
+	}
+	else if (data_arrived.type == "connected_user") {
+		var student = data_arrived.username;
+		add_student_dashboard(student);
+	}
+	else if (data_arrived.type == "disconnected_user") {
+		var student = data_arrived.username;
+		remove_student_dashboard(student);
 	}
 }
 
+function add_student_dashboard(student) {
+	var student_dashboard = $(document.createElement("div"))
+		.attr("class", "student_dashboard")
+		.attr("id", student);
+	var name = $(document.createElement("div"))
+		.attr("class", "name")
+		.text(student);
+	var exercise_content = $(document.createElement("div"))
+		.attr("class", "exercise_content");
+	var exercise_status = $(document.createElement("div"))
+		.attr("class", "exercise_status");
+	var response_time = $(document.createElement("div"))
+		.attr("class", "response_time");
+	$(student_dashboard)
+		.append(name)
+		.append(exercise_content)
+		.append(exercise_status)
+		.append(response_time);
+	$("#students_data").append(student_dashboard);
+}
+
+function remove_student_dashboard(student) {
+	$("#" + student).remove();
+}
+	
+	
 function build_buttons_to_choose (data) {
 	var types = data;
 	for (var i =0; i < types.length; i++) {

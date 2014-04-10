@@ -37,3 +37,10 @@
 	font-size: 0.6em;
 	color: blue;
 	}
+
+.student_dashboard {
+	background-color: #E5E5E5;
+	color: green;
+	margin: 1px solid black;
+	height: 50px;
+	}

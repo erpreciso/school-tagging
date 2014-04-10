@@ -23,53 +23,6 @@ function loghtml(){
 	mylog($("body").html());
 }
 
-function send_s_word_clicked (event) {
-	var triggered = event.target.id;
-	$("#target").children().css("background-color", "inherit");
-	$("#target #" + triggered).css("background-color", "yellow");
-	$.post("/exercise/word_clicked", {"word_number": triggered});
-}
-
-function get_t_logged_list() {
-	$.get("/dashboard/get_logged");
-}
-
-function update_t_student_dashboards(action, students_list) {
-	for (var i = 0; i < students_list.length; i++) {
-		if (action == "build") {
-			var student_dashboard = $(document.createElement("div"))
-				.attr("class", "student_dashboard")
-				.attr("id", students_list[i]);
-			var name = $(document.createElement("div"))
-				.attr("class", "name")
-				.text(students_list[i]);
-			var exercise_content = $(document.createElement("div"))
-				.attr("class", "exercise_content");
-			var exercise_status = $(document.createElement("div"))
-				.attr("class", "exercise_status");
-			var response_time = $(document.createElement("div"))
-				.attr("class", "response_time");
-			$(student_dashboard)
-				.append(name)
-				.append(exercise_content)
-				.append(exercise_status)
-				.append(response_time);
-			$("#student_detail").append(student_dashboard);
-		}
-		else if (action == "remove") {
-			$("#" + students_list[0]).remove();
-		}
-	}
-}
-
-function get_t_exercise_list() {
-	$.get("/dashboard/exercise_list");
-}
-
-function get_t_exercise_list_type_2() {
-	$.get("/dashboard/exercise_list_type_2");
-}
-
 
 
 function build_t_exercise_options() {
@@ -86,51 +39,11 @@ function build_t_exercise_options() {
 }
 
 
-function build_t_dashboard() {
-	var dashboard = document.createElement("div");
-	$(dashboard).attr("id", "dashboard");
-	var exercise_list = document.createElement("div");
-	$(exercise_list)
-		.attr("id", "exercise_list")
-		.append('<div class="title">Exercise list</div>');
-	var classroom_stats = document.createElement("div");
-	$(classroom_stats)
-		.attr("id", "classroom_stats")
-		.append('<div class="title">Classroom statistics</div>');
-	var student_detail = document.createElement("div");
-	$(student_detail)
-		.attr("id", "student_detail")
-		.append('<div class="title">Students</div>');
-	$(dashboard).append(exercise_list);
-	$(dashboard).append(classroom_stats);
-	$(dashboard).append(student_detail);
-	$("#working_area").append(dashboard);
-}
-
 function build_ts_exercise (exercise) {
 	//~ student UI
 	var role = $("#role").text();
-	if (role == "student") {
-		$("#exercise").remove();
-		var instructions = "<div id='instructions'>Please click on the correct ";
-		instructions += exercise["to find"];
-		instructions += "</div>";
-		
-		var target = "<div id='target'>";
-		for (var i=0; i < exercise.words.length; i++) {
-			target += "<div class='word' id='" + i;
-			target += "'>" + exercise.words[i] + "</div> ";
-		}
-		target += "</div>";
-		
-		var exercise = "<div id='exercise'>";
-		exercise += instructions;
-		exercise += target;
-		exercise += "</div>";
-		$("#working_area").append(exercise);
-		$(".word").on("click", send_s_word_clicked);
-	}
-	else if (role == "teacher") {
+	
+	if (role == "teacher") {
 		var param = {"action": "build", "exercise": exercise};
 		update_t_student_detail(param);
 		build_t_classroom_stats();
@@ -263,49 +176,16 @@ function update_t_student_detail (p) {
 }
 
 
-function update_ts_connected_users_list (username, role, status) {
-	if (role != "teacher") {
-		if (status == "connected user") {
-			var user = "<div class='user' id='logged_" + username;
-			user += "'><strong>" + username + "</strong></div>";
-			$("#userlist").append(user);
-			update_t_logged(1);
-		}
-		else if (status == "disconnected user") {
-			$("#logged_" + username).remove();
-			update_t_logged(-1);
-		}
-	}
-}
-
 onMessage = function(message) {
 	var data = JSON.parse(message.data);
 	var role = $("#role").text();
-	if (data.type == "students list") {
-		update_t_student_dashboards("build", data.list);
-	}
-	else if (data.type == "student choice") {
+
+	if (data.type == "student choice") {
 		var param = {"action": "update", "content" : data.content};
 		update_t_student_detail(param);
 	}
-	else if (data.type == "connected user") {
-		update_ts_connected_users_list(
-				data.username,
-				data.role,
-				"connected user");
-		if (role == "teacher") {
-			update_t_student_dashboards("build", [data.username]);
-		}
-	}
-	else if (data.type == "disconnected user") {
-		update_ts_connected_users_list(
-				data.username,
-				data.role,
-				"disconnected user");
-		if (role == "teacher") {
-			update_t_student_dashboards("remove", [data.username]);
-		}
-	}
+	
+	
 	else if (data.type == "exercise") {
 		build_ts_exercise(data.message);
 	}

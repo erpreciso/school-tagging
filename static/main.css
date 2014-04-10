@@ -21,16 +21,6 @@ header {
 	border: 1px solid #737373;
 	}
 
-footer {
-	border: 1px solid #737373;
-	padding: 3px;
-	background-color: #CECECE;
-	}
-
-#dashboard .title {
-	color: blue;
-	}
-
 .hidden {
 	display: none;
 	}
@@ -123,26 +113,9 @@ h2 {
 	font-size: 1.2em;
 	color: #333333;
 	}
-
-#wrapper {
-	
-	}
-
 	
 .error {
 	color: red;
-	}
-
-.user {
-	background-color: #FFFFFF;
-	display: inline-block;
-	font-size: 0.8em;
-	margin: 3px;
-	}
-
-#userlist {
-	background-color: #F2F2F2;
-	font-size: 0.8em;
 	}
 
 #connection_status {

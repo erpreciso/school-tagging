@@ -38,13 +38,12 @@ class Classroom():
 
 	def send_connection(self, login, action):
 		if action == "open":
-			type = "connected user"
+			type = "connected_user"
 		elif action == "close":
-			type = "disconnected user"
+			type = "disconnected_user"
 		message = {
 			"type": type,
 			"username": login.username,
-			"role": login.role,
 			}
 		message = json.dumps(message)
 		channel.send_message(self.teacher.username, message)
@@ -386,6 +385,12 @@ class WelcomePageHandler(MainHandler):
 						token = login.token,
 						logged = classroom.logged_students(),
 						)
+		elif login.role == "student":
+			self.render_page(
+						"student.html",
+						username = login.username,
+						token = login.token,
+						)
 
 	def get(self):
 		login = self.valid_user()
@@ -548,15 +553,7 @@ class DashboardHandler(MainHandler):
 	def get(self, action, param):
 		login = self.valid_user()
 		if login:
-			if action == "get_logged":
-				classroom = Classroom()
-				message = {
-						"type": "students list",
-						"list": classroom.logged_students(),
-						}
-				message = json.dumps(message)
-				channel.send_message(login.username, message)
-			elif action == "exercises_list":
+			if action == "exercises_list":
 				exercise = Exercise()
 				exercise.send_list(login, param)
 			elif action == "exercises_types":
@@ -633,14 +630,7 @@ class Exercise():
 		message = json.dumps(message)
 		channel.send_message(classroom.teacher.username, message)
 
-#~ routes = [
-    #~ ('/check/(in|out|up)', LoginPageHandler),
-    #~ ('/_ah/channel/(connected|disconnected)/', ConnectionHandler),
-    #~ ("/exercise/(word_clicked|foobar)", ExerciseHandler),
-    #~ (r'/dashboard/<action>', DashboardHandler),
-    #~ ('/welcome(/*.*)', WelcomePageHandler),
-	#~ ]
-#~ app = webapp2.WSGIApplication(routes=routes, debug=True)
+
 app = webapp2.WSGIApplication([
 	webapp2.Route(
 			r'/dashboard/<action>/<param>',
@@ -654,4 +644,12 @@ app = webapp2.WSGIApplication([
 			r'/welcome',
 			handler=WelcomePageHandler,
 			name="welcome"),
+	webapp2.Route(
+			r'/exercise/<action>',
+			handler=ExerciseHandler,
+			name="exercise"),
+	webapp2.Route(
+			r'/_ah/channel/<action>/',
+			handler=ConnectionHandler,
+			name="connection"),
 			])

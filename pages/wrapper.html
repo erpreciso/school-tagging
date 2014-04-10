@@ -26,20 +26,8 @@ school-tagging application
 	<div id="welcome">Welcome {{username}}</div>
 	<button id="show_html">show html code</button>
 	{% block payload %}
-<!--
-	
--->
+
 	{% endblock %}
-	<footer>
-		<div id="userlist">
-			<div>Who's logged in</div>
-			{% for user in logged %}
-			<div class="user" id="logged_{{user}}">
-				<div><strong>{{user}}</strong></div>
-			</div>
-			{% endfor %}
-		</div>
-	</footer>
 </div>
 <!--
 	javascript code for the Channel API
