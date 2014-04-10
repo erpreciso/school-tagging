@@ -16,43 +16,70 @@ function ask_info(what, data) {
 }
 
 onMessage = function (message) {
-	var data = JSON.parse(message.data);
-	if (data.type == "exercises_types") {
-		build_types_choice(data.message);
+	var data_arrived = JSON.parse(message.data);
+	if (data_arrived.type == "exercises_types") {
+		build_buttons_to_choose(data_arrived.message);
 	}
-	else if (data.type == "exercises_list") {
-		build_exercises_list(data.message);
+	else if (data_arrived.type == "exercises_list") {
+		var list = data_arrived.message;
+		var exercise_type = data_arrived.exercise_type;
+		build_exercises_list(list, exercise_type);
 	}
-	//~ mylog(data);
+	else if (data_arrived.type == "exercise") {
+		mylog(data_arrived);
+	}
 }
 
-function build_types_choice(data) {
-	for (var i =0; i < data.length; i++) {
-		var b = $(document.createElement("button"))
+function build_buttons_to_choose (data) {
+	var types = data;
+	for (var i =0; i < types.length; i++) {
+		var button = $(document.createElement("button"))
 			.attr("class", "exercise_type")
-			.text("List for " + data[i].name);
-		$("#exercises_menu").append(b);
-		$(b).on("click", {id: data[i].id}, button_fired);
+			.attr("id", "choose_type_" + i)
+			.text("List for " + types[i].name);
+		$("#exercises_menu").append(button);
+		$(button).on("click", {type: types[i].id}, function (event) {
+			ask_info("exercises_list", event.data.type);
+		});
 	}
 }
 
-function build_exercises_list(exercises_list) {
+function build_exercises_list(exercises_list, exercise_type) {
 	//~ $("#exercises_list").remove();
 	var list = $(document.createElement("div"))
 		.attr("id", "exercises_list");
 	for (var i = 0; i < exercises_list.length; i++) {
 		var sentence = $(document.createElement("div"))
 			.attr("class", "sentence")
-			.attr("id", i)
+			.attr("id", "sentence_" + i)
 			.text(exercises_list[i].sentence);
 		$(list).append(sentence);
 	}
-	$("#exercises_menu").append(list);
-	//~ $(".sentence").on("click", sentence_t_clicked);
+	var button = $(document.createElement("button"))
+		.attr("id", "send_exercise_choosen")
+		.text("Send exercise to classroom");
+	$("#exercises_menu")
+		.append(list)
+		.append(button);
+	$(list).on("click", choose_element);
+	$(button).on("click", {type: exercise_type}, function(event) {
+		var chosen = $("#chosen").parent().attr("id").substring(9);
+		param = {"exercise_number": chosen, "type": event.data.type}
+		$.post("/dashboard/exercise_request/foo", param);
+	});
 }
 
-function button_fired (event) {
-	if ($(event.target).hasClass("exercise_type")) {
-		ask_info("exercises_list", event.data.id);
-	}
+function choose_element (event) {
+	//~ on click, will highlight the element clicked and add a nested 
+	//~ element with id=chosen
+	var triggered = $("#" + event.target.id);
+	var container = $(triggered).parent();
+	$(container).children().css("background-color", "inherit");
+	$(triggered).css("background-color", "yellow");
+	$("#chosen").remove();
+	var chosen = $(document.createElement("div"))
+		.attr("id", "chosen")
+		.attr("class", "hidden");
+	$(triggered).append(chosen);
 }
+

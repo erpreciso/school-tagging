@@ -531,13 +531,14 @@ class LoginPageHandler(MainHandler):
 		self.redirect("/check/in")
 		
 class DashboardHandler(MainHandler):
-	def post(self, action):
+	def post(self, action, param):
 		login = self.valid_user()
 		if login:
 			if action == "exercise_request":
 				exercise_number = int(self.request.get("exercise_number"))
+				exercise_type = self.request.get("type")
 				exercise = Exercise()
-				exercise.select(exercise_number)
+				exercise.select(exercise_type, exercise_number)
 				exercise.send_to_classroom()
 				exercise.send_to_teacher()
 		else:
@@ -545,8 +546,6 @@ class DashboardHandler(MainHandler):
 			self.redirect("/check/in")
 
 	def get(self, action, param):
-		#~ MyLogs(action)
-		#~ MyLogs(param)
 		login = self.valid_user()
 		if login:
 			if action == "get_logged":
@@ -587,6 +586,7 @@ class Exercise():
 			} for exercise in ex_list]
 		message = {
 					"type": "exercises_list",
+					"exercise_type": type,
 					"message": lst,
 					}
 		message = json.dumps(message)
@@ -604,14 +604,14 @@ class Exercise():
 		message = json.dumps(message)
 		channel.send_message(login.username, message)
 
-	def select(self, number):
+	def select(self, type, number):
 		lst = [{
 			"sentence": exercise["sentence"],
 			"to find": exercise["to find"],
 			"answer": exercise["answer"],
 			"id": exercise["id"],
 			"words": exercise["sentence"].split(" "),
-			} for exercise in self.list_1]
+			} for exercise in self.list[type]]
 		self.selected = lst[number]
 	
 	def send_to_classroom(self):

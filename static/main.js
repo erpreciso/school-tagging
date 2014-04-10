@@ -30,29 +30,6 @@ function send_s_word_clicked (event) {
 	$.post("/exercise/word_clicked", {"word_number": triggered});
 }
 
-function sentence_t_clicked (event) {
-	var triggered = event.target.id;
-	$("#exercise_list").children().css("background-color", "inherit");
-	$("#exercise_list #" + triggered).css("background-color", "yellow");
-	var button = "<button id='select_sentence'>Send exercise</button>";
-	$("#select_sentence").remove();
-	$("#chosen_sentence").remove();
-	$("#working_area").append(button);
-	$("#working_area").append("<div id='chosen_sentence'></div>");
-	$("#chosen_sentence")
-		.css("display", "none")
-		.val(triggered);
-	$("#select_sentence").on("click", select_t_sentence);
-}
-
-function select_t_sentence () {
-	var chosen = $("#chosen_sentence").val();
-	//~ $("#exercise_list").remove();
-	$("#select_sentence").remove();
-	$.post("/dashboard/exercise_request", {"exercise_number": chosen});
-	
-}
-
 function get_t_logged_list() {
 	$.get("/dashboard/get_logged");
 }
