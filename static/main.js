@@ -39,22 +39,6 @@ function build_t_exercise_options() {
 }
 
 
-function build_ts_exercise (exercise) {
-	//~ student UI
-	var role = $("#role").text();
-	
-	if (role == "teacher") {
-		var param = {"action": "build", "exercise": exercise};
-		update_t_student_detail(param);
-		build_t_classroom_stats();
-		var button = $(document.createElement("button"))
-			.attr("id", "save_and_ask_new")
-			.text("Save results and ask new exercise");
-		$("#working_area").append(button);
-		$(button).on("click", save_and_new_t);
-	}
-}
-
 function save_and_new_t () {
 	//~ create an object to be sent to the server to be stored
 	//~ create a new dashboard and a new exercise area
@@ -184,10 +168,4 @@ onMessage = function(message) {
 		var param = {"action": "update", "content" : data.content};
 		update_t_student_detail(param);
 	}
-	
-	
-	else if (data.type == "exercise") {
-		build_ts_exercise(data.message);
-	}
-	//~ alert(JSON.stringify(message));
 }
