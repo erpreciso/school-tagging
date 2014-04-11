@@ -46,7 +46,8 @@ class Classroom():
 			"username": login.username,
 			}
 		message = json.dumps(message)
-		channel.send_message(self.teacher.username, message)
+		if login.username != self.teacher.username:
+			channel.send_message(self.teacher.username, message)
 			
 	def __init__(self):
 		self.teacher = None
