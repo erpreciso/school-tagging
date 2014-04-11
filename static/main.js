@@ -126,8 +126,6 @@ function update_t_student_detail (p) {
 		var student = p.content.student;
 		var student_dashboard = $("#student_detail #" + p.content.student);
 		var triggered = p.content.choice;
-		var base = $("#student_detail #" + student + " .exercise .word")
-				.css("background-color");
 		$("#student_detail #" + student + " .exercise #words")
 				.children().css("background-color", "inherit");
 		var answer = $("#student_detail #" + student + " .exercise #" + triggered);
@@ -156,16 +154,5 @@ function update_t_student_detail (p) {
 			}
 		
 		
-	}
-}
-
-
-onMessage = function(message) {
-	var data = JSON.parse(message.data);
-	var role = $("#role").text();
-
-	if (data.type == "student choice") {
-		var param = {"action": "update", "content" : data.content};
-		update_t_student_detail(param);
 	}
 }

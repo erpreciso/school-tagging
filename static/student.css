@@ -18,3 +18,25 @@
 	font-size: 0.8em;
 	color: blue;
 	}
+
+#exercise {
+	background-color: #C0C0C0;
+	margin: 20px;
+	padding: 10px;
+	}
+	
+#exercise .instructions {
+	font-size: 0.8em;
+	font-weight: bold;
+	color: blue;
+	}
+
+#exercise #target {
+	font-size: 1.5em;
+	color: red;
+	background-color: #ECEBED;
+	}
+
+.word {
+	display: inline;
+	}

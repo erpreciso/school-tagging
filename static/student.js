@@ -1,34 +1,38 @@
 onMessage = function (message) {
 	var data_arrived = JSON.parse(message.data);
 	if (data_arrived.type == "exercise") {
-		build_exercise(data_arrived.message);
+		Exercise.build(data_arrived.message);
 	}
 }
 
-function build_exercise (exercise) {
-	$("#exercise").remove();
-	var instructions = "<div id='instructions'>Please click on the correct ";
-	instructions += exercise["to find"];
-	instructions += "</div>";
-	
-	var target = "<div id='target'>";
-	for (var i=0; i < exercise.words.length; i++) {
-		target += "<div class='word' id='" + i;
-		target += "'>" + exercise.words[i] + "</div> ";
+var Exercise = new Object;
+Exercise.build = function (exercise) {
+	if (exercise.type == "type_1") {
+		$("#exercise").remove();
+		var instructions = $(document.createElement("div"))
+			.attr("class", "instructions")
+			.text("Please select the correct " + exercise["to find"]);
+		var target = $(document.createElement("div"))
+			.attr("id", "target");
+		for (var i=0; i < exercise.words.length; i++) {
+			var word = $(document.createElement("div"))
+				.attr("class", "word")
+				.attr("id", i)
+				.text(exercise.words[i] + " ");
+				$(target).append(word);
+		}
+		var exercise = $(document.createElement("div"))
+			.attr("id", "exercise")
+			.append(instructions)
+			.append(target);
+		$("#exercise_area").append(exercise);
+		$(".word").on("click", function (event) {
+			var triggered = event.target.id;
+			$("#target").children().css("background-color", "inherit");
+			$("#target #" + triggered).css("background-color", "yellow");
+			$.post("/exercise/word_clicked", {"word_number": triggered});
+		});
 	}
-	target += "</div>";
-	
-	var exercise = "<div id='exercise'>";
-	exercise += instructions;
-	exercise += target;
-	exercise += "</div>";
-	$("#exercise_area").append(exercise);
-	$(".word").on("click", function (event) {
-		var triggered = event.target.id;
-		$("#target").children().css("background-color", "inherit");
-		$("#target #" + triggered).css("background-color", "yellow");
-		$.post("/exercise/word_clicked", {"word_number": triggered});
-	});
 }
 
 

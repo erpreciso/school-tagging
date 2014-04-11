@@ -37,6 +37,10 @@ onMessage = function (message) {
 		var student = data_arrived.username;
 		Dashboard.remove_student_dashboard(student);
 	}
+	else if (data_arrived.type == "student_choice") {
+		var param = {"action": "update", "content" : data_arrived.content};
+		Dashboard.update_student_exercise(param);
+	}
 }
 
 var Dashboard = {
@@ -114,16 +118,27 @@ var Dashboard = {
 		$(triggered).append(chosen);
 	},
 	add_exercise_to_all_students_dashboards: function (exercise) {
-		//~ mylog(exercise);
 		var students_count = $(".student_dashboard").length;
+		$(".student_dashboard .sentence").remove();
 		for (var i = 0; i < students_count; i++) {
 			var sentence = $(document.createElement("div"))
-				.attr("class", "sentence")
-				.text(exercise.sentence);
+				.attr("class", "sentence");
+			for (var j = 0; j < exercise.words.length; j++) {
+				var word = $(document.createElement("div"))
+					.addClass("word " + j)
+					.text(exercise.words[j] + " "); 
+				$(sentence).append(word);
+			}
 			$($(".student_dashboard")[i])
 				.children(".exercise_content")
 				.append(sentence);
-			
 		}
+	},
+	update_student_exercise: function (data) {
+		var student = data.content.student;
+		var choice = data.content.choice;
+		$("#" + student + " .word").css("background-color", "inherit");
+		var triggered = $("#" + student + " [class='word " + choice + "']");
+		triggered.css("background-color", "yellow");
 	}
 }

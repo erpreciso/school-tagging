@@ -408,7 +408,7 @@ class ExerciseHandler(MainHandler):
 				classroom = Classroom()
 				word_number = int(self.request.get("word_number"))
 				message = {
-					"type": "student choice",
+					"type": "student_choice",
 					"content": {
 						"student": login.username,
 						"choice": word_number,
@@ -603,6 +603,7 @@ class Exercise():
 
 	def select(self, type, number):
 		lst = [{
+			"type": type,
 			"sentence": exercise["sentence"],
 			"to find": exercise["to find"],
 			"answer": exercise["answer"],

@@ -44,3 +44,13 @@
 	margin: 1px solid black;
 	height: 50px;
 	}
+	
+#exercise_list {
+	background-color: #E8E8E8;
+	font-size: 0.8em;
+	}
+
+.word {
+	display: inline;
+	}
+

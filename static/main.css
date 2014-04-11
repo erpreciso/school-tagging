@@ -25,44 +25,7 @@ header {
 	display: none;
 	}
 
-.word {
-	display: inline;
-	}
 
-#exercise {
-	background-color: #C0C0C0;
-	margin: 20px;
-	padding: 10px;
-	}
-
-#exercise_list {
-	background-color: #E8E8E8;
-	font-size: 0.8em;
-	}
-
-#exercise_list #exercise_list_title {
-	background-color: #FFFFFF;
-	padding: 2px;
-	margin: 2px;
-	font-weight: bold;
-	}
-
-#exercise_list .sentence {
-	background-color: #ECEBED;
-	padding: 3px;
-	margin: 2px;
-	}
-
-#exercise #instructions {
-	font-size: 0.8em;
-	font-weight: bold;
-	}
-
-#exercise #target {
-	font-size: 1.5em;
-	color: red;
-	background-color: #ECEBED;
-	}
 
 .correct {
 	font-size: 1.2em;
