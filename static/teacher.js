@@ -15,6 +15,8 @@ onMessage = function (message) {
 	else if (data_arrived.type == "exercise") {
 		var exercise = data_arrived.message.exercise;
 		var etype = data_arrived.message.exercise_type;
+		var dataToStore = JSON.stringify({"exercise": exercise, "etype": etype});
+		localStorage.setItem("exercise", dataToStore);
 		Dashboard.add_exercise_to_all_students_dashboards(exercise, etype);
 	}
 	else if (data_arrived.type == "connected_user") {
@@ -118,9 +120,20 @@ var Dashboard = {
 					.text(exercise.words[j] + " ");
 					if (etype == "type_2" && 
 							j == exercise.goal[etype].target) {
-						$(word).css("background-color", "blue");
+						$(word).css("background-color", "#AAF9F4");
 					}
 				$(sentence).append(word);
+			}
+			if (etype == "type_2") {
+				for (var j in exercise.goal[etype].options) {
+					var option = exercise.goal[etype].options[j];
+					var choice = $(document.createElement("div"))
+						.addClass("box")
+						.addClass("raw_box")
+						.attr("id", "answer_" + option)
+						.text(option);
+					$(sentence).append(choice);
+				}
 			}
 			$($(".student_dashboard")[i])
 				.children(".exercise_content")
@@ -131,13 +144,23 @@ var Dashboard = {
 		var student = data.content.student;
 		var choice = data.content.choice;
 		var etype = data.content.etype;
+		var localData = JSON.parse(localStorage.getItem("exercise"));
 		if (etype == "type_1") {
 			$("#" + student + " .word").css("background-color", "inherit");
 			var triggered = $("#" + student + " [class='word " + choice + "']");
 			triggered.css("background-color", "yellow");
 		}
 		else {
-			mylog(choice);
+			var i = localData.exercise.goal[localData.etype].answer;
+			var correct = localData.exercise.goal[localData.etype].options[i];
+			$("#" + student + " #answer_" + choice)
+				.removeClass("raw_box");
+			if (choice == correct) {
+				$("#" + student + " #answer_" + choice).addClass("correct_box");
+			}
+			else {
+				$("#" + student + " #answer_" + choice).addClass("wrong_box");
+			}
 		}
 	}
 }

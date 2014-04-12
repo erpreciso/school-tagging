@@ -13,7 +13,7 @@
 				"type_2": {
 					"description": "Which type is this",
 					"target": 2,
-					"options": ["adverb", "adjective"],
+					"options": ["adverb", "adjective", "name"],
 					"answer": 0
 					}
 				}
@@ -32,7 +32,7 @@
 				"type_2": {
 					"description": "Which type is this",
 					"target": 8,
-					"options": ["adverb", "adjective"],
+					"options": ["adverb", "adjective", "name"],
 					"answer": 0
 					}
 				}
@@ -51,7 +51,7 @@
 				"type_2": {
 					"description": "Which type is this",
 					"target": 1,
-					"options": ["adverb", "adjective"],
+					"options": ["adverb", "adjective", "name"],
 					"answer": 1
 					}
 				}
@@ -70,7 +70,7 @@
 				"type_2": {
 					"description": "Which type is this",
 					"target": 3,
-					"options": ["conjunction", "adjective"],
+					"options": ["conjunction", "adjective", "name"],
 					"answer": 0
 					}
 				}
