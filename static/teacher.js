@@ -1,14 +1,20 @@
 $(document).ready(function () {
-	//~ get list of exercises types
-	ask_info("exercises_types");
+	init.attach_events_to_buttons();
 });
+
+var init = {
+	attach_events_to_buttons: function () {
+		for (var i = 0; i < $(".exercise_type").length; i++) {
+			$(".exercise_type:eq(" + i + ")").on("click", {type: i + 1}, function (event) {
+				$.get("/dashboard/exercises_list/type_" + event.data.type);
+			});	
+		}
+	}
+}
 
 function ask_info(what, data) {
 	if (what == "logged") {
 		$.get("/dashboard/get_logged");
-	}
-	else if (what == "exercises_types") {
-		$.get("/dashboard/exercises_types/list");
 	}
 	else if (what == "exercises_list") {
 		$.get("/dashboard/exercises_list/" + data);
@@ -17,10 +23,7 @@ function ask_info(what, data) {
 
 onMessage = function (message) {
 	var data_arrived = JSON.parse(message.data);
-	if (data_arrived.type == "exercises_types") {
-		Dashboard.build_buttons_to_choose(data_arrived.message);
-	}
-	else if (data_arrived.type == "exercises_list") {
+	if (data_arrived.type == "exercises_list") {
 		var list = data_arrived.message;
 		var exercise_type = data_arrived.exercise_type;
 		Dashboard.build_exercises_list(list, exercise_type);
@@ -44,19 +47,6 @@ onMessage = function (message) {
 }
 
 var Dashboard = {
-	build_buttons_to_choose: function (data) {
-		var types = data;
-		for (var i =0; i < types.length; i++) {
-			var button = $(document.createElement("button"))
-				.attr("class", "exercise_type")
-				.attr("id", "choose_type_" + i)
-				.text("List for " + types[i].name);
-			$("#exercises_menu").append(button);
-			$(button).on("click", {type: types[i].id}, function (event) {
-				ask_info("exercises_list", event.data.type);
-			});
-		}
-	},
 	add_student_dashboard: function (student) {
 		var student_dashboard = $(document.createElement("div"))
 			.attr("class", "student_dashboard")

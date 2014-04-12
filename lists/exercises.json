@@ -1,57 +1,70 @@
-{
-	"type_1": [
+[
 		{
 			"id": 1,
-			"sentence": "Of course, no man is entirely in his right mind at any time.",
-			"to find": "verb",
-			"answer": 4
+			"sentence": "I am always doing things I can’t do. That is how I get to do them.",
+			"author": "Pablo Picasso",
+			"words": ["I", "am", "always", "doing", "things", "I", "can't", "do.", "That", "is", "how", "I", "get", "to", "do", "them."],
+			"exercise": {
+				"type_1": {
+					"to find": "verb",
+					"answers": [1, 3, 6, 7, 9, 12, 14]
+					},
+				"type_2": {
+					"target": 2,
+					"options": ["adverb", "adjective"],
+					"answer": 0
+					}
+				}
 			},
 		{
 			"id": 2,
-			"sentence": "Early to rise and early to bed makes a male healthy and wealthy and dead.",
-			"to find": "article",
-			"answer": 8
+			"sentence": "You miss 100 percent of the shots you never take.",
+			"author": "Wayne Gretzky",
+			"words": ["You", "miss", "100", "percent", "of", "the", "shots", "you", "never", "take."],
+			"exercise": {
+				"type_1": {
+					"to find": "article",
+					"answers": [5]
+					},
+				"type_2": {
+					"target": 8,
+					"options": ["adverb", "adjective"],
+					"answer": 0
+					}
+				}
 			},
 		{
 			"id": 3,
-			"sentence": "Expect nothing. Live frugally on surprise.",
-			"to find": "adverb",
-			"answer": 3
+			"sentence": "What may be done at any time will be done at no time.",
+			"words": ["What", "may", "be", "done", "at", "any", "time", "will", "be", "done", "at", "no", "time."],
+			"author": "Scottish Proverb",
+			"exercise": {
+				"type_1": {
+					"to find": "verb",
+					"answers": [1, 2, 3, 7, 8, 9]
+					},
+				"type_2": {
+					"target": 1,
+					"options": ["adverb", "adjective"],
+					"answer": 1
+					}
+				}
 			},
 		{
 			"id": 4,
-			"sentence": "I'd rather be a lightning rod than a seismograph.",
-			"to find": "pronom",
-			"answer": 0
-			},
-		{
-			"id": 5,
-			"sentence": "Children are all foreigners.",
-			"to find": "subject",
-			"answer": 0
-			}
-		],
-	"type_2": [
-		{
-			"id": 1,
-			"sentence": "Il gatto ha mangiato il topo",
-			"target": 0,
-			"options": ["pronome", "articolo", "aggettivo"],
-			"answer": 1
-			},
-		{
-			"id": 1,
-			"sentence": "Alessandro prende la sua bicicletta",
-			"target": 3,
-			"options": ["pronome", "articolo", "aggettivo"],
-			"answer": 2
-			},
-		{
-			"id": 1,
-			"sentence": "Non è il tuo zaino, è il mio",
-			"target": 7,
-			"options": ["pronome", "articolo", "aggettivo"],
-			"answer": 0
+			"sentence": "Death is nothing, but to live defeated and inglorious is to die daily.",
+			"author": "Napoleone Bonaparte",
+			"words": ["Death", "is", "nothing,", "but", "to", "live", "defeated", "and", "inglorious", "is", "to", "die", "daily."],
+			"exercise": {
+				"type_1": {
+					"to find": "subject",
+					"answers": [0]
+					},
+				"type_2": {
+					"target": 3,
+					"options": ["conjunction", "adjective"],
+					"answer": 0
+					}
+				}
 			}
 		]
-	}

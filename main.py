@@ -380,11 +380,13 @@ class WelcomePageHandler(MainHandler):
 	def write_welcome(self, login):
 		classroom = Classroom()
 		if login.role == "teacher":
+			exercise = Exercise()
 			self.render_page(
 						"teacher.html",
 						username = login.username,
 						token = login.token,
 						logged = classroom.logged_students(),
+						exercises_types = exercise.types()
 						)
 		elif login.role == "student":
 			self.render_page(
@@ -557,9 +559,6 @@ class DashboardHandler(MainHandler):
 			if action == "exercises_list":
 				exercise = Exercise()
 				exercise.send_list(login, param)
-			elif action == "exercises_types":
-				exercise = Exercise()
-				exercise.send_types_list(login)
 		else:
 			MyLogs("user seems not valid")
 			self.redirect("/check/in")
@@ -572,35 +571,19 @@ class Exercise():
 		self.list = json.loads(open("lists/exercises.json").read())
 
 	def send_list(self, login, type):
-		assert type == "type_1"
-		ex_list = self.list[type]
-		lst = [{
-			"type": 1,
-			"sentence": exercise["sentence"],
-			"to find": exercise["to find"],
-			"answer": exercise["answer"],
-			"id": exercise["id"],
-			"words": exercise["sentence"].split(" "),
-			} for exercise in ex_list]
 		message = {
 					"type": "exercises_list",
 					"exercise_type": type,
-					"message": lst,
+					"message": self.list,
 					}
 		message = json.dumps(message)
 		channel.send_message(login.username, message)
-		
-	def send_types_list(self, login):
-		lst = [
+
+	def types(self):
+		return [
 			{"id": "type_1", "name": "find the element"},
 			{"id": "type_2", "name": "recognize the word"},
 			]
-		message = {
-					"type": "exercises_types",
-					"message": lst,
-					}
-		message = json.dumps(message)
-		channel.send_message(login.username, message)
 
 	def select(self, type, number):
 		lst = [{
