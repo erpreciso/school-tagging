@@ -25,29 +25,6 @@ function loghtml(){
 
 
 
-function build_t_exercise_options() {
-	var button_1 = $(document.createElement("button"))
-			.attr("id", "get_exercise_type_1")
-			.text("Get exercise type FIND THE ELEMENT");
-	$("#exercise_list").append(button_1);
-	$(button_1).on("click", get_t_exercise_list);
-	var button_2 = $(document.createElement("button"))
-			.attr("id", "get_exercise_type_2")
-			.text("Get exercise type FIND THE CORRECT TYPE");
-	$("#exercise_list").append(button_2);
-	$(button_2).on("click", get_t_exercise_list_type_2);
-}
-
-
-function save_and_new_t () {
-	//~ create an object to be sent to the server to be stored
-	//~ create a new dashboard and a new exercise area
-	$("#working_area").empty();
-	build_t_dashboard();
-	get_t_logged_list();
-	get_t_exercise_list();
-}
-
 function build_t_classroom_stats() {
 	var exercise_status = document.createElement("div");
 	$(exercise_status).attr("id", "exercise_status");

@@ -9,11 +9,7 @@
 	<div id="main_teacher_menu">.. coming soon the main teacher menu..</div>
 	<div id="exercises_menu">
 		<div class="section_header">Exercises menu</div>
-		{% for type in exercises_types %}
-		<button class="exercise_type" id="choose_type_{{loop.index}}">
-			List for {{type.name}}
-		</button>
-		{% endfor %}
+		<button class="exercise_type" id="pull_exercises_list">Exercises list</button>
 	</div>
 	<div id="dashboard">
 		<div class="section_header">Dashboard</div>

@@ -403,24 +403,7 @@ class WelcomePageHandler(MainHandler):
 		else:
 			self.redirect("/check/in")		
 
-class ExerciseHandler(MainHandler):
-	def post(self, action):
-		login = self.valid_user()
-		if login:
-			if action == "word_clicked":
-				classroom = Classroom()
-				word_number = int(self.request.get("word_number"))
-				message = {
-					"type": "student_choice",
-					"content": {
-						"student": login.username,
-						"choice": word_number,
-						},
-					}
-				message = json.dumps(message)
-				channel.send_message(classroom.teacher.username, message)
-			else:
-				self.redirect("/check/in")
+
 	
 		
 class ConnectionHandler(MainHandler):
@@ -539,26 +522,26 @@ class LoginPageHandler(MainHandler):
 		self.redirect("/check/in")
 		
 class DashboardHandler(MainHandler):
-	def post(self, action, param):
+	def post(self, action):
 		login = self.valid_user()
 		if login:
 			if action == "exercise_request":
-				exercise_number = int(self.request.get("exercise_number"))
+				exercise_id = self.request.get("id")
 				exercise_type = self.request.get("type")
 				exercise = Exercise()
-				exercise.select(exercise_type, exercise_number)
+				exercise.select(exercise_id, exercise_type)
 				exercise.send_to_classroom()
 				exercise.send_to_teacher()
 		else:
 			MyLogs("user seems not valid")
 			self.redirect("/check/in")
 
-	def get(self, action, param):
+	def get(self, action):
 		login = self.valid_user()
 		if login:
 			if action == "exercises_list":
 				exercise = Exercise()
-				exercise.send_list(login, param)
+				exercise.send_list(login)
 		else:
 			MyLogs("user seems not valid")
 			self.redirect("/check/in")
@@ -566,14 +549,14 @@ class DashboardHandler(MainHandler):
 class Exercise():
 	selected = None
 	list = None
+	exercise_type = None
 	
 	def __init__(self):
 		self.list = json.loads(open("lists/exercises.json").read())
 
-	def send_list(self, login, type):
+	def send_list(self, login):
 		message = {
 					"type": "exercises_list",
-					"exercise_type": type,
 					"message": self.list,
 					}
 		message = json.dumps(message)
@@ -585,22 +568,18 @@ class Exercise():
 			{"id": "type_2", "name": "recognize the word"},
 			]
 
-	def select(self, type, number):
-		lst = [{
-			"type": type,
-			"sentence": exercise["sentence"],
-			"to find": exercise["to find"],
-			"answer": exercise["answer"],
-			"id": exercise["id"],
-			"words": exercise["sentence"].split(" "),
-			} for exercise in self.list[type]]
-		self.selected = lst[number]
+	def select(self, exercise_id, exercise_type):
+		self.selected = self.list[exercise_id]
+		self.exercise_type = exercise_type
 	
 	def send_to_classroom(self):
 		classroom = Classroom()
 		message = {
 			"type": "exercise",
-			"message": self.selected,
+			"message": {
+				"exercise": self.selected,
+				"exercise_type": self.exercise_type,
+				},
 			}
 		message = json.dumps(message)
 		for student in classroom.logged_students():
@@ -610,15 +589,47 @@ class Exercise():
 		classroom = Classroom()
 		message = {
 			"type": "exercise",
-			"message": self.selected,
+			"message": {
+				"exercise": self.selected,
+				"exercise_type": self.exercise_type,
+				},
 			}
 		message = json.dumps(message)
 		channel.send_message(classroom.teacher.username, message)
 
+class ExerciseHandler(MainHandler):
+	def post(self, action):
+		login = self.valid_user()
+		if login:
+			classroom = Classroom()
+			if action == "word_clicked":
+				word_number = int(self.request.get("word_number"))
+				message = {
+					"type": "student_choice",
+					"content": {
+						"student": login.username,
+						"choice": word_number,
+						"etype": "type_1",
+						},
+					}
+			elif action == "type_answer":
+				answer = self.request.get("answer")
+				message = {
+					"type": "student_choice",
+					"content": {
+						"student": login.username,
+						"choice": answer,
+						"etype": "type_2",
+						},
+					}
+			message = json.dumps(message)
+			channel.send_message(classroom.teacher.username, message)
+		else:
+			self.redirect("/check/in")
 
 app = webapp2.WSGIApplication([
 	webapp2.Route(
-			r'/dashboard/<action>/<param>',
+			r'/dashboard/<action>',
 			handler=DashboardHandler,
 			name="dashboard"),
 	webapp2.Route(

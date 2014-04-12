@@ -1,70 +1,78 @@
-[
+{
+	"exercise_1":
 		{
-			"id": 1,
 			"sentence": "I am always doing things I can’t do. That is how I get to do them.",
 			"author": "Pablo Picasso",
 			"words": ["I", "am", "always", "doing", "things", "I", "can't", "do.", "That", "is", "how", "I", "get", "to", "do", "them."],
-			"exercise": {
+			"goal": {
 				"type_1": {
+					"description": "Find the element",
 					"to find": "verb",
 					"answers": [1, 3, 6, 7, 9, 12, 14]
 					},
 				"type_2": {
+					"description": "Which type is this",
 					"target": 2,
 					"options": ["adverb", "adjective"],
 					"answer": 0
 					}
 				}
 			},
+	"exercise_2":
 		{
-			"id": 2,
 			"sentence": "You miss 100 percent of the shots you never take.",
 			"author": "Wayne Gretzky",
 			"words": ["You", "miss", "100", "percent", "of", "the", "shots", "you", "never", "take."],
-			"exercise": {
+			"goal": {
 				"type_1": {
+					"description": "Find the element",
 					"to find": "article",
 					"answers": [5]
 					},
 				"type_2": {
+					"description": "Which type is this",
 					"target": 8,
 					"options": ["adverb", "adjective"],
 					"answer": 0
 					}
 				}
 			},
+	"exercise_3":
 		{
-			"id": 3,
 			"sentence": "What may be done at any time will be done at no time.",
 			"words": ["What", "may", "be", "done", "at", "any", "time", "will", "be", "done", "at", "no", "time."],
 			"author": "Scottish Proverb",
-			"exercise": {
+			"goal": {
 				"type_1": {
+					"description": "Find the element",
 					"to find": "verb",
 					"answers": [1, 2, 3, 7, 8, 9]
 					},
 				"type_2": {
+					"description": "Which type is this",
 					"target": 1,
 					"options": ["adverb", "adjective"],
 					"answer": 1
 					}
 				}
 			},
+	"exercise_4":
 		{
-			"id": 4,
 			"sentence": "Death is nothing, but to live defeated and inglorious is to die daily.",
 			"author": "Napoleone Bonaparte",
 			"words": ["Death", "is", "nothing,", "but", "to", "live", "defeated", "and", "inglorious", "is", "to", "die", "daily."],
-			"exercise": {
+			"goal": {
 				"type_1": {
+					"description": "Find the element",
 					"to find": "subject",
 					"answers": [0]
 					},
 				"type_2": {
+					"description": "Which type is this",
 					"target": 3,
 					"options": ["conjunction", "adjective"],
 					"answer": 0
 					}
 				}
 			}
-		]
+		}

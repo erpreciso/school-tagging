@@ -54,3 +54,13 @@
 	display: inline;
 	}
 
+.button_area, .sentence_body {
+	display: inline;
+	}
+	
+.exercise_type_choice {
+	font-size: 1.2em;
+	color: red;
+	
+	background-color: red;
+	}
