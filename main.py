@@ -1,6 +1,7 @@
 # coding: utf-8
 # [school-tagging] webapp
 
+import st
 import webapp2
 import jinja2
 import os
@@ -649,3 +650,4 @@ app = webapp2.WSGIApplication([
 			handler=ConnectionHandler,
 			name="connection"),
 			])
+
