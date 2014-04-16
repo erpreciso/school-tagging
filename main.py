@@ -1,7 +1,7 @@
 # coding: utf-8
 # [school-tagging] webapp
 
-import st
+import school_tagging_core_process as st
 import webapp2
 import jinja2
 import os
@@ -400,6 +400,9 @@ class WelcomePageHandler(MainHandler):
 		login = self.valid_user()
 		if login:
 			self.write_welcome(login)
+			if login.role == "teacher":
+				lesson = st.get_lesson(login.username)
+				lesson.save()
 			return
 		else:
 			self.redirect("/check/in")		
