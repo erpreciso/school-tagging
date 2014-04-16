@@ -386,8 +386,8 @@ class WelcomePageHandler(MainHandler):
 						"teacher.html",
 						username = login.username,
 						token = login.token,
-						logged = classroom.logged_students(),
-						exercises_types = exercise.types()
+						#~ logged = classroom.logged_students(),
+						#~ exercises_types = exercise.types()
 						)
 		elif login.role == "student":
 			self.render_page(
@@ -401,14 +401,12 @@ class WelcomePageHandler(MainHandler):
 		if login:
 			self.write_welcome(login)
 			if login.role == "teacher":
-				lesson = st.get_lesson(login.username)
+				lesson = st.start_lesson(login.username)
 				lesson.save()
 			return
 		else:
 			self.redirect("/check/in")		
 
-
-	
 		
 class ConnectionHandler(MainHandler):
 	def post(self, action):
@@ -543,9 +541,12 @@ class DashboardHandler(MainHandler):
 	def get(self, action):
 		login = self.valid_user()
 		if login:
-			if action == "exercises_list":
+			if action == "get_exercises_list":
 				exercise = Exercise()
 				exercise.send_list(login)
+			elif action == "get_logged_students":
+				classroom = Classroom()
+				
 		else:
 			MyLogs("user seems not valid")
 			self.redirect("/check/in")

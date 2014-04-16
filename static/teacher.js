@@ -1,9 +1,15 @@
 $(document).ready(function () {
+	$("#start_session").on("click", start_session);
 	$("#pull_exercises_list").on("click", function () {
 		$.get("/dashboard/exercises_list");
 	});
 });
 
+function start_session () {
+	$.get("/dashboard/get_exercises_list");
+	$.get("/dashboard/get_logged_students");
+	
+}
 onMessage = function (message) {
 	var data_arrived = JSON.parse(message.data);
 	if (data_arrived.type == "exercises_list") {

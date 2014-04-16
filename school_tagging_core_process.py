@@ -19,13 +19,14 @@ class Lesson():
 	def __init__(self, teacher):
 		self.sessions = []
 		self.teacher = teacher
+	def save(self):
+		memcache.add("lesson:%s" % self.teacher.name, self)
 
 class Session():
 	def __init__(self, lesson):
 		self.question = None
 		self.lesson = lesson
 		self.students = {}
-		#~ {"studentA": {"answers": [], "correct": True}}
 	def add_student(self, student):
 		self.students[student] = {"answers": [], "correct": False}
 	def set_question(self, question):
@@ -89,10 +90,16 @@ class WhichType(Question):
 		return answer == self.answer
 
 
+def start_lesson(username):
+	teacher = Teacher(name=username)
+	lesson = Lesson(teacher)
+	teacher.lessons.append(lesson)
+	return lesson
 
-
-
-
+def get_lesson(username):
+	teacher = Teacher(name=username)  # TODO replace with datastore instances
+	lesson = memcache.get("lesson.%s" % teacher.name)
+	return lesson
 
 
 
