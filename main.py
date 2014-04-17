@@ -308,19 +308,6 @@ class MyLogs():
 	def __init__(self, *a):
 		message = " ".join([str(chunk) for chunk in a])
 		logging.info(str(message))
-		
-TODO = """
-- create process to clean all and have a new exercise
-- process to save exercise results in datastore and send a new exercise
--- new page with session results
--- counter of exercises submitted at the moment
-- don't send the exercise answer!
-- allow only a teacher per session
-- verify all channels are up by sending a pin sometime, 
-		to remove from logged not responding ones
-- think about a creative way to login
-
-"""
 
 class MainHandler(webapp2.RequestHandler):
 	template_dir = os.path.join(os.path.dirname(__file__), 'pages')
@@ -377,7 +364,6 @@ class MainHandler(webapp2.RequestHandler):
 			return False
 
 class WelcomePageHandler(MainHandler):
-	
 	def write_welcome(self, login):
 		classroom = Classroom()
 		if login.role == "teacher":
@@ -407,7 +393,6 @@ class WelcomePageHandler(MainHandler):
 		else:
 			self.redirect("/check/in")		
 
-		
 class ConnectionHandler(MainHandler):
 	def post(self, action):
 		username = self.request.get('from')
@@ -632,6 +617,28 @@ class ExerciseHandler(MainHandler):
 		else:
 			self.redirect("/check/in")
 
+class ProcessHandler(MainHandler):
+	def get(self, command):
+		login = self.valid_user()
+		if login:
+			if command == "start_session":
+				classroom = Classroom()
+				lesson = st.get_lesson(login.username)
+				MyLogs(lesson)
+				session = st.start_session(lesson)
+				for appstudent in classroom.students:
+					student = Student(appstudent.name)
+					session.add_student(student)
+					session.save()
+			elif command == "start_lesson":
+				self.render_page("start_lesson.html",
+							username = login.username,
+							token = login.token,
+							)
+				
+		else:
+			self.redirect("/check/in")
+	
 app = webapp2.WSGIApplication([
 	webapp2.Route(
 			r'/dashboard/<action>',
@@ -653,5 +660,9 @@ app = webapp2.WSGIApplication([
 			r'/_ah/channel/<action>/',
 			handler=ConnectionHandler,
 			name="connection"),
+	webapp2.Route(
+			r'/command/<command>',
+			handler=ProcessHandler,
+			name="commands"),
 			])
 

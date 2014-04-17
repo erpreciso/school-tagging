@@ -12,13 +12,14 @@ a {
 	}
 
 h1 a {
-	color: white;
+	color: black;
 	
 	}
 
 
 header {
 	border: 1px solid #737373;
+	padding: 2px;
 	}
 
 .hidden {
@@ -47,19 +48,20 @@ header {
 	}
 
 #title {
-	padding: 5px;
+	padding: 3px;
 	text-transform: uppercase;
-	color: white;
-	background-color: #3C3C3C;
+	color: black;
+	display: inline;
 	}
 
 #login_tools {
 	font-size: 0.7em;
-	margin: 4px;
+	padding: 3px;
+	display: inline;
 	}
 	
 h1 {
-	font-size: 1.5em;
+	font-size: 1em;
 	display: inline;
 	
 	}

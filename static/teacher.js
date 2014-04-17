@@ -1,14 +1,14 @@
 $(document).ready(function () {
 	$("#start_session").on("click", start_session);
-	$("#pull_exercises_list").on("click", function () {
-		$.get("/dashboard/exercises_list");
-	});
+	//~ $("#pull_exercises_list").on("click", function () {
+		//~ $.get("/dashboard/exercises_list");
+	//~ });
 });
 
 function start_session () {
-	$.get("/dashboard/get_exercises_list");
-	$.get("/dashboard/get_logged_students");
-	
+	//~ $.get("/dashboard/get_exercises_list");
+	//~ $.get("/dashboard/get_logged_students");
+	$.get("/command/start_session");
 }
 onMessage = function (message) {
 	var data_arrived = JSON.parse(message.data);
@@ -25,14 +25,14 @@ onMessage = function (message) {
 		localStorage.setItem("exercise", dataToStore);
 		Dashboard.add_exercise_to_all_students_dashboards(exercise, etype);
 	}
-	else if (data_arrived.type == "connected_user") {
-		var student = data_arrived.username;
-		Dashboard.add_student_dashboard(student);
-	}
-	else if (data_arrived.type == "disconnected_user") {
-		var student = data_arrived.username;
-		Dashboard.remove_student_dashboard(student);
-	}
+	//~ else if (data_arrived.type == "connected_user") {
+		//~ var student = data_arrived.username;
+		//~ Dashboard.add_student_dashboard(student);
+	//~ }
+	//~ else if (data_arrived.type == "disconnected_user") {
+		//~ var student = data_arrived.username;
+		//~ Dashboard.remove_student_dashboard(student);
+	//~ }
 	else if (data_arrived.type == "student_choice") {
 		var param = {"action": "update", "content" : data_arrived.content};
 		Dashboard.update_student_exercise(param);

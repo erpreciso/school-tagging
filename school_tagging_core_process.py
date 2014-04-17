@@ -14,6 +14,9 @@ class Teacher():
 	def __init__(self, name):
 		self.name = name
 		self.lessons = []
+		self.current_lesson = None
+	def set_lesson(self, lesson):
+		self.current_lesson = lesson
 
 class Lesson():
 	def __init__(self, teacher):
@@ -36,6 +39,8 @@ class Session():
 			student.assign_session(self)
 	def is_correct_answer(self, answer):
 		return self.question.is_right_answer(answer)
+	def save(self):
+		memcache.add("session:%s" % self.teacher.name, self)
 
 class Student():
 	def __init__(self, name):
@@ -98,8 +103,18 @@ def start_lesson(username):
 
 def get_lesson(username):
 	teacher = Teacher(name=username)  # TODO replace with datastore instances
-	lesson = memcache.get("lesson.%s" % teacher.name)
+	lesson = memcache.get("lesson:%s" % teacher.name)
 	return lesson
 
-
+def start_session(lesson):
+	teacher = lesson.teacher
+	session = Session(lesson)
+	lesson.sessions.append(session)
+	memcache.add("current_session:%s" % lesson, session)
+	return session
+	
+def get_current_session(lesson):
+	return memcache.get("current_session:%s" % lesson)
+	
+	
 

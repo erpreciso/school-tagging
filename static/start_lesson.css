@@ -1,0 +1,10 @@
+
+#lesson_input, .instructions, #start_lesson {
+	height : 400%;
+	font-size: 4em;
+	
+	}
+
+.instructions, #start_lesson {
+	display: inline;
+	}
