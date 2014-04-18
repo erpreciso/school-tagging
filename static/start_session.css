@@ -1,7 +1,13 @@
+body {
+	height: 100%;
+	width: 100%;
+}
+
 #content {
 	position: absolute;
 	height: 90%;
-	width: 90%;
+	width: 98%;
+	left: 1%;
 	border: 1px solid red;
 
 }
@@ -10,7 +16,8 @@
 	display: inline;
 	float: left;
 	height: 70%;
-	width: 40%;
+	width: 48%;
+	left: 1%;
 	border: 1px solid blue;
 	overflow: scroll;
 }
@@ -24,10 +31,12 @@
 }
 	
 #students_area {
+	position: relative;
+	left: 2%;
 	display: inline;
 	float: left;
 	height: 70%;
-	width: 40%;
+	width: 48%;
 	border: 1px solid yellow;
 
 }

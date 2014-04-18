@@ -640,12 +640,13 @@ class LessonHandler(MainHandler):
 		if login:
 			if command == "start_session":
 				exercise_list = json.loads(open("lists/exercises.json").read())
+				students_list = st.get_current_lesson_student_list(login.username)
 				self.render_page("start_session.html",
 							username = login.username,
 							token = login.token,
 							exercise_list = exercise_list,
+							students_list = students_list,
 							)
-				MyLogs("hiT")
 				return
 							
 			elif command == "start_lesson":
@@ -654,6 +655,16 @@ class LessonHandler(MainHandler):
 							username = login.username,
 							token = login.token,
 							)
+				return
+			elif command == "join_lesson":
+				assert login.role == "student"
+				current_teachers = st.get_current_teachers()
+				self.render_page("join_lesson.html",
+							username = login.username,
+							token = login.token,
+							current_teachers = current_teachers,
+							)
+				return
 		else:
 			self.redirect("/check/in")
 	

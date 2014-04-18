@@ -9,10 +9,22 @@
 <div id="content">
 	<div id="exercise_area">
 	{% for exercise in exercise_list %}
-		<div class="exercise">{{exercise.sentence}}</div>
+		<div class="exercise" id="{{exercise.id}}">
+			<div class="sentence">
+				{{exercise.sentence}}
+			</div>
+			<div class="buttons">
+				{% for goal in exercise.goals %}
+				<button class="exercise_type" id="{{goal.type}}">
+					{{goal["description"]}}
+				</button>
+				{% endfor %}
+			</div>
+		</div>
 	{% endfor %}
 	</div>
 	<div id="students_area"></div>
+	{{students_list}}
 	<div id="classroom_area"></div>
 </div>
 {% endblock %}

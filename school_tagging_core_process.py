@@ -116,3 +116,14 @@ def start_lesson(strTeacher, strLesson):
 	STATUS["teachers"][strTeacher] = strLesson
 	return
 
+def get_current_lesson_student_list(strTeacher):
+	"""return list of string students for the current lesson of the teacher."""
+	strCurrentLesson = STATUS["teachers"][strTeacher]
+	objCurrentLesson = LESSONS[strCurrentLesson]
+	students = objCurrentLesson.students
+	return students
+
+def get_current_teachers():
+	d = STATUS["teachers"]
+	return [teacher for teacher in d.keys()]
+	

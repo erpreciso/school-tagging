@@ -1,0 +1,19 @@
+{% extends "wrapper.html" %}
+
+{% block role_links %}
+<script src="/static/join_lesson.js"></script>
+<link type="text/css" rel="stylesheet" href= "/static/join_lesson.css" />
+{% endblock %}
+
+{% block payload %}
+<div id="content">
+	<div id="choose_teacher">
+		Select the teacher
+		{% for teacher in current_teachers %}
+		<button class="choose_teacher" id="{{teacher}}">
+			{{teacher}}
+		</button>
+		{% endfor %}
+	</div>
+</div>
+{% endblock %}
