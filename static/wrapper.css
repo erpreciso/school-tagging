@@ -22,31 +22,6 @@ header {
 	padding: 2px;
 	}
 
-.hidden {
-	display: none;
-	}
-
-
-
-.correct {
-	font-size: 1.2em;
-	color: green;
-	}
-
-.responding {
-	font-size: 1.2em;
-	color: blue;
-	font-style: italic;
-	}
-
-.student_dashboard .name {
-	color: #070273;
-	}
-
-#content {
-	background-color: #F0F0F0
-	}
-
 #title {
 	padding: 3px;
 	text-transform: uppercase;
@@ -74,17 +49,9 @@ h2 {
 	padding: 2px;
 	}
 
-.error {
-	color: red;
-	}
 
 #connection_status {
 	display: inline;
 	font-weight: bold;
 	}
 	
-#students_count, #respondents_count, #winners_count {
-	display: inline;
-	color: red;
-	font-weight: bold;
-	}

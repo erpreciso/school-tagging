@@ -367,7 +367,8 @@ class WelcomePageHandler(MainHandler):
 	def write_welcome(self, login):
 		classroom = Classroom()
 		if login.role == "teacher":
-			exercise = Exercise()
+			#~ exercise = Exercise()
+			MyLogs("hit")
 			self.render_page(
 						"teacher.html",
 						username = login.username,
@@ -386,10 +387,6 @@ class WelcomePageHandler(MainHandler):
 		login = self.valid_user()
 		if login:
 			self.write_welcome(login)
-			if login.role == "teacher":
-				lesson = st.start_lesson(login.username)
-				lesson.save()
-			return
 		else:
 			self.redirect("/check/in")		
 
@@ -403,8 +400,16 @@ class ConnectionHandler(MainHandler):
 			login.disconnect()
 
 class LoginPageHandler(MainHandler):
-	
 	error = ""
+
+	def enter_lesson(self, login):
+		if login.role == "teacher":
+			st.add_teacher(login.username)
+			self.redirect("/lesson/start_lesson")
+		elif login.role == "student":
+			self.redirect("/lesson/join_lesson")
+		else:
+			raise Exception("Login role not valid")
 	
 	def write_check_page(self, template):
 		self.render_page(template, error=self.error)
@@ -443,7 +448,7 @@ class LoginPageHandler(MainHandler):
 								login.hashpassword,
 								)
 					cookie.send(self)
-					self.redirect("/welcome")
+					self.enter_lesson(login)
 					return
 				else:
 					self.error = "Login didn't work. Try again"
@@ -476,7 +481,7 @@ class LoginPageHandler(MainHandler):
 										login.hashpassword,
 										)
 							cookie.send(self)
-							self.redirect("/welcome")
+							self.enter_lesson(login)
 							return
 						else:
 							self.error = "Login didn't work. Try again"
@@ -488,7 +493,7 @@ class LoginPageHandler(MainHandler):
 				self.error = "Username not valid"
 		else:
 			self.error = "Username already existing"
-		self.write_check_page("login.html")
+		self.write_check_page("signup.html")
 
 	def logout(self):
 		cookie = Cookie(self.get_my_cookie())
@@ -499,7 +504,6 @@ class LoginPageHandler(MainHandler):
 			login.hashpassword = cookie.hashpassword
 			if login.valid_user():
 				MyLogs("cookie verified. move")
-				#~ broadcast_user_connection_info(cookie.username, "close")
 				login.logout()
 				self.clear_cookie()
 			else:
@@ -617,25 +621,39 @@ class ExerciseHandler(MainHandler):
 		else:
 			self.redirect("/check/in")
 
-class ProcessHandler(MainHandler):
+class LessonHandler(MainHandler):
+
+	def post(self, command):
+		login = self.valid_user()
+		if login:
+			if command == "start_lesson":
+				assert login.role == "teacher"
+				lesson_name = self.request.get("name")
+				st.start_lesson(login.username, lesson_name)
+				return self.redirect("/lesson/start_session")
+				
+		else:
+			return self.redirect("/check/in")
+
 	def get(self, command):
 		login = self.valid_user()
 		if login:
 			if command == "start_session":
-				classroom = Classroom()
-				lesson = st.get_lesson(login.username)
-				MyLogs(lesson)
-				session = st.start_session(lesson)
-				for appstudent in classroom.students:
-					student = Student(appstudent.name)
-					session.add_student(student)
-					session.save()
+				exercise_list = json.loads(open("lists/exercises.json").read())
+				self.render_page("start_session.html",
+							username = login.username,
+							token = login.token,
+							exercise_list = exercise_list,
+							)
+				MyLogs("hiT")
+				return
+							
 			elif command == "start_lesson":
+				assert login.role == "teacher"
 				self.render_page("start_lesson.html",
 							username = login.username,
 							token = login.token,
 							)
-				
 		else:
 			self.redirect("/check/in")
 	
@@ -661,8 +679,8 @@ app = webapp2.WSGIApplication([
 			handler=ConnectionHandler,
 			name="connection"),
 	webapp2.Route(
-			r'/command/<command>',
-			handler=ProcessHandler,
-			name="commands"),
+			r'/lesson/<command>',
+			handler=LessonHandler,
+			name="lesson"),
 			])
 

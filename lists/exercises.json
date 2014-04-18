@@ -1,6 +1,6 @@
-{
-	"exercise_1":
+[
 		{
+			"id": "exercise_1",
 			"sentence": "I am always doing things I can’t do. That is how I get to do them.",
 			"author": "Pablo Picasso",
 			"words": ["I", "am", "always", "doing", "things", "I", "can't", "do.", "That", "is", "how", "I", "get", "to", "do", "them."],
@@ -18,8 +18,8 @@
 					}
 				}
 			},
-	"exercise_2":
 		{
+			"id": "exercise_2",
 			"sentence": "You miss 100 percent of the shots you never take.",
 			"author": "Wayne Gretzky",
 			"words": ["You", "miss", "100", "percent", "of", "the", "shots", "you", "never", "take."],
@@ -37,8 +37,8 @@
 					}
 				}
 			},
-	"exercise_3":
 		{
+			"id": "exercise_3",
 			"sentence": "What may be done at any time will be done at no time.",
 			"words": ["What", "may", "be", "done", "at", "any", "time", "will", "be", "done", "at", "no", "time."],
 			"author": "Scottish Proverb",
@@ -56,8 +56,8 @@
 					}
 				}
 			},
-	"exercise_4":
 		{
+			"id": "exercise_4",
 			"sentence": "Death is nothing, but to live defeated and inglorious is to die daily.",
 			"author": "Napoleone Bonaparte",
 			"words": ["Death", "is", "nothing,", "but", "to", "live", "defeated", "and", "inglorious", "is", "to", "die", "daily."],
@@ -75,4 +75,4 @@
 					}
 				}
 			}
-		}
+]

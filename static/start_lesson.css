@@ -1,5 +1,5 @@
 
-#lesson_input, .instructions, #start_lesson {
+input, label {
 	height : 400%;
 	font-size: 4em;
 	

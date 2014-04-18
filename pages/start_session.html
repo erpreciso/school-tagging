@@ -1,0 +1,18 @@
+{% extends "wrapper.html" %}
+
+{% block role_links %}
+<script src="/static/start_session.js"></script>
+<link type="text/css" rel="stylesheet" href= "/static/start_session.css" />
+{% endblock %}
+
+{% block payload %}
+<div id="content">
+	<div id="exercise_area">
+	{% for exercise in exercise_list %}
+		<div class="exercise">{{exercise.sentence}}</div>
+	{% endfor %}
+	</div>
+	<div id="students_area"></div>
+	<div id="classroom_area"></div>
+</div>
+{% endblock %}

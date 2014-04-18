@@ -3,27 +3,20 @@
 # module st
 # this module contains the core logic of the game
 
-import logging
-try:
-	from google.appengine.ext import ndb
-	from google.appengine.api import memcache
-except:
-	pass
 
 class Teacher():
 	def __init__(self, name):
 		self.name = name
 		self.lessons = []
 		self.current_lesson = None
-	def set_lesson(self, lesson):
-		self.current_lesson = lesson
+	#~ def set_lesson(self, lesson):
+		#~ self.current_lesson = lesson # string lesson ID
 
 class Lesson():
 	def __init__(self, teacher):
 		self.sessions = []
-		self.teacher = teacher
-	def save(self):
-		memcache.add("lesson:%s" % self.teacher.name, self)
+		self.teacher = teacher # string teacher name
+		self.students = [] # list of str student name
 
 class Session():
 	def __init__(self, lesson):
@@ -39,25 +32,23 @@ class Session():
 			student.assign_session(self)
 	def is_correct_answer(self, answer):
 		return self.question.is_right_answer(answer)
-	def save(self):
-		memcache.add("session:%s" % self.teacher.name, self)
 
 class Student():
 	def __init__(self, name):
 		self.name = name
-		self.sessions = {}
-	def assign_session(self, session):
-		self.sessions[session] = {"answers": [], "correct": True}
-	def add_answer(self, session, answer):
-		my = self.sessions[session]
-		my["answers"].append(answer)
-		my["correct"] = session.is_correct_answer(answer)
+		self.current_lesson = None   # str lesson ID
+	#~ def assign_session(self, session):
+		#~ self.sessions[session] = {"answers": [], "correct": True}
+	#~ def add_answer(self, session, answer):
+		#~ my = self.sessions[session]
+		#~ my["answers"].append(answer)
+		#~ my["correct"] = session.is_correct_answer(answer)
 		
-	def sessions_token(self):
-		return len(self.sessions.keys())
-	def corrects(self):
-		return len([student for student in self.sessions.keys() if \
-					self.sessions[student]["correct"] == True])
+	#~ def sessions_token(self):
+		#~ return len(self.sessions.keys())
+	#~ def corrects(self):
+		#~ return len([student for student in self.sessions.keys() if \
+					#~ self.sessions[student]["correct"] == True])
 		
 class Question():
 	def __init__(self):
@@ -95,26 +86,33 @@ class WhichType(Question):
 		return answer == self.answer
 
 
-def start_lesson(username):
-	teacher = Teacher(name=username)
-	lesson = Lesson(teacher)
-	teacher.lessons.append(lesson)
-	return lesson
+TEACHERS = {}
 
-def get_lesson(username):
-	teacher = Teacher(name=username)  # TODO replace with datastore instances
-	lesson = memcache.get("lesson:%s" % teacher.name)
-	return lesson
+#~ { teacher name : <obj Teacher> }
 
-def start_session(lesson):
-	teacher = lesson.teacher
-	session = Session(lesson)
-	lesson.sessions.append(session)
-	memcache.add("current_session:%s" % lesson, session)
-	return session
-	
-def get_current_session(lesson):
-	return memcache.get("current_session:%s" % lesson)
-	
-	
+LESSONS = {}
+
+#~ { lesson ID : <obj Lesson> }
+
+STATUS = {"lessons": {}, "teachers": {}}
+
+#~ { "lessons" : { lesson ID : teacher name, ... },
+  #~ "teachers": { teacher name : lesson ID, ... }}
+
+def add_teacher(strTeacher):
+	global TEACHERS
+	global STATUS
+	objTeacher = Teacher(strTeacher)
+	TEACHERS[strTeacher] = objTeacher
+	return
+
+def start_lesson(strTeacher, strLesson):
+	global LESSONS
+	global STATUS
+	#~ teacher = TEACHERS[username]
+	objLesson = Lesson(strTeacher)
+	LESSONS[strLesson] = objLesson
+	STATUS["lessons"][strLesson] = strTeacher
+	STATUS["teachers"][strTeacher] = strLesson
+	return
 

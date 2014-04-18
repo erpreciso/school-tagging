@@ -1,0 +1,44 @@
+#content {
+	position: absolute;
+	height: 90%;
+	width: 90%;
+	border: 1px solid red;
+
+}
+
+#exercise_area {
+	display: inline;
+	float: left;
+	height: 70%;
+	width: 40%;
+	border: 1px solid blue;
+	overflow: scroll;
+}
+
+#exercise_area .exercise {
+	display: block;
+	font-size: 1.6em;
+	margin: 2px;
+	padding: 2px;
+	background-color: PowderBlue;
+}
+	
+#students_area {
+	display: inline;
+	float: left;
+	height: 70%;
+	width: 40%;
+	border: 1px solid yellow;
+
+}
+
+#classroom_area {
+	display: block;
+	float: left;
+	height: 30%;
+	width: 90%;
+	border: 1px solid green;
+
+
+}
+

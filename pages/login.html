@@ -1,13 +1,15 @@
 {% extends "wrapper.html" %}
 
+{% block role_links %}
+<link type="text/css" rel="stylesheet" href= "/static/login.css" />
+{% endblock %}
 {% block payload %}
 <div id="content">
-	<h2>Login</h2>
     <form method="post">
 		<label>Username</label>
-		<input type="text" name="username">
+		<input type="text" name="username" placeholder="Username">
 		<label>Password</label>
-		<input type="password" name="password">
+		<input type="password" name="password" placeholder="Password">
 		{% if error %}
 		<div class="error">{{error}}</div>
 		{% endif %}

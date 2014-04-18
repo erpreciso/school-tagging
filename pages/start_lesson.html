@@ -1,16 +1,14 @@
 {% extends "wrapper.html" %}
 
 {% block role_links %}
-<script src="/static/start_lesson.js"></script>
 <link type="text/css" rel="stylesheet" href= "/static/start_lesson.css" />
 {% endblock %}
 {% block payload %}
 <div id="content">
-	<div class="instructions">Choose a name for your lesson </div>
-	<input type="text" size=17 placeholder="Masters of grammar" name="lesson" id="lesson_input"/>
-<!--
-	<div class="instructions">and</div>
--->
-	<button id="start_lesson">start!</button>
+	<form method="POST" >
+	<label for="lesson" class="instructions">Choose a name for your lesson </label>
+	<input type="text" size=17 placeholder="Masters of grammar" name="lesson"/>
+	<input type="submit" value="Start!" />
+	</form>
 </div>
 {% endblock %}
