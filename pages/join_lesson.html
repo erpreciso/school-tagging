@@ -8,12 +8,15 @@
 {% block payload %}
 <div id="content">
 	<div id="choose_teacher">
+		<form method="POST">
 		Select the teacher
-		{% for teacher in current_teachers %}
-		<button class="choose_teacher" id="{{teacher}}">
-			{{teacher}}
-		</button>
-		{% endfor %}
+			<select name="teacher">
+			{% for teacher in current_teachers %}
+			<option value="{{teacher}}">{{teacher}}</option>
+			{% endfor %}
+			</select>
+			<input type="submit" />
+		</form>
 	</div>
 </div>
 {% endblock %}

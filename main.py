@@ -294,8 +294,8 @@ class Cookie():
 
 	def send(self, http_self):
 		self.stringify()
-		http_self.response.set_cookie('schooltagging', self.value)
-		MyLogs("Cookie sent", self.value)
+		http_self.response.set_cookie('schooltagging-user', self.value)
+		#~ MyLogs("Cookie sent", self.value)
 			
 	def extract_value(self):
 		self.role = self.value.split("|")[0]
@@ -325,15 +325,21 @@ class MainHandler(webapp2.RequestHandler):
 	def render_page(self, template, **kw):
 		self.writeout(self.render_str(template, **kw))
 	
-	def get_my_cookie(self):
-		return self.request.cookies.get("schooltagging")
+	def get_user_cookie(self):
+		return self.request.cookies.get("schooltagging-user")
 	
+	def set_lesson_cookie(self, strLesson):
+		self.response.set_cookie('schooltagging-lesson', strLesson)
+	
+	def get_lesson_cookie(self):
+		return self.request.cookies.get("schooltagging-lesson")
+		
 	def valid_user(self):
 		""" check if the request is coming from a valid user.
 		return the login object if valid, else False
 		
 		"""
-		cookie = Cookie(self.get_my_cookie())
+		cookie = Cookie(self.get_user_cookie())
 		if cookie.value:
 			login = Login()
 			login.username = cookie.username
@@ -356,9 +362,9 @@ class MainHandler(webapp2.RequestHandler):
 		return False if cookie wasn't existing
 		
 		"""
-		cookie = Cookie(self.request.cookies.get("schooltagging"))
+		cookie = Cookie(self.request.cookies.get("schooltagging-user"))
 		if cookie.value:
-			self.response.delete_cookie('schooltagging', path = '/')
+			self.response.delete_cookie('schooltagging-user', path = '/')
 			return True
 		else:
 			return False
@@ -404,9 +410,10 @@ class LoginPageHandler(MainHandler):
 
 	def enter_lesson(self, login):
 		if login.role == "teacher":
-			st.add_teacher(login.username)
+			#~ st.add_teacher(login.username)
 			self.redirect("/lesson/start_lesson")
 		elif login.role == "student":
+			#~ st.add_student(login.username)
 			self.redirect("/lesson/join_lesson")
 		else:
 			raise Exception("Login role not valid")
@@ -496,7 +503,7 @@ class LoginPageHandler(MainHandler):
 		self.write_check_page("signup.html")
 
 	def logout(self):
-		cookie = Cookie(self.get_my_cookie())
+		cookie = Cookie(self.get_user_cookie())
 		if cookie.value:
 			MyLogs("habeamus cookie. move ahead")
 			login = Login()
@@ -628,10 +635,16 @@ class LessonHandler(MainHandler):
 		if login:
 			if command == "start_lesson":
 				assert login.role == "teacher"
-				lesson_name = self.request.get("name")
-				st.start_lesson(login.username, lesson_name)
+				lesson_name = self.request.get("lesson")
+				st.add_lesson(login.username, lesson_name)
+				self.set_lesson_cookie(lesson_name)
 				return self.redirect("/lesson/start_session")
-				
+			elif command == "join_lesson":
+				assert login.role == "student"
+				teacher_name = self.request.get("teacher")
+				lesson_name = st.join_lesson(login.username, teacher_name)
+				self.set_lesson_cookie(lesson_name)
+				return self.redirect("/welcome")
 		else:
 			return self.redirect("/check/in")
 
@@ -639,6 +652,7 @@ class LessonHandler(MainHandler):
 		login = self.valid_user()
 		if login:
 			if command == "start_session":
+				lesson_name = self.get_lesson_cookie()
 				exercise_list = json.loads(open("lists/exercises.json").read())
 				students_list = st.get_current_lesson_student_list(login.username)
 				self.render_page("start_session.html",
@@ -658,7 +672,7 @@ class LessonHandler(MainHandler):
 				return
 			elif command == "join_lesson":
 				assert login.role == "student"
-				current_teachers = st.get_current_teachers()
+				current_teachers = st.get_teachers_list()
 				self.render_page("join_lesson.html",
 							username = login.username,
 							token = login.token,

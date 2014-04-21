@@ -1,22 +1,108 @@
-	# coding: utf-8
-# [school-tagging] webapp
-# module st
-# this module contains the core logic of the game
+from google.appengine.ext import ndb
+from google.appengine.api import memcache
+import logging
 
 
-class Teacher():
-	def __init__(self, name):
-		self.name = name
-		self.lessons = []
-		self.current_lesson = None
-	#~ def set_lesson(self, lesson):
-		#~ self.current_lesson = lesson # string lesson ID
+class Person(ndb.Model):
+	name = ndb.StringProperty()
+	currentLesson = ndb.StringProperty()
 
-class Lesson():
-	def __init__(self, teacher):
-		self.sessions = []
-		self.teacher = teacher # string teacher name
-		self.students = [] # list of str student name
+
+		
+class Teacher(Person):
+	lessons = ndb.StringProperty(repeated=True)
+	def safe_put(self):
+		memcache.set("teacher:" + self.name, self)
+		self.put()
+		
+class Student(Person):
+	def safe_put(self):
+		memcache.set("student:" + self.name, self)
+		self.put()
+
+class Lesson(ndb.Model):
+	name = ndb.StringProperty()
+	sessions = ndb.StringProperty(repeated=True)
+	teacher = ndb.StringProperty()
+	students = ndb.StringProperty(repeated=True)
+	
+	def safe_put(self):
+		memcache.set("lesson:" + self.name, self)
+		self.put()
+
+def add_teacher(strTeacher, strLesson):
+	objTeacher = Teacher(id=strTeacher)
+	objTeacher.name = strTeacher
+	objTeacher.lessons = []
+	objTeacher.currentLesson = strLesson
+	objTeacher.safe_put()
+	update_teachers_list("add", strTeacher)
+	return objTeacher
+
+def get_teachers_list():
+	lst = memcache.get("teachers_list")
+	if not lst:
+		lst = []
+		q = Teacher.query()
+		if q.get():
+			lst = [t.name for t in q]
+		memcache.add("teachers_list", lst)
+	return lst
+				
+def update_teachers_list(command, strTeacher):
+	lst = get_teachers_list()
+	if command == "add":
+		lst.append(strTeacher)
+		memcache.set("teachers_list", lst)
+	return
+
+def add_student(strStudent):
+	objStudent = Student(id=strStudent)
+	objStudent.name = strStudent
+	objStudent.currentLesson = None
+	objStudent.safe_put()
+	return objStudent
+	
+def get_teacher(strTeacher):
+	t = memcache.get("teacher:" + strTeacher)
+	if not t:
+		k = ndb.Key("Teacher", strTeacher)
+		t = k.get()
+		memcache.add("teacher:" + strTeacher, t)
+	return t
+
+def get_student(strStudent):
+	t = memcache.get("student:" + strStudent)
+	if not t:
+		k = ndb.Key("Student", strStudent)
+		t = k.get()
+		memcache.add("student:" + strStudent, t)
+	return t
+
+def add_lesson(strTeacher, strLesson):
+	objTeacher = add_teacher(strTeacher, strLesson)
+	objLesson = Lesson(id=strLesson)
+	objLesson.name = strLesson
+	objLesson.teacher = strTeacher
+	objLesson.safe_put()
+	return objLesson
+
+def get_lesson(strLesson):
+	t = memcache.get("lesson:" + strLesson)
+	if not t:
+		k = ndb.Key("Lesson", strLesson)
+		t = k.get()
+		memcache.add("lesson:" + strLesson, t)
+	return t
+
+def join_lesson(strStudent, strTeacher):
+	objTeacher = get_teacher(strTeacher)
+	strLesson = objTeacher.currentLesson
+	objLesson = get_lesson(strLesson)
+	objLesson.students.append(strStudent)
+	objLesson.safe_put()
+	return strLesson
+	
 
 class Session():
 	def __init__(self, lesson):
@@ -33,10 +119,10 @@ class Session():
 	def is_correct_answer(self, answer):
 		return self.question.is_right_answer(answer)
 
-class Student():
-	def __init__(self, name):
-		self.name = name
-		self.current_lesson = None   # str lesson ID
+#~ class Student():
+	#~ def __init__(self, name):
+		#~ self.name = name
+		#~ self.current_lesson = None   # str lesson ID
 	#~ def assign_session(self, session):
 		#~ self.sessions[session] = {"answers": [], "correct": True}
 	#~ def add_answer(self, session, answer):
@@ -86,10 +172,6 @@ class WhichType(Question):
 		return answer == self.answer
 
 
-TEACHERS = {}
-
-#~ { teacher name : <obj Teacher> }
-
 LESSONS = {}
 
 #~ { lesson ID : <obj Lesson> }
@@ -99,22 +181,12 @@ STATUS = {"lessons": {}, "teachers": {}}
 #~ { "lessons" : { lesson ID : teacher name, ... },
   #~ "teachers": { teacher name : lesson ID, ... }}
 
-def add_teacher(strTeacher):
-	global TEACHERS
-	global STATUS
-	objTeacher = Teacher(strTeacher)
-	TEACHERS[strTeacher] = objTeacher
-	return
 
-def start_lesson(strTeacher, strLesson):
-	global LESSONS
-	global STATUS
-	#~ teacher = TEACHERS[username]
-	objLesson = Lesson(strTeacher)
-	LESSONS[strLesson] = objLesson
-	STATUS["lessons"][strLesson] = strTeacher
-	STATUS["teachers"][strTeacher] = strLesson
-	return
+	
+	
+	
+	
+
 
 def get_current_lesson_student_list(strTeacher):
 	"""return list of string students for the current lesson of the teacher."""
@@ -123,7 +195,5 @@ def get_current_lesson_student_list(strTeacher):
 	students = objCurrentLesson.students
 	return students
 
-def get_current_teachers():
-	d = STATUS["teachers"]
-	return [teacher for teacher in d.keys()]
+
 	
