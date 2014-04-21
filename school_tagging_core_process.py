@@ -56,13 +56,21 @@ def update_teachers_list(command, strTeacher):
 		memcache.set("teachers_list", lst)
 	return
 
-def add_student(strStudent):
+def add_student(strStudent, strLesson):
 	objStudent = Student(id=strStudent)
 	objStudent.name = strStudent
-	objStudent.currentLesson = None
+	objStudent.currentLesson = strLesson
 	objStudent.safe_put()
 	return objStudent
-	
+
+def get_current_lesson_student_list(strTeacher):
+	"""return list of string students for the current lesson of the teacher."""
+	objTeacher = get_teacher(strTeacher)
+	strCurrentLesson = objTeacher.currentLesson
+	objCurrentLesson = get_lesson(strCurrentLesson)
+	students = objCurrentLesson.students
+	return students
+
 def get_teacher(strTeacher):
 	t = memcache.get("teacher:" + strTeacher)
 	if not t:
@@ -98,6 +106,7 @@ def get_lesson(strLesson):
 def join_lesson(strStudent, strTeacher):
 	objTeacher = get_teacher(strTeacher)
 	strLesson = objTeacher.currentLesson
+	objStudent = add_student(strStudent, strLesson)
 	objLesson = get_lesson(strLesson)
 	objLesson.students.append(strStudent)
 	objLesson.safe_put()
@@ -188,12 +197,7 @@ STATUS = {"lessons": {}, "teachers": {}}
 	
 
 
-def get_current_lesson_student_list(strTeacher):
-	"""return list of string students for the current lesson of the teacher."""
-	strCurrentLesson = STATUS["teachers"][strTeacher]
-	objCurrentLesson = LESSONS[strCurrentLesson]
-	students = objCurrentLesson.students
-	return students
+
 
 
 	

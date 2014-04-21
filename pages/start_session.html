@@ -23,8 +23,12 @@
 		</div>
 	{% endfor %}
 	</div>
-	<div id="students_area"></div>
-	{{students_list}}
+	<div id="students_area">
+	{% for student in students_list %}
+	{{student}}
+	{% endfor %}
+	</div>
+	
 	<div id="classroom_area"></div>
 </div>
 {% endblock %}

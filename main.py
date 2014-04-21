@@ -644,7 +644,7 @@ class LessonHandler(MainHandler):
 				teacher_name = self.request.get("teacher")
 				lesson_name = st.join_lesson(login.username, teacher_name)
 				self.set_lesson_cookie(lesson_name)
-				return self.redirect("/welcome")
+				return self.redirect("/lesson/join_session")
 		else:
 			return self.redirect("/check/in")
 
@@ -679,6 +679,12 @@ class LessonHandler(MainHandler):
 							current_teachers = current_teachers,
 							)
 				return
+			elif command == "join_session":
+				assert login.role == "student"
+				self.render_page("join_session.html",
+							username = login.username,
+							token = login.token,
+							)
 		else:
 			self.redirect("/check/in")
 	
