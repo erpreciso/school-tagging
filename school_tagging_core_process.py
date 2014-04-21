@@ -6,9 +6,8 @@ import logging
 class Person(ndb.Model):
 	name = ndb.StringProperty()
 	currentLesson = ndb.StringProperty()
+	connected = ndb.BooleanProperty()
 
-
-		
 class Teacher(Person):
 	lessons = ndb.StringProperty(repeated=True)
 	def safe_put(self):
@@ -25,6 +24,7 @@ class Lesson(ndb.Model):
 	sessions = ndb.StringProperty(repeated=True)
 	teacher = ndb.StringProperty()
 	students = ndb.StringProperty(repeated=True)
+	currentSession = ndb.StringProperty()
 	
 	def safe_put(self):
 		memcache.set("lesson:" + self.name, self)
@@ -35,6 +35,7 @@ def add_teacher(strTeacher, strLesson):
 	objTeacher.name = strTeacher
 	objTeacher.lessons = []
 	objTeacher.currentLesson = strLesson
+	objTeacher.connected = True
 	objTeacher.safe_put()
 	update_teachers_list("add", strTeacher)
 	return objTeacher
@@ -60,15 +61,24 @@ def add_student(strStudent, strLesson):
 	objStudent = Student(id=strStudent)
 	objStudent.name = strStudent
 	objStudent.currentLesson = strLesson
+	objStudent.connected = True
 	objStudent.safe_put()
 	return objStudent
 
+def disconnect_student(strStudent):
+	student = get_student(strStudent)
+	if student:
+		student.connected = False
+		student.safe_put()
+	
+	
 def get_current_lesson_student_list(strTeacher):
 	"""return list of string students for the current lesson of the teacher."""
 	objTeacher = get_teacher(strTeacher)
 	strCurrentLesson = objTeacher.currentLesson
 	objCurrentLesson = get_lesson(strCurrentLesson)
-	students = objCurrentLesson.students
+	students = [s for s in objCurrentLesson.students \
+						if get_student(s).connected == True]
 	return students
 
 def get_teacher(strTeacher):
@@ -108,96 +118,86 @@ def join_lesson(strStudent, strTeacher):
 	strLesson = objTeacher.currentLesson
 	objStudent = add_student(strStudent, strLesson)
 	objLesson = get_lesson(strLesson)
-	objLesson.students.append(strStudent)
+	if strStudent not in objLesson.students:
+		objLesson.students.append(strStudent)
 	objLesson.safe_put()
 	return strLesson
 	
+class Session(ndb.Model):
+	#~ start = ndb.DateTimeProperty(auto_now_add = True)
+	exercise = ndb.PickleProperty()
+	lesson = ndb.StringProperty()
+	students = ndb.StringProperty(repeated=True)
+	
+	def safe_put(self):
+		k = str(self.put().id())
+		memcache.set("session:" + k, self)
+		return k
 
-class Session():
-	def __init__(self, lesson):
-		self.question = None
-		self.lesson = lesson
-		self.students = {}
-	def add_student(self, student):
-		self.students[student] = {"answers": [], "correct": False}
-	def set_question(self, question):
-		self.question = question
-	def assign_to_students(self):
-		for student in self.students.keys():
-			student.assign_session(self)
-	def is_correct_answer(self, answer):
-		return self.question.is_right_answer(answer)
+def add_session(objLesson, objExercise):
+	objSession = Session()
+	objSession.lesson = objLesson.name
+	objSession.exercise = objExercise
+	objSession.students = objLesson.students
+	strSession = objSession.safe_put()
+	objLesson.currentSession = strSession
+	objLesson.safe_put()
+	return strSession
 
-#~ class Student():
-	#~ def __init__(self, name):
-		#~ self.name = name
-		#~ self.current_lesson = None   # str lesson ID
-	#~ def assign_session(self, session):
-		#~ self.sessions[session] = {"answers": [], "correct": True}
-	#~ def add_answer(self, session, answer):
-		#~ my = self.sessions[session]
-		#~ my["answers"].append(answer)
-		#~ my["correct"] = session.is_correct_answer(answer)
+def get_session(idSession):
+	t = memcache.get("session:" + idSession)
+	if not t:
+		k = ndb.Key("Lesson", idSession)
+		t = k.get()
+		memcache.add("lesson:" + idSession, t)
+	return t
+
+#~ class Session():
+	#~ def __init__(self, lesson):
+		#~ self.question = None
+		#~ self.lesson = lesson
+		#~ self.students = {}
+	#~ def add_student(self, student):
+		#~ self.students[student] = {"answers": [], "correct": False}
+	#~ def set_question(self, question):
+		#~ self.question = question
+	#~ def assign_to_students(self):
+		#~ for student in self.students.keys():
+			#~ student.assign_session(self)
+	#~ def is_correct_answer(self, answer):
+		#~ return self.question.is_right_answer(answer)
 		
-	#~ def sessions_token(self):
-		#~ return len(self.sessions.keys())
-	#~ def corrects(self):
-		#~ return len([student for student in self.sessions.keys() if \
-					#~ self.sessions[student]["correct"] == True])
-		
-class Question():
-	def __init__(self):
-		self.id = None
-		self.sentence = None
-		self.words = None
-		self.author = None
-
-class FindTheElement(Question):
-	def __init__(self):
-		self.description = "Find the Element"
-		self.to_find = None  # what we're looking for
-		self.answers = []  # which word is the correct answer
-	def __repr__(self):
-		result = '\nType:"' + self.description + '"'
-		result = result + "\nInstructions: given the sentence, find the " + self.to_find
-		result = result + "\nSentence:" + self.sentence
-		return result
-	def is_right_answer(self, answer):
-		return answer in self.answers
-
-class WhichType(Question):
-	def __init__(self):
-		self.description = "Which type is this"
-		self.instructions = ""
-		self.options = []    # options provided
-		self.answer = None    # only one possible answer
-	def __repr__(self):
-		result = '\nType:"' + self.description + '"'
-		result = result + "\nInstructions: select the correct type of the word indicated"
-		result = result + "\nSentence:" + self.sentence
-		result = result + "\nOptions:" + str(self.options)
-		return result
-	def is_right_answer(self, answer):
-		return answer == self.answer
-
-
-LESSONS = {}
-
-#~ { lesson ID : <obj Lesson> }
-
-STATUS = {"lessons": {}, "teachers": {}}
-
-#~ { "lessons" : { lesson ID : teacher name, ... },
-  #~ "teachers": { teacher name : lesson ID, ... }}
-
-
-	
-	
-	
-	
-
-
-
-
-
-	
+#~ class Question():
+	#~ def __init__(self):
+		#~ self.id = None
+		#~ self.sentence = None
+		#~ self.words = None
+		#~ self.author = None
+#~ 
+#~ class FindTheElement(Question):
+	#~ def __init__(self):
+		#~ self.description = "Find the Element"
+		#~ self.to_find = None  # what we're looking for
+		#~ self.answers = []  # which word is the correct answer
+	#~ def __repr__(self):
+		#~ result = '\nType:"' + self.description + '"'
+		#~ result = result + "\nInstructions: given the sentence, find the " + self.to_find
+		#~ result = result + "\nSentence:" + self.sentence
+		#~ return result
+	#~ def is_right_answer(self, answer):
+		#~ return answer in self.answers
+#~ 
+#~ class WhichType(Question):
+	#~ def __init__(self):
+		#~ self.description = "Which type is this"
+		#~ self.instructions = ""
+		#~ self.options = []    # options provided
+		#~ self.answer = None    # only one possible answer
+	#~ def __repr__(self):
+		#~ result = '\nType:"' + self.description + '"'
+		#~ result = result + "\nInstructions: select the correct type of the word indicated"
+		#~ result = result + "\nSentence:" + self.sentence
+		#~ result = result + "\nOptions:" + str(self.options)
+		#~ return result
+	#~ def is_right_answer(self, answer):
+		#~ return answer == self.answer

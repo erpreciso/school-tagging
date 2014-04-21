@@ -1,5 +1,6 @@
 onMessage = function (message) {
 	var data_arrived = JSON.parse(message.data);
+	mylog(data_arrived);
 	if (data_arrived.type == "exercise") {
 		var exercise = data_arrived.message.exercise;
 		var exercise_type = data_arrived.message.exercise_type;

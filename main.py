@@ -17,6 +17,13 @@ from google.appengine.api import channel
 from google.appengine.ext import ndb
 from google.appengine.api import memcache
 
+def get_exercise_list():
+	lst = memcache.get("exercise_list")
+	if not lst:
+		lst = json.loads(open("lists/exercises.json").read())
+		memcache.set("exercise_list", lst)
+	return lst
+	
 class AppUser(ndb.Model):
 	username = ndb.StringProperty()
 	role = ndb.StringProperty()
@@ -246,8 +253,10 @@ class Login():
 		self.login_status = "registered"
 		self.update_attr("connection_status")
 		self.update_attr("login_status")
-		classroom = Classroom()
-		classroom.send_connection(self, "close")
+		#~ classroom = Classroom()
+		#~ classroom.send_connection(self, "close")
+		if self.role == "student":
+			st.disconnect_student(self.username)
 
 	def valid_user(self):
 		""" check if the user is entitled to login.
@@ -362,6 +371,7 @@ class MainHandler(webapp2.RequestHandler):
 		return False if cookie wasn't existing
 		
 		"""
+		self.response.delete_cookie('schooltagging-lesson', path = '/')
 		cookie = Cookie(self.request.cookies.get("schooltagging-user"))
 		if cookie.value:
 			self.response.delete_cookie('schooltagging-user', path = '/')
@@ -505,12 +515,10 @@ class LoginPageHandler(MainHandler):
 	def logout(self):
 		cookie = Cookie(self.get_user_cookie())
 		if cookie.value:
-			MyLogs("habeamus cookie. move ahead")
 			login = Login()
 			login.username = cookie.username
 			login.hashpassword = cookie.hashpassword
 			if login.valid_user():
-				MyLogs("cookie verified. move")
 				login.logout()
 				self.clear_cookie()
 			else:
@@ -628,6 +636,31 @@ class ExerciseHandler(MainHandler):
 		else:
 			self.redirect("/check/in")
 
+class SessionHandler(MainHandler):
+	def post(self, command):
+		login = self.valid_user()
+		if login:
+			if command == "exercise_request":
+				type = self.request.get("type")
+				id = self.request.get("id")
+				exerciseList = get_exercise_list()
+				objLesson = st.get_lesson(self.get_lesson_cookie())
+				objExercise = [e for e in exerciseList if e["id"] == id][0]
+				strIdSession = st.add_session(objLesson, objExercise)
+				objSession = st.get_session(strIdSession)
+				self.send_exercise_to_classroom(objExercise, objSession.students)
+	
+	def send_exercise_to_classroom(self, exercise, students):
+		message = {
+			"type": "exercise",
+			"message": {
+				"exercise": exercise,
+				},
+			}
+		message = json.dumps(message)
+		for student in students:
+			channel.send_message(student, message)
+
 class LessonHandler(MainHandler):
 
 	def post(self, command):
@@ -653,7 +686,7 @@ class LessonHandler(MainHandler):
 		if login:
 			if command == "start_session":
 				lesson_name = self.get_lesson_cookie()
-				exercise_list = json.loads(open("lists/exercises.json").read())
+				exercise_list = get_exercise_list()
 				students_list = st.get_current_lesson_student_list(login.username)
 				self.render_page("start_session.html",
 							username = login.username,
@@ -713,5 +746,9 @@ app = webapp2.WSGIApplication([
 			r'/lesson/<command>',
 			handler=LessonHandler,
 			name="lesson"),
+	webapp2.Route(
+			r'/session/<command>',
+			handler=SessionHandler,
+			name="session"),
 			])
 
