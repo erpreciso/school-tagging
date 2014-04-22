@@ -607,32 +607,37 @@ class Exercise():
 		channel.send_message(classroom.teacher.username, message)
 
 class ExerciseHandler(MainHandler):
-	def post(self, action):
+	def post(self, strExerciseType):
 		login = self.valid_user()
 		if login:
-			classroom = Classroom()
-			if action == "word_clicked":
-				word_number = int(self.request.get("word_number"))
-				message = {
-					"type": "student_choice",
-					"content": {
-						"student": login.username,
-						"choice": word_number,
-						"etype": "type_1",
-						},
-					}
-			elif action == "type_answer":
-				answer = self.request.get("answer")
-				message = {
-					"type": "student_choice",
-					"content": {
-						"student": login.username,
-						"choice": answer,
-						"etype": "type_2",
-						},
-					}
-			message = json.dumps(message)
-			channel.send_message(classroom.teacher.username, message)
+			assert login.role == "student"
+			objStudent = st.get_student(login.username)
+			objLesson = st.get_lesson(self.get_lesson_cookie())
+			strTeacher = objLesson.teacher
+			strAnswer = self.request.get("answer")
+			st.add_answer(objStudent, objLesson, strExerciseType, strAnswer)
+			#~ if action == "word_clicked":
+				#~ word_number = int(self.request.get("word_number"))
+				#~ message = {
+					#~ "type": "student_choice",
+					#~ "content": {
+						#~ "student": login.username,
+						#~ "choice": word_number,
+						#~ "etype": "type_1",
+						#~ },
+					#~ }
+			#~ elif action == "type_answer":
+				#~ answer = self.request.get("answer")
+				#~ message = {
+					#~ "type": "student_choice",
+					#~ "content": {
+						#~ "student": login.username,
+						#~ "choice": answer,
+						#~ "etype": "type_2",
+						#~ },
+					#~ }
+			#~ message = json.dumps(message)
+			#~ channel.send_message(strTeacher, message)
 		else:
 			self.redirect("/check/in")
 
@@ -646,15 +651,21 @@ class SessionHandler(MainHandler):
 				exerciseList = get_exercise_list()
 				objLesson = st.get_lesson(self.get_lesson_cookie())
 				objExercise = [e for e in exerciseList if e["id"] == id][0]
-				strIdSession = st.add_session(objLesson, objExercise)
+				objType = [t for t in objExercise["goals"] if t["type"] == type][0]
+				strIdSession = st.add_session(objLesson, objExercise, objType)
 				objSession = st.get_session(strIdSession)
-				self.send_exercise_to_classroom(objExercise, objSession.students)
+				self.send_exercise_to_classroom(
+							objExercise,
+							objSession.students,
+							objType,
+							)
 	
-	def send_exercise_to_classroom(self, exercise, students):
+	def send_exercise_to_classroom(self, exercise, students, type):
 		message = {
 			"type": "exercise",
 			"message": {
 				"exercise": exercise,
+				"type": type,
 				},
 			}
 		message = json.dumps(message)
@@ -735,7 +746,7 @@ app = webapp2.WSGIApplication([
 			handler=WelcomePageHandler,
 			name="welcome"),
 	webapp2.Route(
-			r'/exercise/<action>',
+			r'/exercise/<strExerciseType>',
 			handler=ExerciseHandler,
 			name="exercise"),
 	webapp2.Route(

@@ -1,7 +1,10 @@
+from time import localtime, strftime
 from google.appengine.ext import ndb
 from google.appengine.api import memcache
 import logging
 
+def nowtime():
+	return strftime("%Y-%m-%d-%H:%M:%S", localtime())
 
 class Person(ndb.Model):
 	name = ndb.StringProperty()
@@ -15,6 +18,7 @@ class Teacher(Person):
 		self.put()
 		
 class Student(Person):
+	answers = ndb.PickleProperty()
 	def safe_put(self):
 		memcache.set("student:" + self.name, self)
 		self.put()
@@ -61,6 +65,7 @@ def add_student(strStudent, strLesson):
 	objStudent = Student(id=strStudent)
 	objStudent.name = strStudent
 	objStudent.currentLesson = strLesson
+	objStudent.answers = {}
 	objStudent.connected = True
 	objStudent.safe_put()
 	return objStudent
@@ -124,34 +129,47 @@ def join_lesson(strStudent, strTeacher):
 	return strLesson
 	
 class Session(ndb.Model):
-	#~ start = ndb.DateTimeProperty(auto_now_add = True)
+	start = ndb.StringProperty()
 	exercise = ndb.PickleProperty()
+	exerciseType = ndb.PickleProperty()
 	lesson = ndb.StringProperty()
 	students = ndb.StringProperty(repeated=True)
 	
 	def safe_put(self):
-		k = str(self.put().id())
-		memcache.set("session:" + k, self)
-		return k
+		memcache.set("session:" + self.start, self)
+		self.put()
 
-def add_session(objLesson, objExercise):
-	objSession = Session()
+def add_session(objLesson, objExercise, objExerciseType):
+	strSession = nowtime()
+	objSession = Session(id=strSession)
+	objSession.start = strSession
 	objSession.lesson = objLesson.name
 	objSession.exercise = objExercise
+	objSession.exerciseType = objExerciseType
 	objSession.students = objLesson.students
-	strSession = objSession.safe_put()
+	objSession.safe_put()
 	objLesson.currentSession = strSession
 	objLesson.safe_put()
 	return strSession
 
-def get_session(idSession):
-	t = memcache.get("session:" + idSession)
+def get_session(strSession):
+	t = memcache.get("session:" + strSession)
 	if not t:
-		k = ndb.Key("Lesson", idSession)
+		k = ndb.Key("Session", strSession)
 		t = k.get()
-		memcache.add("lesson:" + idSession, t)
+		memcache.add("session:" + strSession, t)
 	return t
 
+def add_answer(objStudent, objLesson, strExerciseType, strAnswer):
+	strSession = objLesson.currentSession
+	objSession = get_session(strSession)
+	if strSession in objStudent.answers.keys():
+		objStudent.answers[strSession].append(strAnswer)
+	else:
+		objStudent.answers[strSession] = [strAnswer]
+	booCorrect = strAnswer in objSession.exerciseType["answers"]
+	logging.info(booCorrect)
+	
 #~ class Session():
 	#~ def __init__(self, lesson):
 		#~ self.question = None
