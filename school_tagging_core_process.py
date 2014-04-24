@@ -138,6 +138,13 @@ class Session(ndb.Model):
 	def safe_put(self):
 		memcache.set("session:" + self.start, self)
 		self.put()
+	def is_correct(self, answer):
+		if self.exerciseType["type"] == "find_element":
+			answer = int(answer)
+			answers = self.exerciseType["answers"]
+		elif self.exerciseType["type"] == "which_type":
+			answers = [self.exerciseType["options"][a] for a in self.exerciseType["answers"]]
+		return answer in answers
 
 def add_session(objLesson, objExercise, objExerciseType):
 	strSession = nowtime()
@@ -149,6 +156,8 @@ def add_session(objLesson, objExercise, objExerciseType):
 	objSession.students = objLesson.students
 	objSession.safe_put()
 	objLesson.currentSession = strSession
+	if strSession not in objLesson.sessions:
+		objLesson.sessions.append(strSession)
 	objLesson.safe_put()
 	return strSession
 
@@ -167,7 +176,7 @@ def add_answer(objStudent, objLesson, strExerciseType, strAnswer):
 		objStudent.answers[strSession].append(strAnswer)
 	else:
 		objStudent.answers[strSession] = [strAnswer]
-	booCorrect = strAnswer in objSession.exerciseType["answers"]
+	booCorrect = objSession.is_correct(strAnswer)
 	logging.info(booCorrect)
 	
 #~ class Session():

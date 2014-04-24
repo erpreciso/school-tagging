@@ -731,7 +731,22 @@ class LessonHandler(MainHandler):
 							)
 		else:
 			self.redirect("/check/in")
-	
+
+class DataHandler(MainHandler):
+
+	def get(self, command):
+		login = self.valid_user()
+		if login:
+			if command == "exercises_list":
+				message = {
+					"type": "exercises_list",
+					"message": get_exercise_list(),
+					}
+				message = json.dumps(message)
+				channel.send_message(login.username, message)
+		else:
+			return self.redirect("/check/in")
+
 app = webapp2.WSGIApplication([
 	webapp2.Route(
 			r'/dashboard/<action>',
@@ -761,5 +776,9 @@ app = webapp2.WSGIApplication([
 			r'/session/<command>',
 			handler=SessionHandler,
 			name="session"),
+	webapp2.Route(
+			r'/data/<command>',
+			handler=DataHandler,
+			name="data"),
 			])
 

@@ -8,6 +8,7 @@
 {% block payload %}
 <div id="content">
 	<div id="exercise_area">
+		<div id="data_exercise" data-exercise="{{exercise_list}}" class="hidden"></div>
 	{% for exercise in exercise_list %}
 		<div class="exercise" id="{{exercise.id}}">
 			<div class="sentence">
@@ -25,6 +26,12 @@
 	</div>
 	<div id="students_area">
 	{% for student in students_list %}
+		<div class="student_dashboard" id="{{student}}">
+			<div class="name">{{student}}</div>
+			<div class="exercise_content"></div>
+			<div class="exercise_status"></div>
+			<div class="response_time"></div>
+		</div>
 	{{student}}
 	{% endfor %}
 	</div>
