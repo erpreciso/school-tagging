@@ -177,7 +177,7 @@ def add_answer(objStudent, objLesson, strExerciseType, strAnswer):
 	else:
 		objStudent.answers[strSession] = [strAnswer]
 	booCorrect = objSession.is_correct(strAnswer)
-	logging.info(booCorrect)
+	#~ logging.info(booCorrect)
 	
 #~ class Session():
 	#~ def __init__(self, lesson):

@@ -616,6 +616,15 @@ class ExerciseHandler(MainHandler):
 			strTeacher = objLesson.teacher
 			strAnswer = self.request.get("answer")
 			st.add_answer(objStudent, objLesson, strExerciseType, strAnswer)
+			message = {
+					"type": "student_choice",
+					"content": {
+						"student": login.username,
+						"answer": strAnswer,
+						},
+					}
+			message = json.dumps(message)
+			channel.send_message(strTeacher, message)
 			#~ if action == "word_clicked":
 				#~ word_number = int(self.request.get("word_number"))
 				#~ message = {

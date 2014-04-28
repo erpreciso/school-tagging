@@ -10,6 +10,7 @@ $(document).ready(function () {
 				"id": exerciseId,
 			};
 		var exercise = Strg.getExercise(exerciseId, exerciseType);
+		Strg.saveCurrentExercise(exercise);
 		add_exercise_to_all_students_dashboards(exercise.exercise, exercise.goal);
 		$.post("/session/exercise_request", param);
 	});
@@ -19,6 +20,12 @@ $(document).ready(function () {
 var Strg = {
 	saveExerciseList : function (exerciseList) {
 		localStorage.setItem("exercises", JSON.stringify(exerciseList));
+	},
+	saveCurrentExercise : function (exercise) {
+		localStorage.setItem("currentExercise", JSON.stringify(exercise));
+	},
+	getCurrentExercise : function () {
+		return JSON.parse(localStorage.getItem("currentExercise"));
 	},
 	getExercise : function (exerciseId, exerciseType) {
 		var exercises = JSON.parse(localStorage.getItem("exercises"));
@@ -36,7 +43,7 @@ var Strg = {
 				}
 			}
 		}
-		return {"exercise": exercise, "goal": goal}
+		return {"exercise": exercise, "goal": goal};
 	}
 }
 
@@ -46,9 +53,34 @@ onMessage = function (message) {
 		var exerciseList = data_arrived.message;
 		Strg.saveExerciseList(exerciseList);
 	}
+	else if (data_arrived.type == "student_choice") {
+		update_student_exercise(data_arrived.content);
+	}
+}
+function update_student_exercise (data) {
+	var student = data.student;
+	var answer = data.answer;
+	var currentExercise = Strg.getCurrentExercise();
+	if (currentExercise.goal.type == "find_element") {
+		$("#" + student + " .word").css("background-color", "inherit");
+		var triggered = $("#" + student + " [class='word " + answer + "']");
+		triggered.css("background-color", "yellow");
+	}
+	else if (currentExercise.goal.type == "which_type") {
+		var i = currentExercise.goal.answers[0];
+		var correct = currentExercise.goal.options[i];
+		$("#" + student + " #answer_" + answer)
+			.removeClass("raw_box");
+		if (answer == correct) {
+			$("#" + student + " #answer_" + answer).addClass("correct_box");
+		}
+		else {
+			$("#" + student + " #answer_" + answer).addClass("wrong_box");
+		}
+	}
 }
 
-function add_exercise_to_all_students_dashboards (exercise, etype) {
+function add_exercise_to_all_students_dashboards (exercise, goal) {
 	var students_count = $(".student_dashboard").length;
 	$(".student_dashboard .sentence").remove();
 	for (var i = 0; i < students_count; i++) {
@@ -58,15 +90,15 @@ function add_exercise_to_all_students_dashboards (exercise, etype) {
 			var word = $(document.createElement("div"))
 				.addClass("word " + j)
 				.text(exercise.words[j] + " ");
-				if (etype == "type_2" && 
-						j == exercise.goal[etype].target) {
+				if (goal.type == "which_type" && 
+						j == goal.target) {
 					$(word).css("background-color", "#AAF9F4");
 				}
 			$(sentence).append(word);
 		}
-		if (etype == "type_2") {
-			for (var j in exercise.goal[etype].options) {
-				var option = exercise.goal[etype].options[j];
+		if (goal.type == "which_type") {
+			for (var j in goal.options) {
+				var option = goal.options[j];
 				var choice = $(document.createElement("div"))
 					.addClass("box")
 					.addClass("raw_box")

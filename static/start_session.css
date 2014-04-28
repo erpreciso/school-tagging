@@ -54,3 +54,31 @@ body {
 .word {
 	display: inline;
 	}
+button.exercise_type_choice {
+	font-size: 0.8em;
+	color: red;
+	}
+
+
+.box {
+	border: 1px solid blue;
+	display: inline;
+	font-size: 0.6em;
+	margin: 2px;
+	padding: 2px;
+	}
+
+.raw_box {
+	background-color: white;
+	color: black;
+	}
+
+.wrong_box {
+	background-color: red;
+	color: white;
+	}
+
+.correct_box {
+	background-color: green;
+	color: white;
+	}

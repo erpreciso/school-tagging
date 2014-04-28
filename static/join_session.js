@@ -12,9 +12,13 @@ onMessage = function (message) {
 var Exercise = new Object;
 Exercise.build = function (exercise, type) {
 	$("#exercise").remove();
+	var instructions_text = type.description;
+	if (type.type == "find_element") {
+		instructions_text += " " + type["to find"];
+	}
 	var instructions = $(document.createElement("div"))
 		.attr("class", "instructions")
-		.text(type.description);
+		.text(instructions_text);
 	var target = $(document.createElement("div"))
 		.attr("id", "target");
 	for (var i=0; i < exercise.words.length; i++) {
