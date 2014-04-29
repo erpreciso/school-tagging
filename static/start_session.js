@@ -12,6 +12,7 @@ $(document).ready(function () {
 		var exercise = Strg.getExercise(exerciseId, exerciseType);
 		Strg.saveCurrentExercise(exercise);
 		add_exercise_to_all_students_dashboards(exercise.exercise, exercise.goal);
+		add_exercise_to_classroom_dashboard(exercise.exercise, exercise.goal);
 		$.post("/session/exercise_request", param);
 	});
 	
@@ -69,15 +70,71 @@ function update_student_exercise (data) {
 	else if (currentExercise.goal.type == "which_type") {
 		var i = currentExercise.goal.answers[0];
 		var correct = currentExercise.goal.options[i];
-		$("#" + student + " #answer_" + answer)
-			.removeClass("raw_box");
-		if (answer == correct) {
-			$("#" + student + " #answer_" + answer).addClass("correct_box");
+		if ($("#" + student + " .raw_box").length == $("#" + student + " .box").length) {
+			Classroom.add_respondent(1);
 		}
-		else {
-			$("#" + student + " #answer_" + answer).addClass("wrong_box");
+		var box = $("#" + student + " #answer_" + answer);
+		if ($(box).hasClass("raw_box")) {
+			$(box).removeClass("raw_box");
+			if (answer == correct) {
+				Classroom.add_winner(1);
+				$(box).addClass("correct_box");
+			}
+			else {
+				$(box).addClass("wrong_box");
+			}
 		}
 	}
+}
+
+var Classroom = {
+	add_student : function (n) {
+		if ($("#students_count").length > 0) {
+			var logged = Number($("#students_count").text());
+			logged += n;
+			$("#students_count").text(logged);
+		}
+	},
+	add_respondent : function (n) {
+		if ($("#respondents_count").length > 0) {
+			var respondents = Number($("#respondents_count").text());
+			respondents += n;
+			$("#respondents_count").text(respondents);
+		}
+	},
+	add_winner : function (n) {
+		if ($("#winners_count").length > 0) {
+			var winners = Number($("#winners_count").text());
+			winners += n;
+			$("#winners_count").text(winners,toString());
+		}
+	}
+}
+	
+function add_exercise_to_classroom_dashboard (exercise, goal) {
+	var students_count = $(".student_dashboard").length.toString();
+	var exercise_status = document.createElement("div");
+	$(exercise_status).attr("id", "exercise_status");
+	var students_count_stat = document.createElement("div");
+	$(students_count_stat)
+		.attr("id", "students_count_stat")
+		.text("Students connected: ");
+	$(students_count_stat).append('<div id="students_count">' + students_count + '</div>');
+	var respondents_count_stat = document.createElement("div");
+	$(respondents_count_stat)
+		.attr("id", "respondents_count_stat")
+		.text("Students responding: ");
+	$(respondents_count_stat).append('<div id="respondents_count">0</div>');
+	var winners_count_stat = document.createElement("div");
+	$(winners_count_stat)
+		.attr("id", "winners_count_stat")
+		.text("Students correct: ");
+	$(winners_count_stat).append('<div id="winners_count">0</div>');
+	$(exercise_status)
+		.append(students_count_stat)
+		.append(respondents_count_stat)
+		.append(winners_count_stat);
+	$("#classroom_area").append(exercise_status);
 }
 
 function add_exercise_to_all_students_dashboards (exercise, goal) {

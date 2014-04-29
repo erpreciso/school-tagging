@@ -41,6 +41,15 @@ body {
 
 }
 
+#students_area .student_dashboard {
+	display: block;
+	font-size: 1.6em;
+	margin: 2px;
+	padding: 2px;
+	background-color: Orange;
+
+}
+
 #classroom_area {
 	display: block;
 	float: left;
@@ -81,4 +90,8 @@ button.exercise_type_choice {
 .correct_box {
 	background-color: green;
 	color: white;
+	}
+
+#students_count, #respondents_count, #winners_count {
+	display: inline;
 	}

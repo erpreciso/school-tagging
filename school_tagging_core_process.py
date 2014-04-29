@@ -75,7 +75,12 @@ def disconnect_student(strStudent):
 	if student:
 		student.connected = False
 		student.safe_put()
-	
+
+def connect_student(strStudent):
+	student = get_student(strStudent)
+	if student and not student.connected:
+		student.connected = True
+		student.safe_put()
 	
 def get_current_lesson_student_list(strTeacher):
 	"""return list of string students for the current lesson of the teacher."""

@@ -26,54 +26,10 @@ function loghtml(){
 
 
 function build_t_classroom_stats() {
-	var exercise_status = document.createElement("div");
-	$(exercise_status).attr("id", "exercise_status");
-	var n = $("#student_detail").children(".student_dashboard").length.toString();
-	var students_count_stat = document.createElement("div");
-	$(students_count_stat)
-		.attr("id", "students_count_stat")
-		.text("Students connected: ");
-	$(students_count_stat).append('<div id="students_count">' + n + '</div>');
-	var respondents_count_stat = document.createElement("div");
-	$(respondents_count_stat)
-		.attr("id", "respondents_count_stat")
-		.text("Students responding: ");
-	$(respondents_count_stat).append('<div id="respondents_count">0</div>');
-	var winners_count_stat = document.createElement("div");
-	$(winners_count_stat)
-		.attr("id", "winners_count_stat")
-		.text("Students correct: ");
-	$(winners_count_stat).append('<div id="winners_count">0</div>');
-	$(exercise_status)
-		.append(students_count_stat)
-		.append(respondents_count_stat)
-		.append(winners_count_stat);
-	$("#classroom_stats").append(exercise_status);
+	
 }
 
-function update_t_logged (n) {
-	if ($("#students_count").length > 0) {
-		var logged = Number($("#students_count").text());
-		logged += n;
-		$("#students_count").text(logged);
-	}
-}
 
-function update_t_respondents (n) {
-	if ($("#respondents_count").length > 0) {
-		var respondents = Number($("#respondents_count").text());
-		respondents += n;
-		$("#respondents_count").text(respondents);
-	}
-}
-
-function update_t_winners (n) {
-	if ($("#winners_count").length > 0) {
-		var winners = Number($("#winners_count").text());
-		winners += n;
-		$("#winners_count").text(winners,toString());
-	}
-}
 
 function update_t_student_detail (p) {
 	if (p.action == "build") {

@@ -245,16 +245,14 @@ class Login():
 	def connect(self):
 		self.connection_status = "connected"
 		self.update_attr("connection_status")
-		classroom = Classroom()
-		classroom.send_connection(self, "open")
+		if self.role == "student":
+			st.connect_student(self.username)
 		
 	def disconnect(self):
 		self.connection_status = "not connected"
 		self.login_status = "registered"
 		self.update_attr("connection_status")
 		self.update_attr("login_status")
-		#~ classroom = Classroom()
-		#~ classroom.send_connection(self, "close")
 		if self.role == "student":
 			st.disconnect_student(self.username)
 
@@ -734,6 +732,7 @@ class LessonHandler(MainHandler):
 				return
 			elif command == "join_session":
 				assert login.role == "student"
+				st.connect_student(login.username)
 				self.render_page("join_session.html",
 							username = login.username,
 							token = login.token,
