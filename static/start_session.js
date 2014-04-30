@@ -12,13 +12,19 @@ $(document).ready(function () {
 		var exercise = Strg.getExercise(exerciseId, exerciseType);
 		Strg.saveCurrentExercise(exercise);
 		add_exercise_to_all_students_dashboards(exercise.exercise, exercise.goal);
-		add_exercise_to_classroom_dashboard(exercise.exercise, exercise.goal);
+		Classroom.create_dashboard(exercise.exercise, exercise.goal);
 		$.post("/session/exercise_request", param);
 	});
 	
 });
 
 var Strg = {
+	saveChartValues : function (chartValues) {
+		localStorage.setItem("chartValues", JSON.stringify(chartValues));
+	},
+	getChartValues : function () {
+		return JSON.parse(localStorage.getItem("chartValues"));
+	},
 	saveExerciseList : function (exerciseList) {
 		localStorage.setItem("exercises", JSON.stringify(exerciseList));
 	},
@@ -58,6 +64,7 @@ onMessage = function (message) {
 		update_student_exercise(data_arrived.content);
 	}
 }
+
 function update_student_exercise (data) {
 	var student = data.student;
 	var answer = data.answer;
@@ -68,6 +75,8 @@ function update_student_exercise (data) {
 		triggered.css("background-color", "yellow");
 	}
 	else if (currentExercise.goal.type == "which_type") {
+		Chart.updateValues(answer);
+		Chart.createChart($("#chart"));
 		var i = currentExercise.goal.answers[0];
 		var correct = currentExercise.goal.options[i];
 		if ($("#" + student + " .raw_box").length == $("#" + student + " .box").length) {
@@ -87,7 +96,84 @@ function update_student_exercise (data) {
 	}
 }
 
+var Chart = {
+	colorsPool: ["red", "green", "blue", "orange"],
+	updateValues : function (answer) {
+		var values = Strg.getChartValues();
+		values[answer] += 1;
+		Strg.saveChartValues(values);
+	},
+	createChart : function (chartElement) {
+		var dictChart = Strg.getChartValues();
+		var values = [];
+		//~ var colorsPool = ["red", "green", "blue", "orange"];
+		var colors = [];
+		var i = 0;
+		for (var attr in dictChart) {
+			values.push(dictChart[attr]);
+			colors.push(Chart.colorsPool[i]);
+			i++;
+		}
+		var param = {
+			type: "pie",
+			width: 80,
+			height: 80,
+			sliceColors: colors
+		};
+		mylog(param);
+		chartElement.sparkline(values, param);
+	},
+	createChartArea : function (parent) {
+		var chart = $(document.createElement("div"))
+			.attr("id", "chart");
+		parent.append(chart);
+	},
+	initChart : function (list) {
+		var chartValues = {};
+		for (var i = 0; i < list.length; i++) {
+			chartValues[list[i]] = 0;
+		}
+		Strg.saveChartValues(chartValues);
+	}
+	
+	
+}
+
+
 var Classroom = {
+	create_dashboard : function (exercise, goal) {
+		var students_count = $(".student_dashboard").length.toString();
+		var exercise_status = document.createElement("div");
+		$(exercise_status).attr("id", "exercise_status");
+		var students_count_stat = document.createElement("div");
+		$(students_count_stat)
+			.attr("id", "students_count_stat")
+			.text("Students connected: ");
+		$(students_count_stat).append('<div id="students_count">' + students_count + '</div>');
+		var respondents_count_stat = document.createElement("div");
+		$(respondents_count_stat)
+			.attr("id", "respondents_count_stat")
+			.text("Students responding: ");
+		$(respondents_count_stat).append('<div id="respondents_count">0</div>');
+		var winners_count_stat = document.createElement("div");
+		$(winners_count_stat)
+			.attr("id", "winners_count_stat")
+			.text("Students correct: ");
+		$(winners_count_stat).append('<div id="winners_count">0</div>');
+		$(exercise_status)
+			.append(students_count_stat)
+			.append(respondents_count_stat)
+			.append(winners_count_stat);
+		$("#classroom_area").append(exercise_status);
+		if (goal.type == "which_type") {
+			var list = goal.options;
+			Chart.initChart(list);
+			Chart.createChartArea($("#classroom_area"));
+		}
+		
+		//~ mylog(exercise);mylog(goal);
+		
+	},
 	add_student : function (n) {
 		if ($("#students_count").length > 0) {
 			var logged = Number($("#students_count").text());
@@ -111,32 +197,6 @@ var Classroom = {
 	}
 }
 	
-function add_exercise_to_classroom_dashboard (exercise, goal) {
-	var students_count = $(".student_dashboard").length.toString();
-	var exercise_status = document.createElement("div");
-	$(exercise_status).attr("id", "exercise_status");
-	var students_count_stat = document.createElement("div");
-	$(students_count_stat)
-		.attr("id", "students_count_stat")
-		.text("Students connected: ");
-	$(students_count_stat).append('<div id="students_count">' + students_count + '</div>');
-	var respondents_count_stat = document.createElement("div");
-	$(respondents_count_stat)
-		.attr("id", "respondents_count_stat")
-		.text("Students responding: ");
-	$(respondents_count_stat).append('<div id="respondents_count">0</div>');
-	var winners_count_stat = document.createElement("div");
-	$(winners_count_stat)
-		.attr("id", "winners_count_stat")
-		.text("Students correct: ");
-	$(winners_count_stat).append('<div id="winners_count">0</div>');
-	$(exercise_status)
-		.append(students_count_stat)
-		.append(respondents_count_stat)
-		.append(winners_count_stat);
-	$("#classroom_area").append(exercise_status);
-}
-
 function add_exercise_to_all_students_dashboards (exercise, goal) {
 	var students_count = $(".student_dashboard").length;
 	$(".student_dashboard .sentence").remove();

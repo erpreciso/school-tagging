@@ -60,6 +60,15 @@ body {
 
 }
 
+#exercise_status, #answers_stats {
+	display: inline;
+	float: left;
+	margin: 5px;
+	padding: 3px;
+	font-size: 0.8em;
+	color: Teal;
+	}
+
 .word {
 	display: inline;
 	}
