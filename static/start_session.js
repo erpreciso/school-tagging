@@ -18,6 +18,8 @@ $(document).ready(function () {
 	
 });
 
+var colorsPool = ["red", "green", "blue", "orange"];
+
 var Strg = {
 	saveChartValues : function (chartValues) {
 		localStorage.setItem("chartValues", JSON.stringify(chartValues));
@@ -75,12 +77,13 @@ function update_student_exercise (data) {
 		triggered.css("background-color", "yellow");
 	}
 	else if (currentExercise.goal.type == "which_type") {
-		Chart.updateValues(answer);
-		Chart.createChart($("#chart"));
+		
 		var i = currentExercise.goal.answers[0];
 		var correct = currentExercise.goal.options[i];
 		if ($("#" + student + " .raw_box").length == $("#" + student + " .box").length) {
 			Classroom.add_respondent(1);
+			Chart.updateValues(answer);
+			Chart.createChart($("#chart"));
 		}
 		var box = $("#" + student + " #answer_" + answer);
 		if ($(box).hasClass("raw_box")) {
@@ -97,7 +100,7 @@ function update_student_exercise (data) {
 }
 
 var Chart = {
-	colorsPool: ["red", "green", "blue", "orange"],
+	
 	updateValues : function (answer) {
 		var values = Strg.getChartValues();
 		values[answer] += 1;
@@ -106,12 +109,11 @@ var Chart = {
 	createChart : function (chartElement) {
 		var dictChart = Strg.getChartValues();
 		var values = [];
-		//~ var colorsPool = ["red", "green", "blue", "orange"];
 		var colors = [];
 		var i = 0;
 		for (var attr in dictChart) {
 			values.push(dictChart[attr]);
-			colors.push(Chart.colorsPool[i]);
+			colors.push(colorsPool[i]);
 			i++;
 		}
 		var param = {
@@ -169,6 +171,15 @@ var Classroom = {
 			var list = goal.options;
 			Chart.initChart(list);
 			Chart.createChartArea($("#classroom_area"));
+			var chartLegend = $(document.createElement("div"))
+				.attr("id", "chartLegend");
+			for (var i = 0; i < list.length; i++) {
+				var option = $(document.createElement("div"))
+					.text(list[i])
+					.css("color", colorsPool[i]);
+				chartLegend.append(option);
+			}
+			$("#chart").before(chartLegend);
 		}
 		
 		//~ mylog(exercise);mylog(goal);

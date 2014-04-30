@@ -41,13 +41,22 @@ body {
 
 }
 
-#students_area .student_dashboard {
+.student_dashboard {
 	display: block;
+	background-color: Orange;
+}
+
+.student_dashboard .name {
 	font-size: 1.6em;
 	margin: 2px;
 	padding: 2px;
-	background-color: Orange;
-
+	background-color: PaleGoldenrod;
+}
+.student_dashboard .exercise_area {
+	font-size: 1.2em;
+	margin: 2px;
+	padding: 2px;
+	background-color: Khaki;
 }
 
 #classroom_area {
@@ -60,7 +69,7 @@ body {
 
 }
 
-#exercise_status, #answers_stats {
+#exercise_status, #chartLegend {
 	display: inline;
 	float: left;
 	margin: 5px;

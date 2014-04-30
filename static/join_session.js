@@ -3,8 +3,6 @@ onMessage = function (message) {
 	if (data_arrived.type == "exercise") {
 		var exercise = data_arrived.message.exercise;
 		var type = data_arrived.message.type;
-		//~ var dataToStore = JSON.stringify(data_arrived.message);
-		//~ localStorage.setItem("exercise", dataToStore);
 		Exercise.build(exercise, type);
 	}
 }
@@ -55,7 +53,10 @@ Exercise.build = function (exercise, type) {
 			$(exercise_body).append(button);
 			var answer_parameter = {"answer": options[i]};
 			$(button).on("click", answer_parameter, function (event) {
+				//~ mylog(event);
+				$(event.target).css("background-color", "blue");
 				$.post("/exercise/" + type.type, {"answer": event.data.answer});
+				$(".answer").off("click");
 			});
 		}
 	}
