@@ -16,16 +16,26 @@ $(document).ready(function () {
 		$.post("/session/exercise_request", param);
 	});
 	
+	var studentsCount = $(".student_dashboard").length.toString();
+	Chart.initRespondentsChart(studentsCount);
+	Chart.createRespondentsChart($("#chartRespondents .chart"));
+	
 });
 
 var colorsPool = ["red", "green", "blue", "orange"];
 
 var Strg = {
-	saveChartValues : function (chartValues) {
-		localStorage.setItem("chartValues", JSON.stringify(chartValues));
+	saveAnswersChartValues : function (chartValues) {
+		localStorage.setItem("answersChartValues", JSON.stringify(chartValues));
 	},
-	getChartValues : function () {
-		return JSON.parse(localStorage.getItem("chartValues"));
+	saveRespondentsChartValues : function (chartValues) {
+		localStorage.setItem("respondentsChartValues", JSON.stringify(chartValues));
+	},
+	getAnswersChartValues : function () {
+		return JSON.parse(localStorage.getItem("answersChartValues"));
+	},
+	getRespondentsChartValues : function () {
+		return JSON.parse(localStorage.getItem("respondentsChartValues"));
 	},
 	saveExerciseList : function (exerciseList) {
 		localStorage.setItem("exercises", JSON.stringify(exerciseList));
@@ -82,8 +92,8 @@ function update_student_exercise (data) {
 		var correct = currentExercise.goal.options[i];
 		if ($("#" + student + " .raw_box").length == $("#" + student + " .box").length) {
 			Classroom.add_respondent(1);
-			Chart.updateValues(answer);
-			Chart.createChart($("#chart"));
+			Chart.updateAnswersValues(answer);
+			Chart.createAnswersChart($("#chartAnswers .chart"));
 		}
 		var box = $("#" + student + " #answer_" + answer);
 		if ($(box).hasClass("raw_box")) {
@@ -100,14 +110,36 @@ function update_student_exercise (data) {
 }
 
 var Chart = {
-	
-	updateValues : function (answer) {
-		var values = Strg.getChartValues();
-		values[answer] += 1;
-		Strg.saveChartValues(values);
+	createRespondentsChart : function (chartElement) {
+		var dictChart = Strg.getRespondentsChartValues();
+		var values = [[2,6,3]];
+		var param = {
+			type: "bar",
+			width: 80,
+			height: 80,
+		};
+		//~ mylog(param);
+		chartElement.sparkline(values, param);
 	},
-	createChart : function (chartElement) {
-		var dictChart = Strg.getChartValues();
+	initRespondentsChart : function (studentsCount) {
+		var chartValues = {"correct": 0, "wrong": 0, "waiting": studentsCount};
+		Strg.saveRespondentsChartValues(chartValues);
+	},
+	createAnswersLegend : function (options) {
+		for (var i = 0; i < options.length; i++) {
+			var option = $(document.createElement("div"))
+				.text(options[i])
+				.css("color", colorsPool[i]);
+			$("#chartAnswers .legend").append(option);
+		}
+	},
+	updateAnswersValues : function (answer) {
+		var values = Strg.getAnswersChartValues();
+		values[answer] += 1;
+		Strg.saveAnswersChartValues(values);
+	},
+	createAnswersChart : function (chartElement) {
+		var dictChart = Strg.getAnswersChartValues();
 		var values = [];
 		var colors = [];
 		var i = 0;
@@ -122,64 +154,49 @@ var Chart = {
 			height: 80,
 			sliceColors: colors
 		};
-		mylog(param);
+		//~ mylog(param);
 		chartElement.sparkline(values, param);
 	},
-	createChartArea : function (parent) {
-		var chart = $(document.createElement("div"))
-			.attr("id", "chart");
-		parent.append(chart);
-	},
-	initChart : function (list) {
+	initAnswersChart : function (list) {
 		var chartValues = {};
 		for (var i = 0; i < list.length; i++) {
 			chartValues[list[i]] = 0;
 		}
-		Strg.saveChartValues(chartValues);
+		Strg.saveAnswersChartValues(chartValues);
 	}
-	
-	
 }
-
 
 var Classroom = {
 	create_dashboard : function (exercise, goal) {
-		var students_count = $(".student_dashboard").length.toString();
-		var exercise_status = document.createElement("div");
-		$(exercise_status).attr("id", "exercise_status");
-		var students_count_stat = document.createElement("div");
-		$(students_count_stat)
-			.attr("id", "students_count_stat")
-			.text("Students connected: ");
-		$(students_count_stat).append('<div id="students_count">' + students_count + '</div>');
-		var respondents_count_stat = document.createElement("div");
-		$(respondents_count_stat)
-			.attr("id", "respondents_count_stat")
-			.text("Students responding: ");
-		$(respondents_count_stat).append('<div id="respondents_count">0</div>');
-		var winners_count_stat = document.createElement("div");
-		$(winners_count_stat)
-			.attr("id", "winners_count_stat")
-			.text("Students correct: ");
-		$(winners_count_stat).append('<div id="winners_count">0</div>');
-		$(exercise_status)
-			.append(students_count_stat)
-			.append(respondents_count_stat)
-			.append(winners_count_stat);
-		$("#classroom_area").append(exercise_status);
+		//~ var students_count = $(".student_dashboard").length.toString();
+		//~ var exercise_status = document.createElement("div");
+		//~ $(exercise_status).attr("id", "exercise_status");
+		//~ var students_count_stat = document.createElement("div");
+		//~ $(students_count_stat)
+			//~ .attr("id", "students_count_stat")
+			//~ .text("Students connected: ");
+		//~ $(students_count_stat).append('<div id="students_count">' + students_count + '</div>');
+		//~ var respondents_count_stat = document.createElement("div");
+		//~ $(respondents_count_stat)
+			//~ .attr("id", "respondents_count_stat")
+			//~ .text("Students responding: ");
+		//~ $(respondents_count_stat).append('<div id="respondents_count">0</div>');
+		//~ var winners_count_stat = document.createElement("div");
+		//~ $(winners_count_stat)
+			//~ .attr("id", "winners_count_stat")
+			//~ .text("Students correct: ");
+		//~ $(winners_count_stat).append('<div id="winners_count">0</div>');
+		//~ $(exercise_status)
+			//~ .append(students_count_stat)
+			//~ .append(respondents_count_stat)
+			//~ .append(winners_count_stat);
+		//~ $("#classroom_area").append(exercise_status);
 		if (goal.type == "which_type") {
 			var list = goal.options;
-			Chart.initChart(list);
-			Chart.createChartArea($("#classroom_area"));
-			var chartLegend = $(document.createElement("div"))
-				.attr("id", "chartLegend");
-			for (var i = 0; i < list.length; i++) {
-				var option = $(document.createElement("div"))
-					.text(list[i])
-					.css("color", colorsPool[i]);
-				chartLegend.append(option);
-			}
-			$("#chart").before(chartLegend);
+			Chart.initAnswersChart(list);
+			Chart.createAnswersLegend(list);
+			
+			
 		}
 		
 		//~ mylog(exercise);mylog(goal);

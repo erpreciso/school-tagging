@@ -8,7 +8,9 @@
 {% block payload %}
 <div id="content">
 	<div id="exercise_area">
+<!--
 		<div id="data_exercise" data-exercise="{{exercise_list}}" class="hidden"></div>
+-->
 	{% for exercise in exercise_list %}
 		<div class="exercise" id="{{exercise.id}}">
 			<div class="sentence">
@@ -36,7 +38,20 @@
 	</div>
 	
 	<div id="classroom_area">
-
+		<div id="chartRespondents">
+			<div class="title">Students responding</div>
+			<div class="legend">
+				<div class="legendEntry">Correct</div>
+				<div class="legendEntry">Not correct</div>
+				<div class="legendEntry">Waiting answer</div>
+			</div>
+			<div class="chart"></div>
+		</div>
+		<div id="chartAnswers">
+			<div class="title">Answers given</div>
+			<div class="legend"></div>
+			<div class="chart"></div>
+		</div>
 	</div>
 </div>
 {% endblock %}
