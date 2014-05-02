@@ -4,6 +4,7 @@
 <script src="/static/start_session.js"></script>
 <script src="/static/jquery.jqplot.min.js"></script>
 <script src="/static/plugins/jqplot.barRenderer.min.js"></script>
+<script src="/static/plugins/jqplot.pieRenderer.min.js"></script>
 <script src="/static/plugins/jqplot.pointLabels.min.js"></script>
 <link type="text/css" rel="stylesheet" href= "/static/start_session.css" />
 <link rel="stylesheet" type="text/css" href="/static/jquery.jqplot.css" />
@@ -12,9 +13,6 @@
 {% block payload %}
 <div id="content">
 	<div id="exercise_area">
-<!--
-		<div id="data_exercise" data-exercise="{{exercise_list}}" class="hidden"></div>
--->
 	{% for exercise in exercise_list %}
 		<div class="exercise" id="{{exercise.id}}">
 			<div class="sentence">
@@ -41,14 +39,13 @@
 	{% endfor %}
 	</div>
 	
-	<div id="classroom_area">
+	<div id="classroomStatisticsArea">
 		<div id="chartRespondents">
 			<div class="title">Students responding</div>
 			<div class="chart" id="respondentsBarChart"></div>
 		</div>
 		<div id="chartAnswers">
 			<div class="title">Answers given</div>
-			<div class="legend"></div>
 			<div class="chart" id="answersPieChart"></div>
 		</div>
 	</div>

@@ -53,7 +53,6 @@ Exercise.build = function (exercise, type) {
 			$(exercise_body).append(button);
 			var answer_parameter = {"answer": options[i]};
 			$(button).on("click", answer_parameter, function (event) {
-				//~ mylog(event);
 				$(event.target).css("background-color", "blue");
 				$.post("/exercise/" + type.type, {"answer": event.data.answer});
 				$(".answer").off("click");

@@ -11,11 +11,10 @@ $(document).ready(function () {
 			};
 		var exercise = Strg.getExercise(exerciseId, exerciseType);
 		Strg.saveCurrentExercise(exercise);
-		add_exercise_to_all_students_dashboards(exercise.exercise, exercise.goal);
+		addExerciseToAllStudentsDashboards(exercise.exercise, exercise.goal);
 		if (exercise.goal.type == "which_type") {
 			var list = exercise.goal.options;
 			Chart.initAnswersChart(list);
-			Chart.createAnswersLegend(list);
 		}
 		var studentsCount = $(".student_dashboard").length;
 		Chart.initRespondentsChart(studentsCount);
@@ -24,7 +23,7 @@ $(document).ready(function () {
 	});
 });
 
-var colorsPool = ["green", "red", "blue", "orange"];
+var colorsPool = ["#9acd32", "#f08080", "#fffacd", "#40e0d0"];
 
 var Strg = {
 	saveAnswersChartValues : function (chartValues) {
@@ -124,8 +123,13 @@ var Chart = {
 		var values = [];
 		var i = 0;
 		for (var attr in dictChart) {
-			var serie = {label: attr, color: colorsPool[i]};
 			var value = [Number(dictChart[attr])];
+			var serie = {
+				label: attr,
+				color: colorsPool[i],
+				pointLabels: {labels: [value.toString()]}
+			};
+			
 			if (value > 0) {
 				values.push(value);
 				series.push(serie);
@@ -143,7 +147,6 @@ var Chart = {
 	            renderer:$.jqplot.BarRenderer,
 	            rendererOptions: {
 					barDirection: 'horizontal',
-					barWidth: 40,
 					shadowAlpha: 0
 				},
 				pointLabels: {show: true }
@@ -155,11 +158,19 @@ var Chart = {
 			},
 			axes: {
 				xaxis: {
-					max: studentsCount
+					max: studentsCount,
+				},
+				yaxis: {
+					max: 2
 				}
 			},
-	        grid: {drawGridlines: false}
-		    };
+	        grid: {
+				drawGridlines: false,
+				background: "transparent",
+				borderWidth: 0,
+				shadow: false
+			}
+	    };
 		var plot = $.jqplot(Chart.strRespondentsChartId, values, options);
 	},
 	initRespondentsChart : function (studentsCount) {
@@ -171,37 +182,48 @@ var Chart = {
 		values[category] += Number(amount);
 		Strg.saveRespondentsChartValues(values);
 	},
-	createAnswersLegend : function (options) {
-		for (var i = 0; i < options.length; i++) {
-			var option = $(document.createElement("div"))
-				.text(options[i])
-				.css("color", colorsPool[i]);
-			$("#chartAnswers .legend").append(option);
-		}
-	},
 	updateAnswersValues : function (answer) {
 		var values = Strg.getAnswersChartValues();
 		values[answer] += 1;
 		Strg.saveAnswersChartValues(values);
 	},
 	createAnswersChart : function () {
+		$("#" + Chart.strAnswersChartId).empty();
 		var dictChart = Strg.getAnswersChartValues();
-		var values = [];
-		var colors = [];
+		var data = [];
 		var i = 0;
 		for (var attr in dictChart) {
-			values.push(dictChart[attr]);
-			colors.push(colorsPool[i]);
+			var value = Number(dictChart[attr]);
+			if (value > 0) {
+				data.push([attr, value]);
+			}
 			i++;
 		}
-		var param = {
-			type: "pie",
-			width: 80,
-			height: 80,
-			sliceColors: colors
-		};
-		//~ mylog(param);
-		$("#" + Chart.strAnswersChartId).sparkline(values, param);
+		var options = {
+			legend: {
+				show: true,
+				location: "e"
+			},
+	        seriesDefaults: {
+	            renderer:$.jqplot.PieRenderer,
+	            rendererOptions: {
+					showDataLabels: true,
+					fill: false
+				},
+	        },
+	        axesDefaults: {
+				showTicks: false,
+				showTickMarks: false,
+				borderWidth: 0
+			},
+			grid: {
+				drawGridlines: false,
+				background: "transparent",
+				borderWidth: 0,
+				shadow: false
+			}
+	    };
+		var plot = $.jqplot(Chart.strAnswersChartId, [data], options);
 	},
 	initAnswersChart : function (list) {
 		var chartValues = {};
@@ -212,7 +234,7 @@ var Chart = {
 	}
 }
 	
-function add_exercise_to_all_students_dashboards (exercise, goal) {
+function addExerciseToAllStudentsDashboards (exercise, goal) {
 	var students_count = $(".student_dashboard").length;
 	$(".student_dashboard .sentence").remove();
 	for (var i = 0; i < students_count; i++) {

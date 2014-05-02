@@ -18,7 +18,6 @@ body {
 	height: 70%;
 	width: 48%;
 	left: 1%;
-	border: 1px solid blue;
 	overflow: scroll;
 }
 
@@ -37,8 +36,6 @@ body {
 	float: left;
 	height: 70%;
 	width: 48%;
-	border: 1px solid yellow;
-
 }
 
 .student_dashboard {
@@ -59,35 +56,47 @@ body {
 	background-color: Khaki;
 }
 
-#classroom_area {
+#classroomStatisticsArea {
 	display: block;
 	float: left;
 	height: 30%;
 	width: 90%;
-	border: 1px solid green;
-
 }
 
-#classroom_area #chartRespondents, #classroom_area #chartAnswers {
-	width: 45%;
+#classroomStatisticsArea #chartRespondents {
+	height: 100%;
+	width: 60%;
 	float: left;
-	border: 1px solid Orange;
-
 }
 
-#classroom_area .title {
+#classroomStatisticsArea #chartAnswers {
+	height: 100%;
+	width: 39%;
+	float: left;
+}
+
+#classroomStatisticsArea .title {
 	font-size: 1.4em;
-	color: red;
+	color: #483d8b;
+	margin: 3px;
+	padding: 2px;
+	background-color: #ffffe0;
 }
 
-#chartAnswers .chart, #chartAnswers .legend {
+#chartAnswers .chart {
 	float: left;
-	width: 48%;
+	width: 100%;
 }
 
 #respondentsBarChart {
 	float: left;
-	height: 60px;
+	height: 80%;
+	width: 100%;
+}
+
+#answersPieChart {
+	float: left;
+	height: 80%;
 	width: 100%;
 }
 
