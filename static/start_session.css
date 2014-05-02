@@ -80,12 +80,21 @@ body {
 	color: red;
 }
 
-#classroom_area .chart, #classroom_area .legend {
+#chartAnswers .chart, #chartAnswers .legend {
 	float: left;
-	width: 30%;
+	width: 48%;
 }
 
+#respondentsBarChart {
+	float: left;
+	height: 60px;
+	width: 100%;
+}
 
+#respondentsBarChart .jqplot-point-label {
+	font-weight: bold;
+	font-size: 1.4em;
+	}
 .word {
 	display: inline;
 	}

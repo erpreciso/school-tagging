@@ -12,17 +12,19 @@ $(document).ready(function () {
 		var exercise = Strg.getExercise(exerciseId, exerciseType);
 		Strg.saveCurrentExercise(exercise);
 		add_exercise_to_all_students_dashboards(exercise.exercise, exercise.goal);
-		Classroom.create_dashboard(exercise.exercise, exercise.goal);
+		if (exercise.goal.type == "which_type") {
+			var list = exercise.goal.options;
+			Chart.initAnswersChart(list);
+			Chart.createAnswersLegend(list);
+		}
+		var studentsCount = $(".student_dashboard").length;
+		Chart.initRespondentsChart(studentsCount);
+		Chart.createRespondentsChart($("#chartRespondents .chart"));
 		$.post("/session/exercise_request", param);
 	});
-	
-	var studentsCount = $(".student_dashboard").length.toString();
-	Chart.initRespondentsChart(studentsCount);
-	Chart.createRespondentsChart($("#chartRespondents .chart"));
-	
 });
 
-var colorsPool = ["red", "green", "blue", "orange"];
+var colorsPool = ["green", "red", "blue", "orange"];
 
 var Strg = {
 	saveAnswersChartValues : function (chartValues) {
@@ -73,11 +75,11 @@ onMessage = function (message) {
 		Strg.saveExerciseList(exerciseList);
 	}
 	else if (data_arrived.type == "student_choice") {
-		update_student_exercise(data_arrived.content);
+		updateStudentExercise(data_arrived.content);
 	}
 }
 
-function update_student_exercise (data) {
+function updateStudentExercise (data) {
 	var student = data.student;
 	var answer = data.answer;
 	var currentExercise = Strg.getCurrentExercise();
@@ -91,39 +93,83 @@ function update_student_exercise (data) {
 		var i = currentExercise.goal.answers[0];
 		var correct = currentExercise.goal.options[i];
 		if ($("#" + student + " .raw_box").length == $("#" + student + " .box").length) {
-			Classroom.add_respondent(1);
 			Chart.updateAnswersValues(answer);
 			Chart.createAnswersChart($("#chartAnswers .chart"));
+			Chart.updateRespondentsValue("waiting", -1);
 		}
 		var box = $("#" + student + " #answer_" + answer);
 		if ($(box).hasClass("raw_box")) {
 			$(box).removeClass("raw_box");
 			if (answer == correct) {
-				Classroom.add_winner(1);
+				Chart.updateRespondentsValue("correct", 1);
 				$(box).addClass("correct_box");
 			}
 			else {
+				Chart.updateRespondentsValue("wrong", 1);
 				$(box).addClass("wrong_box");
 			}
+			Chart.createRespondentsChart();
 		}
 	}
 }
 
 var Chart = {
-	createRespondentsChart : function (chartElement) {
+	strAnswersChartId : "answersPieChart",
+	strRespondentsChartId: "respondentsBarChart",
+	createRespondentsChart : function () {
+		$("#" + Chart.strRespondentsChartId).empty();
 		var dictChart = Strg.getRespondentsChartValues();
-		var values = [[2,6,3]];
-		var param = {
-			type: "bar",
-			width: 80,
-			height: 80,
-		};
-		//~ mylog(param);
-		chartElement.sparkline(values, param);
+		var studentsCount = $(".student_dashboard").length;
+		var series = [];
+		var values = [];
+		var i = 0;
+		for (var attr in dictChart) {
+			var serie = {label: attr, color: colorsPool[i]};
+			var value = [Number(dictChart[attr])];
+			if (value > 0) {
+				values.push(value);
+				series.push(serie);
+			}
+			i++;
+		}
+		var options = {
+			stackSeries: true,
+			series: series,
+			legend: {
+				show: true,
+				placement: 'outsideGrid'
+			},
+	        seriesDefaults: {
+	            renderer:$.jqplot.BarRenderer,
+	            rendererOptions: {
+					barDirection: 'horizontal',
+					barWidth: 40,
+					shadowAlpha: 0
+				},
+				pointLabels: {show: true }
+	        },
+	        axesDefaults: {
+				showTicks: false,
+				showTickMarks: false,
+				borderWidth: 0
+			},
+			axes: {
+				xaxis: {
+					max: studentsCount
+				}
+			},
+	        grid: {drawGridlines: false}
+		    };
+		var plot = $.jqplot(Chart.strRespondentsChartId, values, options);
 	},
 	initRespondentsChart : function (studentsCount) {
 		var chartValues = {"correct": 0, "wrong": 0, "waiting": studentsCount};
 		Strg.saveRespondentsChartValues(chartValues);
+	},
+	updateRespondentsValue : function (category, amount) {
+		var values = Strg.getRespondentsChartValues();
+		values[category] += Number(amount);
+		Strg.saveRespondentsChartValues(values);
 	},
 	createAnswersLegend : function (options) {
 		for (var i = 0; i < options.length; i++) {
@@ -138,7 +184,7 @@ var Chart = {
 		values[answer] += 1;
 		Strg.saveAnswersChartValues(values);
 	},
-	createAnswersChart : function (chartElement) {
+	createAnswersChart : function () {
 		var dictChart = Strg.getAnswersChartValues();
 		var values = [];
 		var colors = [];
@@ -155,7 +201,7 @@ var Chart = {
 			sliceColors: colors
 		};
 		//~ mylog(param);
-		chartElement.sparkline(values, param);
+		$("#" + Chart.strAnswersChartId).sparkline(values, param);
 	},
 	initAnswersChart : function (list) {
 		var chartValues = {};
@@ -163,65 +209,6 @@ var Chart = {
 			chartValues[list[i]] = 0;
 		}
 		Strg.saveAnswersChartValues(chartValues);
-	}
-}
-
-var Classroom = {
-	create_dashboard : function (exercise, goal) {
-		//~ var students_count = $(".student_dashboard").length.toString();
-		//~ var exercise_status = document.createElement("div");
-		//~ $(exercise_status).attr("id", "exercise_status");
-		//~ var students_count_stat = document.createElement("div");
-		//~ $(students_count_stat)
-			//~ .attr("id", "students_count_stat")
-			//~ .text("Students connected: ");
-		//~ $(students_count_stat).append('<div id="students_count">' + students_count + '</div>');
-		//~ var respondents_count_stat = document.createElement("div");
-		//~ $(respondents_count_stat)
-			//~ .attr("id", "respondents_count_stat")
-			//~ .text("Students responding: ");
-		//~ $(respondents_count_stat).append('<div id="respondents_count">0</div>');
-		//~ var winners_count_stat = document.createElement("div");
-		//~ $(winners_count_stat)
-			//~ .attr("id", "winners_count_stat")
-			//~ .text("Students correct: ");
-		//~ $(winners_count_stat).append('<div id="winners_count">0</div>');
-		//~ $(exercise_status)
-			//~ .append(students_count_stat)
-			//~ .append(respondents_count_stat)
-			//~ .append(winners_count_stat);
-		//~ $("#classroom_area").append(exercise_status);
-		if (goal.type == "which_type") {
-			var list = goal.options;
-			Chart.initAnswersChart(list);
-			Chart.createAnswersLegend(list);
-			
-			
-		}
-		
-		//~ mylog(exercise);mylog(goal);
-		
-	},
-	add_student : function (n) {
-		if ($("#students_count").length > 0) {
-			var logged = Number($("#students_count").text());
-			logged += n;
-			$("#students_count").text(logged);
-		}
-	},
-	add_respondent : function (n) {
-		if ($("#respondents_count").length > 0) {
-			var respondents = Number($("#respondents_count").text());
-			respondents += n;
-			$("#respondents_count").text(respondents);
-		}
-	},
-	add_winner : function (n) {
-		if ($("#winners_count").length > 0) {
-			var winners = Number($("#winners_count").text());
-			winners += n;
-			$("#winners_count").text(winners,toString());
-		}
 	}
 }
 	

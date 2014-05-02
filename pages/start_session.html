@@ -2,7 +2,11 @@
 
 {% block role_links %}
 <script src="/static/start_session.js"></script>
+<script src="/static/jquery.jqplot.min.js"></script>
+<script src="/static/plugins/jqplot.barRenderer.min.js"></script>
+<script src="/static/plugins/jqplot.pointLabels.min.js"></script>
 <link type="text/css" rel="stylesheet" href= "/static/start_session.css" />
+<link rel="stylesheet" type="text/css" href="/static/jquery.jqplot.css" />
 {% endblock %}
 
 {% block payload %}
@@ -40,17 +44,12 @@
 	<div id="classroom_area">
 		<div id="chartRespondents">
 			<div class="title">Students responding</div>
-			<div class="legend">
-				<div class="legendEntry">Correct</div>
-				<div class="legendEntry">Not correct</div>
-				<div class="legendEntry">Waiting answer</div>
-			</div>
-			<div class="chart"></div>
+			<div class="chart" id="respondentsBarChart"></div>
 		</div>
 		<div id="chartAnswers">
 			<div class="title">Answers given</div>
 			<div class="legend"></div>
-			<div class="chart"></div>
+			<div class="chart" id="answersPieChart"></div>
 		</div>
 	</div>
 </div>
