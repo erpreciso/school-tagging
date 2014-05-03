@@ -1,26 +1,27 @@
 $(document).ready(function () {
-	var data;
-	$.get("/data/exercises_list");
-	
 	$(".buttons .exercise_type").on("click", function (event) {
-		var exerciseId = event.target.parentNode.parentNode.id;
-		var exerciseType = event.target.id;
-		var param = {
-				"type": exerciseType,
-				"id": exerciseId,
-			};
-		var exercise = Strg.getExercise(exerciseId, exerciseType);
-		Strg.saveCurrentExercise(exercise);
-		addExerciseToAllStudentsDashboards(exercise.exercise, exercise.goal);
-		if (exercise.goal.type == "which_type") {
-			var list = exercise.goal.options;
-			Chart.initAnswersChart(list);
-		}
 		var studentsCount = $(".student_dashboard").length;
-		Chart.initRespondentsChart(studentsCount);
-		Chart.createRespondentsChart($("#chartRespondents .chart"));
-		$.post("/session/exercise_request", param);
+		if (studentsCount > 0) {
+			var exerciseId = event.target.parentNode.parentNode.id;
+			var exerciseType = event.target.id;
+			var param = {
+					"type": exerciseType,
+					"id": exerciseId,
+				};
+			var exercise = Strg.getExercise(exerciseId, exerciseType);
+			Strg.saveCurrentExercise(exercise);
+			addExerciseToAllStudentsDashboards(exercise.exercise, exercise.goal);
+			if (exercise.goal.type == "which_type") {
+				var list = exercise.goal.options;
+				Chart.initAnswersChart(list);
+			}
+			
+			Chart.initRespondentsChart(studentsCount);
+			Chart.createRespondentsChart($("#chartRespondents .chart"));
+			$.post("/session/exercise_request", param);
+		}
 	});
+	$.get("/data/exercises_list");
 });
 
 var colorsPool = ["#9acd32", "#f08080", "#fffacd", "#40e0d0"];
@@ -137,6 +138,7 @@ var Chart = {
 			i++;
 		}
 		var options = {
+			title: "Students responding",
 			stackSeries: true,
 			series: series,
 			legend: {
@@ -200,6 +202,7 @@ var Chart = {
 			i++;
 		}
 		var options = {
+			title: "Answers given",
 			legend: {
 				show: true,
 				location: "e"

@@ -15,7 +15,7 @@ body {
 #exercise_area {
 	display: inline;
 	float: left;
-	height: 70%;
+	height: 60%;
 	width: 48%;
 	left: 1%;
 	overflow: scroll;
@@ -23,7 +23,7 @@ body {
 
 #exercise_area .exercise {
 	display: block;
-	font-size: 1.6em;
+	font-size: 1.2em;
 	margin: 2px;
 	padding: 2px;
 	background-color: PowderBlue;
@@ -34,7 +34,7 @@ body {
 	left: 2%;
 	display: inline;
 	float: left;
-	height: 70%;
+	height: 60%;
 	width: 48%;
 }
 
@@ -44,7 +44,7 @@ body {
 }
 
 .student_dashboard .name {
-	font-size: 1.6em;
+	font-size: 1.4em;
 	margin: 2px;
 	padding: 2px;
 	background-color: PaleGoldenrod;
@@ -59,48 +59,24 @@ body {
 #classroomStatisticsArea {
 	display: block;
 	float: left;
-	height: 30%;
+	height: 40%;
 	width: 90%;
 }
 
-#classroomStatisticsArea #chartRespondents {
+
+#classroomStatisticsArea #respondentsBarChart {
+	float: left;
 	height: 100%;
 	width: 60%;
-	float: left;
 }
 
-#classroomStatisticsArea #chartAnswers {
+#classroomStatisticsArea #answersPieChart {
+	float: left;
 	height: 100%;
-	width: 39%;
-	float: left;
+	width: 40%;
 }
 
-#classroomStatisticsArea .title {
-	font-size: 1.4em;
-	color: #483d8b;
-	margin: 3px;
-	padding: 2px;
-	background-color: #ffffe0;
-}
-
-#chartAnswers .chart {
-	float: left;
-	width: 100%;
-}
-
-#respondentsBarChart {
-	float: left;
-	height: 80%;
-	width: 100%;
-}
-
-#answersPieChart {
-	float: left;
-	height: 80%;
-	width: 100%;
-}
-
-#respondentsBarChart .jqplot-point-label {
+#classroomStatisticsArea #respondentsBarChart .jqplot-point-label {
 	font-weight: bold;
 	font-size: 1.4em;
 	}

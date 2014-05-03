@@ -17,7 +17,7 @@ from google.appengine.api import channel
 from google.appengine.ext import ndb
 from google.appengine.api import memcache
 
-def get_exercise_list():
+def getExerciseList():
 	lst = memcache.get("exercise_list")
 	if not lst:
 		lst = json.loads(open("lists/exercises.json").read())
@@ -29,107 +29,123 @@ class AppUser(ndb.Model):
 	role = ndb.StringProperty()
 	token = ndb.StringProperty()
 	hashpassword = ndb.StringProperty()
-	login_status = ndb.StringProperty()
-	connection_status = ndb.StringProperty()
+	loginStatus = ndb.StringProperty()
+	connectionStatus = ndb.StringProperty()
 	addtime = ndb.DateTimeProperty(auto_now_add=True)
 	
-	def safe_put(self):
-		if not memcache.flush_all():
-			MyLogs("safe_put:memcache error: not flushed")
+	def safePut(self):
+		memcache.add("%s:appuser" % self.username, self)
 		return self.put()
 
-class Login():
+class User():
 	""" create a Login obj to manage all login stuffs """
-	username = ""
-	password = ""
-	verify_password = "foobar"
-	hashpassword = ""
-	salt = ""
-	role = ""
-	connection_status = ""
-	token = ""
-	login_status = ""
-	re_username = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
-	re_password = r"^.{3,20}$"
+	#~ username = ""
+	#~ password = ""
+	#~ verify_password = "foobar"
+	#~ hashpassword = ""
+	#~ salt = ""
+	#~ role = ""
+	#~ connection_status = ""
+	#~ token = ""
+	#~ login_status = ""
+	RE_USERNAME = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
+	RE_PASSWORD = r"^.{3,20}$"
 	
 	def __init__(self, username="", salt=""):
 		self.salt = salt or self.make_salt()
 		if username:
 			self.username = username
-			user = self.get_user()
+			user = self.getAppUser()
 			self.role = user.role
-			self.connection_status = user.connection_status
+			self.connectionStatus = user.connectionStatus
 	
+	def setUsername(self, username):
+		self.username = username
+		return
+	def setPassword(self, password):
+		self.password = password
+		self.hashpassword = ""
+		return
+	def setVerifyPassword(self, verify):
+		self.verifyPassword = verify
+		return
+	def setRole(self, role):
+		self.role = role
+		return
+		
 	def make_salt(self):
 		return ''.join(random.choice(string.letters) for x in xrange(5))
 	
-	def make_hashpassword(self):
+	def makeHashpassword(self):
 		cript = self.username + self.password + self.salt
 		encr_password = hashlib.sha256(cript).hexdigest()
 		self.hashpassword = "%s|%s" % (encr_password, self.salt)
 
-	def two_passwords_match(self):
+	def twoPasswordsMatch(self):
 		""" return True if the two inserted psw match. """
-		match = self.password == self.verify_password
+		match = self.password == self.verifyPassword
 		if match:
 			return True
 		else:
 			MyLogs("The two passwords don't match")
 
-	def password_matches_re(self):
+	def passwordMatchesRE(self):
 		""" return True if the psw matches the regular expression. """
-		re_password = re.compile(self.re_password)
+		re_password = re.compile(self.RE_PASSWORD)
 		if re_password.match(self.password):
 			return True
 		else:
 			MyLogs("Password doesn't match the regex")
 			return False
 	
-	def password_is_valid(self):
+	def passwordIsValid(self):
 		""" return True if the password matches the two rules above.
 		also setup the hashpassword.
 		
 		"""
-		result = self.password_matches_re() and self.two_passwords_match()
+		result = self.passwordMatchesRE() and self.twoPasswordsMatch()
 		if result:
-			self.make_hashpassword()
+			self.makeHashpassword()
 			return True
 		else:
 			MyLogs("Password rejected. See log above")
 			return False
 
-	def username_is_valid(self):
+	def usernameIsValid(self):
 		""" return True if the inserted username matchs the re. """
-		re_username = re.compile(self.re_username)
+		re_username = re.compile(self.RE_USERNAME)
 		if re_username.match(self.username):
 			return True
 		else:
 			MyLogs("Username rejected (it doesn't match the regex)")
 			return False
 	
-	def build_channel(self):
+	def getChannel(self):
 		""" creates a channel and return the token. """
-		token = channel.create_channel(self.username)
-		if token:
-			self.token = token
-			return True
+		if hasattr(self, "token") and self.token:
+			return self.token
 		else:
-			MyLogs("Channel creation failure")
-			return False
+			token = channel.create_channel(self.username)
+			if token:
+				self.token = token
+				return token
+			else:
+				MyLogs("Channel creation failure")
+				return False
 
 	def signup(self):
-		""" signup the login.
-		insert the user in the ndb with login_status "registered".
+		""" signup the user.
+		insert the user in the ndb with loginStatus "registered".
 		return the ndb key
 		
 		"""
-		new_user = AppUser()
-		new_user.username = self.username
-		new_user.role = self.role
-		new_user.hashpassword = self.hashpassword
-		new_user.login_status = "registered"
-		key = new_user.safe_put()
-		memcache.add("%s:appuser" % self.username, new_user)
+		appuser = AppUser(id=self.username)
+		appuser.username = self.username
+		appuser.role = self.role
+		appuser.hashpassword = self.hashpassword
+		appuser.loginStatus = "registered"
+		key = appuser.safePut()
+		
 		return key
 
 	def login(self):
@@ -142,31 +158,31 @@ class Login():
 		return True if success
 		
 		"""
-		if self.build_channel():
+		if self.getChannel():
 			self.connect()
-			self.login_status = "logged"
-			if self.update_attr("login_status") and \
-						self.update_attr("token"):
+			self.loginStatus = "logged"
+			if self.updateAttr("loginStatus") and \
+						self.updateAttr("token"):
 				return True
 		return False
 	
 	def logout(self):
 		self.disconnect()
-		self.login_status = "registered"
-		if self.update_attr("login_status"):
+		self.loginStatus = "registered"
+		if self.updateAttr("loginStatus"):
 			return True
 		else:
 			return False
 
-	def username_already_existing(self):
-		if self.get_user():
+	def usernameAlreadyExisting(self):
+		if self.getAppUser():
 			return True
 		else:
 			return False
 
-	def get_user(self):
+	def getAppUser(self):
 		""" return the user object from memcache or from ndb.
-		input=the login username.
+		input=the user username.
 		
 		"""
 		user = memcache.get("%s:appuser" % self.username)
@@ -181,47 +197,47 @@ class Login():
 			else:
 				return None
 		
-	def update_attr(self, attribute):
-		appuser = self.get_user()
+	def updateAttr(self, attribute):
+		appuser = self.getAppUser()
 		if appuser:
 			setattr(appuser, attribute, getattr(self, attribute))
-			if appuser.safe_put():
+			if appuser.safePut():
 				return True
 			else:
-				MyLogs("update_attr", attribute, ":safe put didn't work")
+				MyLogs("updateAttr", attribute, ":safe put didn't work")
 		else:
-			MyLogs("update_attr", attribute, ":error. user not retrieved")
+			MyLogs("updateAttr", attribute, ":error. user not retrieved")
 		return False
 	
 	def connect(self):
 		self.connection_status = "connected"
-		self.update_attr("connection_status")
+		self.updateAttr("connection_status")
 		if self.role == "student":
-			st.connect_student(self.username)
+			logic.connect_student(self.username)
 		
 	def disconnect(self):
-		self.connection_status = "not connected"
-		self.login_status = "registered"
-		self.update_attr("connection_status")
-		self.update_attr("login_status")
+		self.connectionStatus = "not connected"
+		self.loginStatus = "registered"
+		self.updateAttr("connectionStatus")
+		self.updateAttr("loginStatus")
 		if self.role == "student":
-			st.disconnect_student(self.username)
+			logic.disconnect_student(self.username)
 
-	def valid_user(self):
+	def validUser(self):
 		""" check if the user is entitled to login.
 		input=username string and password not hashed
 		return True if user is valid.
 		
 		"""
-		user = self.get_user()
+		user = self.getAppUser()
 		if user:
 			if self.hashpassword == "":
 				self.salt = user.hashpassword.split("|")[1]
-				self.make_hashpassword()
+				self.makeHashpassword()
 			if self.hashpassword == user.hashpassword:
 				self.role = user.role
 				self.token = user.token
-				self.connection_status = user.connection_status
+				self.connectionStatus = user.connectionStatus
 				return True
 			else:
 				MyLogs("Password incorrect for user", self.username)
@@ -230,19 +246,18 @@ class Login():
 			return False
 
 class Cookie():
-	value = ""
-	username = ""
-	hashpassword = ""
-	role = ""
-	password = ""
-	salt = ""
 
 	def __init__(self, value=""):
+		self.username = ""
+		self.hashpassword = ""
+		self.role = ""
+		self.password = ""
+		self.salt = ""
 		self.value = value
 		if value:
-			self.extract_value()
+			self.extractValue()
 
-	def set_value(self, role, username, hashpassword):
+	def setValue(self, role, username, hashpassword):
 		self.role = str(role)
 		self.username = str(username)
 		self.hashpassword = str(hashpassword)
@@ -254,7 +269,7 @@ class Cookie():
 		self.stringify()
 		http_self.response.set_cookie('schooltagging-user', self.value)
 			
-	def extract_value(self):
+	def extractValue(self):
 		self.role = self.value.split("|")[0]
 		self.username = self.value.split("|")[1]
 		self.password = self.value.split("|")[2]
@@ -282,28 +297,28 @@ class MainHandler(webapp2.RequestHandler):
 	def render_page(self, template, **kw):
 		self.writeout(self.render_str(template, **kw))
 	
-	def get_user_cookie(self):
+	def getUserCookie(self):
 		return self.request.cookies.get("schooltagging-user")
 	
-	def set_lesson_cookie(self, strLesson):
+	def setLessonCookie(self, strLesson):
 		self.response.set_cookie('schooltagging-lesson', strLesson)
 	
-	def get_lesson_cookie(self):
+	def getLessonCookie(self):
 		return self.request.cookies.get("schooltagging-lesson")
 		
-	def valid_user(self):
+	def validUser(self):
 		""" check if the request is coming from a valid user.
 		return the login object if valid, else False
 		
 		"""
-		cookie = Cookie(self.get_user_cookie())
+		cookie = Cookie(self.getUserCookie())
 		if cookie.value:
-			login = Login()
-			login.username = cookie.username
-			login.hashpassword = cookie.hashpassword
-			if login.valid_user():
-				if login.login():
-					return login
+			user = User()
+			user.username = cookie.username
+			user.hashpassword = cookie.hashpassword
+			if user.validUser():
+				if user.login():
+					return user
 				else:
 					MyLogs("valid_user:login failed. try again")
 			else:
@@ -312,7 +327,7 @@ class MainHandler(webapp2.RequestHandler):
 			MyLogs("valid_user:cookie is not existing or has not value")
 		return False
 		
-	def clear_cookie(self):
+	def clearCookies(self):
 		""" clear my cookie if existing.
 		input=server response
 		return True if cookie existed and has been eliminated,
@@ -326,25 +341,24 @@ class MainHandler(webapp2.RequestHandler):
 			return True
 		else:
 			return False
-	
 
 class ConnectionHandler(MainHandler):
 	def post(self, action):
 		username = self.request.get('from')
-		login = Login(username=username)
+		user = User(username=username)
 		if action == "connected":
-			login.connect()
+			user.connect()
 		elif action == "disconnected":
-			login.disconnect()
+			user.disconnect()
 
 class LoginPageHandler(MainHandler):
 	error = ""
 
-	def enter_lesson(self, login):
-		if login.role == "teacher":
+	def enterLesson(self, user):
+		if user.role == "teacher":
 			#~ logic.add_teacher(login.username)
 			self.redirect("/lesson/start_lesson")
-		elif login.role == "student":
+		elif user.role == "student":
 			#~ logic.add_student(login.username)
 			self.redirect("/lesson/join_lesson")
 		else:
@@ -364,30 +378,30 @@ class LoginPageHandler(MainHandler):
 		self.write_check_page(template)
 		
 	def post(self, action):
-		self.clear_cookie()
+		self.clearCookies()
 		if action == "up":
 			self.signup()
 		elif action == "in":
 			self.login()
 		
 	def login(self):
-		login = Login()
-		login.username = self.request.get("username")
-		login.password = self.request.get("password")
-		if login.username_is_valid():
-			MyLogs("username is valid. move ahead")
-			if login.valid_user():
-				MyLogs("user in database and entitled to login. move")
-				if login.login():
-					MyLogs("also login success!cookie now, and go")
+		user = User()
+		user.setUsername(self.request.get("username"))
+		user.setPassword(self.request.get("password"))
+		if user.usernameIsValid():
+			#~ MyLogs("username is valid. move ahead")
+			if user.validUser():
+				#~ MyLogs("user in database and entitled to login. move")
+				if user.login():
+					#~ MyLogs("also login success!cookie now, and go")
 					cookie = Cookie()
-					cookie.set_value(
-								login.role,
-								login.username,
-								login.hashpassword,
+					cookie.setValue(
+								user.role,
+								user.username,
+								user.hashpassword,
 								)
 					cookie.send(self)
-					self.enter_lesson(login)
+					self.enterLesson(user)
 					return
 				else:
 					self.error = "Login didn't work. Try again"
@@ -398,29 +412,29 @@ class LoginPageHandler(MainHandler):
 		self.write_check_page("login.html")
 
 	def signup(self):
-		login = Login()
-		login.username = self.request.get("username")
-		login.password = self.request.get("password")
-		login.verify_password = self.request.get("verify")
-		login.role = self.request.get("role")
-		if not login.username_already_existing():
+		user = User()
+		user.setUsername(self.request.get("username"))
+		user.setPassword(self.request.get("password"))
+		user.setVerifyPassword(self.request.get("verify"))
+		user.setRole(self.request.get("role"))
+		if not user.usernameAlreadyExisting():
 			MyLogs("username not yet existing. move ahead")
-			if login.username_is_valid():
+			if user.usernameIsValid():
 				MyLogs("username is valid. move ahead")
-				if login.password_is_valid():
+				if user.passwordIsValid():
 					MyLogs("password is valid. move ahead")
-					if login.signup():
+					if user.signup():
 						MyLogs("signup succesful. move ahead")
-						if login.login():
+						if user.login():
 							MyLogs("also login success!cookie now, and go")
 							cookie = Cookie()
-							cookie.set_value(
-										login.role,
-										login.username,
-										login.hashpassword,
+							cookie.setValue(
+										user.role,
+										user.username,
+										user.hashpassword,
 										)
 							cookie.send(self)
-							self.enter_lesson(login)
+							self.enterLesson(user)
 							return
 						else:
 							self.error = "Login didn't work. Try again"
@@ -435,14 +449,14 @@ class LoginPageHandler(MainHandler):
 		self.write_check_page("signup.html")
 
 	def logout(self):
-		cookie = Cookie(self.get_user_cookie())
+		cookie = Cookie(self.getUserCookie())
 		if cookie.value:
-			login = Login()
-			login.username = cookie.username
-			login.hashpassword = cookie.hashpassword
-			if login.valid_user():
-				login.logout()
-				self.clear_cookie()
+			user = User()
+			user.username = cookie.username
+			user.hashpassword = cookie.hashpassword
+			if user.validUser():
+				user.logout()
+				self.clearCookies()
 			else:
 				MyLogs("Invalid cookie")
 		else:
@@ -480,18 +494,18 @@ class DashboardHandler(MainHandler):
 
 class ExerciseHandler(MainHandler):
 	def post(self, strExerciseType):
-		login = self.valid_user()
-		if login:
-			assert login.role == "student"
-			objStudent = logic.get_student(login.username)
-			objLesson = logic.get_lesson(self.get_lesson_cookie())
+		user = self.validUser()
+		if user:
+			assert user.role == "student"
+			objStudent = logic.get_student(user.username)
+			objLesson = logic.get_lesson(self.getLessonCookie())
 			strTeacher = objLesson.teacher
 			strAnswer = self.request.get("answer")
-			st.add_answer(objStudent, objLesson, strExerciseType, strAnswer)
+			logic.add_answer(objStudent, objLesson, strExerciseType, strAnswer)
 			message = {
 					"type": "student_choice",
 					"content": {
-						"student": login.username,
+						"student": user.username,
 						"answer": strAnswer,
 						},
 					}
@@ -502,13 +516,13 @@ class ExerciseHandler(MainHandler):
 
 class SessionHandler(MainHandler):
 	def post(self, command):
-		login = self.valid_user()
-		if login:
+		user = self.validUser()
+		if user:
 			if command == "exercise_request":
 				type = self.request.get("type")
 				id = self.request.get("id")
-				exerciseList = get_exercise_list()
-				objLesson = logic.get_lesson(self.get_lesson_cookie())
+				exerciseList = getExerciseList()
+				objLesson = logic.get_lesson(self.getLessonCookie())
 				objExercise = [e for e in exerciseList if e["id"] == id][0]
 				objType = [t for t in objExercise["goals"] if t["type"] == type][0]
 				strIdSession = logic.add_session(objLesson, objExercise, objType)
@@ -534,60 +548,60 @@ class SessionHandler(MainHandler):
 class LessonHandler(MainHandler):
 
 	def post(self, command):
-		login = self.valid_user()
-		if login:
+		user = self.validUser()
+		if user:
 			if command == "start_lesson":
-				assert login.role == "teacher"
+				assert user.role == "teacher"
 				lesson_name = self.request.get("lesson")
-				st.add_lesson(login.username, lesson_name)
+				logic.add_lesson(user.username, lesson_name)
 				self.set_lesson_cookie(lesson_name)
 				return self.redirect("/lesson/start_session")
 			elif command == "join_lesson":
-				assert login.role == "student"
+				assert user.role == "student"
 				teacher_name = self.request.get("teacher")
-				lesson_name = logic.join_lesson(login.username, teacher_name)
-				self.set_lesson_cookie(lesson_name)
+				lesson_name = logic.join_lesson(user.username, teacher_name)
+				self.setLessonCookie(lesson_name)
 				return self.redirect("/lesson/join_session")
 		else:
 			return self.redirect("/check/in")
 
 	def get(self, command):
-		login = self.valid_user()
-		if login:
+		user = self.validUser()
+		if user:
 			if command == "start_session":
-				lesson_name = self.get_lesson_cookie()
-				exercise_list = get_exercise_list()
-				students_list = logic.get_current_lesson_student_list(login.username)
+				lessonName = self.getLessonCookie()
+				exerciseList = getExerciseList()
+				studentsList = logic.get_current_lesson_student_list(user.username)
 				self.render_page("start_session.html",
-							username = login.username,
-							token = login.token,
-							exercise_list = exercise_list,
-							students_list = students_list,
+							username = user.username,
+							token = user.token,
+							exercise_list = exerciseList,
+							students_list = studentsList,
 							)
 				return
 							
 			elif command == "start_lesson":
-				assert login.role == "teacher"
+				assert user.role == "teacher"
 				self.render_page("start_lesson.html",
-							username = login.username,
-							token = login.token,
+							username = user.username,
+							token = user.token,
 							)
 				return
 			elif command == "join_lesson":
-				assert login.role == "student"
-				current_teachers = logic.get_teachers_list()
+				assert user.role == "student"
+				currentTeachers = logic.get_teachers_list()
 				self.render_page("join_lesson.html",
-							username = login.username,
-							token = login.token,
-							current_teachers = current_teachers,
+							username = user.username,
+							token = user.token,
+							current_teachers = currentTeachers,
 							)
 				return
 			elif command == "join_session":
-				assert login.role == "student"
-				st.connect_student(login.username)
+				assert user.role == "student"
+				logic.connect_student(user.username)
 				self.render_page("join_session.html",
-							username = login.username,
-							token = login.token,
+							username = user.username,
+							token = user.token,
 							)
 		else:
 			self.redirect("/check/in")
@@ -595,15 +609,15 @@ class LessonHandler(MainHandler):
 class DataHandler(MainHandler):
 
 	def get(self, command):
-		login = self.valid_user()
-		if login:
+		user = self.validUser()
+		if user:
 			if command == "exercises_list":
 				message = {
 					"type": "exercises_list",
-					"message": get_exercise_list(),
+					"message": getExerciseList(),
 					}
 				message = json.dumps(message)
-				channel.send_message(login.username, message)
+				channel.send_message(user.username, message)
 		else:
 			return self.redirect("/check/in")
 
