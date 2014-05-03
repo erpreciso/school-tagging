@@ -1,7 +1,7 @@
 # coding: utf-8
 # [school-tagging] webapp
 
-import school_tagging_core_process as st
+import lessonLogic as logic
 import webapp2
 import jinja2
 import os
@@ -36,57 +36,7 @@ class AppUser(ndb.Model):
 	def safe_put(self):
 		if not memcache.flush_all():
 			MyLogs("safe_put:memcache error: not flushed")
-		#~ else:
-			#~ MyLogs("safe_put:memcache flushed")
 		return self.put()
-
-class Classroom():
-	teacher = None
-	students = []
-
-	def send_connection(self, login, action):
-		if action == "open":
-			type = "connected_user"
-		elif action == "close":
-			type = "disconnected_user"
-		message = {
-			"type": type,
-			"username": login.username,
-			}
-		message = json.dumps(message)
-		if login.username != self.teacher.username:
-			channel.send_message(self.teacher.username, message)
-			
-	def __init__(self):
-		self.teacher = None
-		self.students = []
-		self.populate()
-
-	def populate(self):
-		allusersquery = memcache.get("allusersquery")
-		if allusersquery is not None:
-			q = allusersquery
-		else:
-			q = AppUser.query()
-			memcache.add("allusersquery", q)
-		if q:
-			for user in q:
-				if user.role == "teacher":
-					self.teacher = user
-				elif user.role == "student" and \
-						user.login_status == "logged" and \
-						user not in self.students:
-							self.students.append(user)
-			return True
-		else:
-			return False
-
-	def logged_students(self):
-		result = []
-		for student in self.students:
-			if student.login_status == "logged":
-				result.append(student.username)
-		return result
 
 class Login():
 	""" create a Login obj to manage all login stuffs """
@@ -193,6 +143,7 @@ class Login():
 		
 		"""
 		if self.build_channel():
+			self.connect()
 			self.login_status = "logged"
 			if self.update_attr("login_status") and \
 						self.update_attr("token"):
@@ -302,7 +253,6 @@ class Cookie():
 	def send(self, http_self):
 		self.stringify()
 		http_self.response.set_cookie('schooltagging-user', self.value)
-		#~ MyLogs("Cookie sent", self.value)
 			
 	def extract_value(self):
 		self.role = self.value.split("|")[0]
@@ -376,33 +326,7 @@ class MainHandler(webapp2.RequestHandler):
 			return True
 		else:
 			return False
-
-class WelcomePageHandler(MainHandler):
-	def write_welcome(self, login):
-		classroom = Classroom()
-		if login.role == "teacher":
-			#~ exercise = Exercise()
-			MyLogs("hit")
-			self.render_page(
-						"teacher.html",
-						username = login.username,
-						token = login.token,
-						#~ logged = classroom.logged_students(),
-						#~ exercises_types = exercise.types()
-						)
-		elif login.role == "student":
-			self.render_page(
-						"student.html",
-						username = login.username,
-						token = login.token,
-						)
-
-	def get(self):
-		login = self.valid_user()
-		if login:
-			self.write_welcome(login)
-		else:
-			self.redirect("/check/in")		
+	
 
 class ConnectionHandler(MainHandler):
 	def post(self, action):
@@ -418,10 +342,10 @@ class LoginPageHandler(MainHandler):
 
 	def enter_lesson(self, login):
 		if login.role == "teacher":
-			#~ st.add_teacher(login.username)
+			#~ logic.add_teacher(login.username)
 			self.redirect("/lesson/start_lesson")
 		elif login.role == "student":
-			#~ st.add_student(login.username)
+			#~ logic.add_student(login.username)
 			self.redirect("/lesson/join_lesson")
 		else:
 			raise Exception("Login role not valid")
@@ -553,64 +477,14 @@ class DashboardHandler(MainHandler):
 			MyLogs("user seems not valid")
 			self.redirect("/check/in")
 
-class Exercise():
-	selected = None
-	list = None
-	exercise_type = None
-	
-	def __init__(self):
-		self.list = json.loads(open("lists/exercises.json").read())
-
-	def send_list(self, login):
-		message = {
-					"type": "exercises_list",
-					"message": self.list,
-					}
-		message = json.dumps(message)
-		channel.send_message(login.username, message)
-
-	def types(self):
-		return [
-			{"id": "type_1", "name": "find the element"},
-			{"id": "type_2", "name": "recognize the word"},
-			]
-
-	def select(self, exercise_id, exercise_type):
-		self.selected = self.list[exercise_id]
-		self.exercise_type = exercise_type
-	
-	def send_to_classroom(self):
-		classroom = Classroom()
-		message = {
-			"type": "exercise",
-			"message": {
-				"exercise": self.selected,
-				"exercise_type": self.exercise_type,
-				},
-			}
-		message = json.dumps(message)
-		for student in classroom.logged_students():
-			channel.send_message(student, message)
-
-	def send_to_teacher(self):
-		classroom = Classroom()
-		message = {
-			"type": "exercise",
-			"message": {
-				"exercise": self.selected,
-				"exercise_type": self.exercise_type,
-				},
-			}
-		message = json.dumps(message)
-		channel.send_message(classroom.teacher.username, message)
 
 class ExerciseHandler(MainHandler):
 	def post(self, strExerciseType):
 		login = self.valid_user()
 		if login:
 			assert login.role == "student"
-			objStudent = st.get_student(login.username)
-			objLesson = st.get_lesson(self.get_lesson_cookie())
+			objStudent = logic.get_student(login.username)
+			objLesson = logic.get_lesson(self.get_lesson_cookie())
 			strTeacher = objLesson.teacher
 			strAnswer = self.request.get("answer")
 			st.add_answer(objStudent, objLesson, strExerciseType, strAnswer)
@@ -623,28 +497,6 @@ class ExerciseHandler(MainHandler):
 					}
 			message = json.dumps(message)
 			channel.send_message(strTeacher, message)
-			#~ if action == "word_clicked":
-				#~ word_number = int(self.request.get("word_number"))
-				#~ message = {
-					#~ "type": "student_choice",
-					#~ "content": {
-						#~ "student": login.username,
-						#~ "choice": word_number,
-						#~ "etype": "type_1",
-						#~ },
-					#~ }
-			#~ elif action == "type_answer":
-				#~ answer = self.request.get("answer")
-				#~ message = {
-					#~ "type": "student_choice",
-					#~ "content": {
-						#~ "student": login.username,
-						#~ "choice": answer,
-						#~ "etype": "type_2",
-						#~ },
-					#~ }
-			#~ message = json.dumps(message)
-			#~ channel.send_message(strTeacher, message)
 		else:
 			self.redirect("/check/in")
 
@@ -656,11 +508,11 @@ class SessionHandler(MainHandler):
 				type = self.request.get("type")
 				id = self.request.get("id")
 				exerciseList = get_exercise_list()
-				objLesson = st.get_lesson(self.get_lesson_cookie())
+				objLesson = logic.get_lesson(self.get_lesson_cookie())
 				objExercise = [e for e in exerciseList if e["id"] == id][0]
 				objType = [t for t in objExercise["goals"] if t["type"] == type][0]
-				strIdSession = st.add_session(objLesson, objExercise, objType)
-				objSession = st.get_session(strIdSession)
+				strIdSession = logic.add_session(objLesson, objExercise, objType)
+				objSession = logic.get_session(strIdSession)
 				self.send_exercise_to_classroom(
 							objExercise,
 							objSession.students,
@@ -693,7 +545,7 @@ class LessonHandler(MainHandler):
 			elif command == "join_lesson":
 				assert login.role == "student"
 				teacher_name = self.request.get("teacher")
-				lesson_name = st.join_lesson(login.username, teacher_name)
+				lesson_name = logic.join_lesson(login.username, teacher_name)
 				self.set_lesson_cookie(lesson_name)
 				return self.redirect("/lesson/join_session")
 		else:
@@ -705,7 +557,7 @@ class LessonHandler(MainHandler):
 			if command == "start_session":
 				lesson_name = self.get_lesson_cookie()
 				exercise_list = get_exercise_list()
-				students_list = st.get_current_lesson_student_list(login.username)
+				students_list = logic.get_current_lesson_student_list(login.username)
 				self.render_page("start_session.html",
 							username = login.username,
 							token = login.token,
@@ -723,7 +575,7 @@ class LessonHandler(MainHandler):
 				return
 			elif command == "join_lesson":
 				assert login.role == "student"
-				current_teachers = st.get_teachers_list()
+				current_teachers = logic.get_teachers_list()
 				self.render_page("join_lesson.html",
 							username = login.username,
 							token = login.token,
@@ -764,10 +616,6 @@ app = webapp2.WSGIApplication([
 			r'/check/<action>',
 			handler=LoginPageHandler,
 			name="login"),
-	webapp2.Route(
-			r'/welcome',
-			handler=WelcomePageHandler,
-			name="welcome"),
 	webapp2.Route(
 			r'/exercise/<strExerciseType>',
 			handler=ExerciseHandler,
