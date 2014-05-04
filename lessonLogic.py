@@ -10,6 +10,7 @@ class Person(ndb.Model):
 	name = ndb.StringProperty()
 	currentLesson = ndb.StringProperty()
 	connected = ndb.BooleanProperty()
+	token = ndb.StringProperty()
 
 class Teacher(Person):
 	lessons = ndb.StringProperty(repeated=True)
@@ -19,6 +20,7 @@ class Teacher(Person):
 		
 class Student(Person):
 	answers = ndb.PickleProperty()
+	
 	def safe_put(self):
 		memcache.set("student:" + self.name, self)
 		self.put()
@@ -34,17 +36,20 @@ class Lesson(ndb.Model):
 		memcache.set("lesson:" + self.name, self)
 		self.put()
 
-def add_teacher(strTeacher, strLesson):
+def addTeacher(strTeacher, strToken, strLesson):
 	objTeacher = Teacher(id=strTeacher)
 	objTeacher.name = strTeacher
 	objTeacher.lessons = []
+	objTeacher.token = strToken
 	objTeacher.currentLesson = strLesson
 	objTeacher.connected = True
 	objTeacher.safe_put()
 	update_teachers_list("add", strTeacher)
 	return objTeacher
 
-def get_teachers_list():
+# TODO recast this method below as it increase teacher's number
+# even if they're disconnected
+def getTeachersList():
 	lst = memcache.get("teachers_list")
 	if not lst:
 		lst = []
@@ -55,15 +60,16 @@ def get_teachers_list():
 	return lst
 				
 def update_teachers_list(command, strTeacher):
-	lst = get_teachers_list()
+	lst = getTeachersList()
 	if command == "add":
 		lst.append(strTeacher)
 		memcache.set("teachers_list", lst)
 	return
 
-def add_student(strStudent, strLesson):
+def addStudent(strStudent, strToken, strLesson):
 	objStudent = Student(id=strStudent)
 	objStudent.name = strStudent
+	objStudent.token = strToken
 	objStudent.currentLesson = strLesson
 	objStudent.answers = {}
 	objStudent.connected = True
@@ -71,27 +77,30 @@ def add_student(strStudent, strLesson):
 	return objStudent
 
 def disconnect_student(strStudent):
-	student = get_student(strStudent)
+	student = getStudent(strStudent)
 	if student:
 		student.connected = False
 		student.safe_put()
 
 def connect_student(strStudent):
-	student = get_student(strStudent)
+	student = getStudent(strStudent)
 	if student and not student.connected:
 		student.connected = True
 		student.safe_put()
 	
-def get_current_lesson_student_list(strTeacher):
+def getCurrentLessonStudentList(strTeacher):
 	"""return list of string students for the current lesson of the teacher."""
-	objTeacher = get_teacher(strTeacher)
-	strCurrentLesson = objTeacher.currentLesson
-	objCurrentLesson = get_lesson(strCurrentLesson)
-	students = [s for s in objCurrentLesson.students \
-						if get_student(s).connected == True]
-	return students
-
-def get_teacher(strTeacher):
+	objTeacher = getTeacher(strTeacher)
+	if objTeacher:
+		strCurrentLesson = objTeacher.currentLesson
+		objCurrentLesson = get_lesson(strCurrentLesson)
+		students = [s for s in objCurrentLesson.students \
+							if getStudent(s).connected == True]
+		return students
+	else:
+		return False
+	
+def getTeacher(strTeacher):
 	t = memcache.get("teacher:" + strTeacher)
 	if not t:
 		k = ndb.Key("Teacher", strTeacher)
@@ -99,7 +108,7 @@ def get_teacher(strTeacher):
 		memcache.add("teacher:" + strTeacher, t)
 	return t
 
-def get_student(strStudent):
+def getStudent(strStudent):
 	t = memcache.get("student:" + strStudent)
 	if not t:
 		k = ndb.Key("Student", strStudent)
@@ -107,8 +116,8 @@ def get_student(strStudent):
 		memcache.add("student:" + strStudent, t)
 	return t
 
-def add_lesson(strTeacher, strLesson):
-	objTeacher = add_teacher(strTeacher, strLesson)
+def addLesson(strTeacher, strToken, strLesson):
+	objTeacher = addTeacher(strTeacher, strToken, strLesson)
 	objLesson = Lesson(id=strLesson)
 	objLesson.name = strLesson
 	objLesson.teacher = strTeacher
@@ -123,10 +132,10 @@ def get_lesson(strLesson):
 		memcache.add("lesson:" + strLesson, t)
 	return t
 
-def join_lesson(strStudent, strTeacher):
-	objTeacher = get_teacher(strTeacher)
+def joinLesson(strStudent, strToken, strTeacher):
+	objTeacher = getTeacher(strTeacher)
 	strLesson = objTeacher.currentLesson
-	objStudent = add_student(strStudent, strLesson)
+	objStudent = addStudent(strStudent, strToken, strLesson)
 	objLesson = get_lesson(strLesson)
 	if strStudent not in objLesson.students:
 		objLesson.students.append(strStudent)

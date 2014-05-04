@@ -1,15 +1,25 @@
 {% extends "backbone.html" %}
 
-{% block title %}
-school-tagging application
-{% endblock %}
-
 {% block wrapper %}
+<script>
+	openChannel = function() {
+		var token = '{{ token }}';
+		var channel = new goog.appengine.Channel(token);
+		var handler = {
+			'onopen': onOpened,
+			'onmessage': onMessage,
+			'onerror': function() {},
+			'onclose': function() {}
+		};
+		var socket = channel.open(handler);
+		socket.onopen = onOpened;
+		socket.onmessage = onMessage;
+	}
+	setTimeout(openChannel, 100);
+</script>
 <div id="wrapper">
 	<header>
-		<div id="title">
-			<h1><a href="/welcome">School Tagging application</a></h1>
-		</div>
+		<div class="title">School Tagging application</div>
 		<div id="login_tools">
 			{% if not username %}
 			<a href="/check/in">Login</a>
@@ -24,20 +34,7 @@ school-tagging application
 			<button id="show_html">show html code</button>
 		</div>
 	</header>
-	
 	{% block payload %}
-
 	{% endblock %}
 </div>
-<!--
-	javascript code for the Channel API
--->
-<script>
-	channel = new goog.appengine.Channel('{{token}}');
-	socket = channel.open();
-	socket.onopen = onOpened;
-	socket.onmessage = onMessage;
-	socket.onerror = function(){};
-	socket.onclose = onClose;
-</script>
 {% endblock %}

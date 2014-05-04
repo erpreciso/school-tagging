@@ -22,6 +22,10 @@ $(document).ready(function () {
 		}
 	});
 	$.get("/data/exercises_list");
+	$("#askExercises").on("click", function(){
+		$.get("/data/exercises_list");
+		mylog("exercises asked");
+	});
 });
 
 var colorsPool = ["#9acd32", "#f08080", "#fffacd", "#40e0d0"];
@@ -69,10 +73,13 @@ var Strg = {
 }
 
 onMessage = function (message) {
+	mylog("Message received: ");
+	mylog(message);
 	var data_arrived = JSON.parse(message.data);
 	if (data_arrived.type == "exercises_list") {
 		var exerciseList = data_arrived.message;
 		Strg.saveExerciseList(exerciseList);
+		$(".buttons .exercise_type").css("background-color", "green");
 	}
 	else if (data_arrived.type == "student_choice") {
 		updateStudentExercise(data_arrived.content);
