@@ -6,12 +6,6 @@
 			"words": ["I", "am", "always", "doing", "things", "I", "can't", "do.", "That", "is", "how", "I", "get", "to", "do", "them."],
 			"goals": [
 						{
-						"type": "find_element",
-						"description": "Find the element",
-						"to find": "verb",
-						"answers": [1, 3, 6, 7, 9, 12, 14]
-						},
-						{
 						"type": "which_type",
 						"description": "Which type is this",
 						"target": 2,
@@ -26,12 +20,6 @@
 			"author": "Wayne Gretzky",
 			"words": ["You", "miss", "100", "percent", "of", "the", "shots", "you", "never", "take."],
 			"goals": [
-						{
-						"type": "find_element",
-						"description": "Find the element",
-						"to find": "article",
-						"answers": [5]
-						},
 						{
 						"type": "which_type",
 						"description": "Which type is this",
@@ -48,12 +36,6 @@
 			"author": "Scottish Proverb",
 			"goals": [
 						{
-						"type": "find_element",
-						"description": "Find the element",
-						"to find": "verb",
-						"answers": [1, 2, 3, 7, 8, 9]
-						},
-						{
 						"type": "which_type",
 						"description": "Which type is this",
 						"target": 1,
@@ -68,12 +50,6 @@
 			"author": "Napoleone Bonaparte",
 			"words": ["Death", "is", "nothing,", "but", "to", "live", "defeated", "and", "inglorious", "is", "to", "die", "daily."],
 			"goals": [
-						{
-						"type": "find_element",
-						"description": "Find the element",
-						"to find": "subject",
-						"answers": [0]
-						},
 						{
 						"type": "which_type",
 						"description": "Which type is this",

@@ -7,6 +7,7 @@
 
 {% block payload %}
 <div id="content">
+	{% if current_teachers %}
 	<div id="choose_teacher">
 		<form method="POST">
 		Select the teacher
@@ -18,5 +19,8 @@
 			<input type="submit" value="Go!"/>
 		</form>
 	</div>
+	{% else %}
+	Wait a teacher join, then refresh
+	{% endif %}
 </div>
 {% endblock %}

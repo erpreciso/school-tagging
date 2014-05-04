@@ -182,6 +182,8 @@ class User():
 		#~ self.loginStatus = "registered"
 		if self.role == "student":
 			logic.disconnect_student(self.username)
+		else:
+			logic.disconnectTeacher(self.username)
 		self.save()
 		#~ if self.updateAttr("loginStatus") and self.updateAttr("token"):
 			#~ return True
@@ -325,15 +327,12 @@ class MainHandler(webapp2.RequestHandler):
 		else:
 			return False
 
-#~ class ConnectionHandler(MainHandler):
-	#~ def post(self, action):
-		#~ username = self.request.get('from')
-		#~ raise Exception
-		#~ user = User(username=username)
-		#~ if action == "connected":
-			#~ user.connect()
-		#~ elif action == "disconnected":
-			#~ user.disconnect()
+class ConnectionHandler(MainHandler):
+	def post(self, action):
+		username = self.request.get('from')
+		user = logic.getStudent(username)
+		if action == "disconnected" and user:
+			logic.disconnect_student(username)
 
 class LoginPageHandler(MainHandler):
 	error = ""
@@ -342,7 +341,7 @@ class LoginPageHandler(MainHandler):
 		if user.role == "teacher":
 			self.redirect("/lesson/start_lesson")
 		elif user.role == "student":
-			logic.connect_student(user.username)
+			#~ logic.connect_student(user.username)
 			self.redirect("/lesson/join_lesson")
 		else:
 			raise Exception("Login role not valid")
@@ -547,7 +546,10 @@ class LessonHandler(MainHandler):
 				return
 			elif command == "join_session":
 				assert user.role == "student"
-				logic.connect_student(user.username)
+				strLessonName = self.getLessonCookie()
+				if not logic.checkInLesson(user.username, strLessonName):
+					self.response.delete_cookie('schooltagging-lesson', path = '/')
+				#~ logic.connect_student(user.username)
 				self.render_page("join_session.html",
 							username = user.username,
 							token = user.token,
@@ -580,10 +582,10 @@ app = webapp2.WSGIApplication([
 			r'/exercise/<strExerciseType>',
 			handler=ExerciseHandler,
 			name="exercise"),
-	#~ webapp2.Route(
-			#~ r'/_ah/channel/<action>/',
-			#~ handler=ConnectionHandler,
-			#~ name="connection"),
+	webapp2.Route(
+			r'/_ah/channel/<action>/',
+			handler=ConnectionHandler,
+			name="connection"),
 	webapp2.Route(
 			r'/lesson/<command>',
 			handler=LessonHandler,

@@ -21,16 +21,20 @@ $(document).ready(function () {
 			$.post("/session/exercise_request", param);
 		}
 	});
+	Strg.flush();
 	$.get("/data/exercises_list");
 	$("#askExercises").on("click", function(){
 		$.get("/data/exercises_list");
-		mylog("exercises asked");
+		//~ mylog("exercises asked");
 	});
 });
 
 var colorsPool = ["#9acd32", "#f08080", "#fffacd", "#40e0d0"];
 
 var Strg = {
+	flush : function () {
+		localStorage.clear();
+	},
 	saveAnswersChartValues : function (chartValues) {
 		localStorage.setItem("answersChartValues", JSON.stringify(chartValues));
 	},
@@ -73,8 +77,8 @@ var Strg = {
 }
 
 onMessage = function (message) {
-	mylog("Message received: ");
-	mylog(message);
+	//~ mylog("Message received: ");
+	//~ mylog(message);
 	var data_arrived = JSON.parse(message.data);
 	if (data_arrived.type == "exercises_list") {
 		var exerciseList = data_arrived.message;

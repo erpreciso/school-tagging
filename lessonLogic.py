@@ -9,7 +9,7 @@ def nowtime():
 class Person(ndb.Model):
 	name = ndb.StringProperty()
 	currentLesson = ndb.StringProperty()
-	connected = ndb.BooleanProperty()
+	#~ connected = ndb.BooleanProperty()
 	token = ndb.StringProperty()
 
 class Teacher(Person):
@@ -42,13 +42,12 @@ def addTeacher(strTeacher, strToken, strLesson):
 	objTeacher.lessons = []
 	objTeacher.token = strToken
 	objTeacher.currentLesson = strLesson
-	objTeacher.connected = True
+	#~ objTeacher.connected = True
 	objTeacher.safe_put()
-	update_teachers_list("add", strTeacher)
+	updateTeachersList("add", strTeacher)
 	return objTeacher
 
-# TODO recast this method below as it increase teacher's number
-# even if they're disconnected
+
 def getTeachersList():
 	lst = memcache.get("teachers_list")
 	if not lst:
@@ -59,11 +58,13 @@ def getTeachersList():
 		memcache.add("teachers_list", lst)
 	return lst
 				
-def update_teachers_list(command, strTeacher):
+def updateTeachersList(command, strTeacher):
 	lst = getTeachersList()
 	if command == "add":
 		lst.append(strTeacher)
-		memcache.set("teachers_list", lst)
+	elif command == "remove":
+		lst.remove(strTeacher)
+	memcache.set("teachers_list", lst)
 	return
 
 def addStudent(strStudent, strToken, strLesson):
@@ -72,21 +73,27 @@ def addStudent(strStudent, strToken, strLesson):
 	objStudent.token = strToken
 	objStudent.currentLesson = strLesson
 	objStudent.answers = {}
-	objStudent.connected = True
+	#~ objStudent.connected = True
 	objStudent.safe_put()
 	return objStudent
 
 def disconnect_student(strStudent):
 	student = getStudent(strStudent)
 	if student:
-		student.connected = False
+		#~ student.connected = False
+		student.token = ""
 		student.safe_put()
 
-def connect_student(strStudent):
-	student = getStudent(strStudent)
-	if student and not student.connected:
-		student.connected = True
-		student.safe_put()
+def disconnectTeacher(strTeacher):
+	teacher = getTeacher(strTeacher)
+	if teacher:
+		teacher.token = ""
+		
+#~ def connect_student(strStudent):
+	#~ student = getStudent(strStudent)
+	#~ if student and not student.connected:
+		#~ student.connected = True
+		#~ student.safe_put()
 	
 def getCurrentLessonStudentList(strTeacher):
 	"""return list of string students for the current lesson of the teacher."""
@@ -95,7 +102,7 @@ def getCurrentLessonStudentList(strTeacher):
 		strCurrentLesson = objTeacher.currentLesson
 		objCurrentLesson = get_lesson(strCurrentLesson)
 		students = [s for s in objCurrentLesson.students \
-							if getStudent(s).connected == True]
+							if getStudent(s).token != ""]
 		return students
 	else:
 		return False
@@ -112,8 +119,9 @@ def getStudent(strStudent):
 	t = memcache.get("student:" + strStudent)
 	if not t:
 		k = ndb.Key("Student", strStudent)
-		t = k.get()
-		memcache.add("student:" + strStudent, t)
+		if k.get():
+			t = k.get()
+			memcache.add("student:" + strStudent, t)
 	return t
 
 def addLesson(strTeacher, strToken, strLesson):
@@ -141,6 +149,18 @@ def joinLesson(strStudent, strToken, strTeacher):
 		objLesson.students.append(strStudent)
 	objLesson.safe_put()
 	return strLesson
+
+def checkInLesson(strStudent, strLesson):
+	objStudent = getStudent(strStudent)
+	if objStudent and objStudent.currentLesson == strLesson:
+		objLesson = get_lesson(strLesson)
+		if strStudent not in objLesson.students:
+			objLesson.students.append(strStudent)
+			objLesson.safe_put()
+		return True
+	else:
+		return False
+	
 	
 class Session(ndb.Model):
 	start = ndb.StringProperty()
