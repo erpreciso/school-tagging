@@ -36,6 +36,7 @@ body {
 	float: left;
 	height: 60%;
 	width: 48%;
+	overflow: scroll;
 }
 
 .student_dashboard {
