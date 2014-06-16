@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>signup|school-tagging app</title>
+	</head>
+	<body>
+		<form method="post">
+			<label>{{labels["username"][language]}}</label>
+			<input type="text" name="username">
+			<label>{{labels["password"][language]}}</label>
+			<input type="password" name="password">
+			<label>{{labels["verify"][language]}}</label>
+			<input type="password" name="verify">
+			{% if error %}
+			<div class="error">{{error}}</div>
+			{% endif %}
+			<input type="submit" value='{{labels["register"][language]}}'>
+		</form>
+	</body>
+</html>
