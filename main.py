@@ -501,7 +501,7 @@ class LessonHandler(MainHandler):
 				strLessonName = self.request.get("lesson")
 				logic.addLesson(user.username, user.token, strLessonName)
 				self.setLessonCookie(strLessonName)
-				return self.redirect("/lesson/start_session")
+				return self.redirect("/lesson/dashboard")
 			elif command == "join_lesson":
 				assert user.role == "student"
 				strTeacherName = self.request.get("teacher")
@@ -516,11 +516,10 @@ class LessonHandler(MainHandler):
 		user = self.validUserFromCookie()
 		#~ raise Exception
 		if user:
-			if command == "start_session":
+			if command == "dashboard":
 				exerciseList = getExerciseList()
 				studentsList = logic.getCurrentLessonStudentList(user.username) or []
-				#~ MyLogs(studentsList)
-				self.render_page("start_session.html",
+				self.render_page("dashboard.html",
 							username = user.username,
 							token = user.token,
 							exercise_list = exerciseList,
@@ -569,10 +568,13 @@ class DataHandler(MainHandler):
 					}
 				message = json.dumps(message)
 				channel.send_message(user.token, message)
-				#~ MyLogs("Exercise list sent", message)
 		else:
 			return self.redirect("/check/in")
 
+class JollyHandler(MainHandler):
+	def get(self, *a):
+		return self.redirect("/check/in")
+			
 app = webapp2.WSGIApplication([
 	webapp2.Route(
 			r'/check/<action>',
@@ -598,5 +600,65 @@ app = webapp2.WSGIApplication([
 			r'/data/<command>',
 			handler=DataHandler,
 			name="data"),
+	webapp2.Route(
+			r'/<:[a-zA-Z0-9]*>',
+			handler=JollyHandler,
+			name="jolly"),
 			])
 
+dictLabelBook = {
+	"TeacherLogin": {
+		"username": {
+			"EN": "Username",
+			"IT": "Nome utente",
+			},
+		"password": {
+			"EN": "Password",
+			"IT": "Password",
+			},
+		"or_signup": {
+			"EN": "or Signup",
+			"IT": "oppure registrati",
+			},
+		"login": {
+			"EN": "Login",
+			"IT": "Entra",
+			},
+		},
+	"TeacherSignup": {
+		"username": {
+			"EN": "Username",
+			"IT": "Nome utente",
+			},
+		"password": {
+			"EN": "Password",
+			"IT": "Password",
+			},
+		"verify": {
+			"EN": "Verify password",
+			"IT": "Ripeti la password",
+			},
+		"register": {
+			"EN": "Register my data",
+			"IT": "Registrami",
+			},
+		},
+	"TeacherLessonStart": {
+		"lesson_name": {
+			"EN": "Lesson name",
+			"IT": "Nome per la lezione",
+			},
+		"": {
+			"EN": "",
+			"IT": "",
+			},
+		"welcome": {
+			"EN": "Welcome",
+			"IT": "Benvenuto",
+			},
+		"start": {
+			"EN": "Start the lesson",
+			"IT": "Inizia la lezione",
+			},
+		},
+	}
