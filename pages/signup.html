@@ -6,12 +6,6 @@
 <div id="signup">
 	<h2>Signup</h2>
     <form method="post">
-		<label>Role</label>
-		<select name="role">
-			<option value="student">I'm a student</option>
-			<option value="teacher">I'm a teacher</option>
-		</select>
-		<br>
 		<label>Username</label>
 		<input type="text" name="username" value="{{username}}">
 		{% if error %}
@@ -21,6 +15,8 @@
 		<input type="password" name="password">
 		<label>Verify Password</label>
 		<input type="password" name="verify">
+		<label>Lesson name</label>
+		<input type="text" name="lessonName">
 		<input type="submit" value="Register my data">
 	</form>
 	<hr>

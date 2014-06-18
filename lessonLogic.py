@@ -95,7 +95,7 @@ def disconnectTeacher(strTeacher):
 		#~ student.connected = True
 		#~ student.safe_put()
 	
-def getCurrentLessonStudentList(strTeacher):
+def getStudentList(strTeacher):
 	"""return list of string students for the current lesson of the teacher."""
 	objTeacher = getTeacher(strTeacher)
 	if objTeacher:
@@ -140,15 +140,15 @@ def get_lesson(strLesson):
 		memcache.add("lesson:" + strLesson, t)
 	return t
 
-def joinLesson(strStudent, strToken, strTeacher):
-	objTeacher = getTeacher(strTeacher)
-	strLesson = objTeacher.currentLesson
+def joinLesson(strStudent, strToken, strLesson):
+	#~ objTeacher = getTeacher(strTeacher)
+	#~ strLesson = objTeacher.currentLesson
 	objStudent = addStudent(strStudent, strToken, strLesson)
 	objLesson = get_lesson(strLesson)
 	if strStudent not in objLesson.students:
 		objLesson.students.append(strStudent)
 	objLesson.safe_put()
-	return strLesson
+	return True
 
 def checkInLesson(strStudent, strLesson):
 	objStudent = getStudent(strStudent)
@@ -203,7 +203,7 @@ def get_session(strSession):
 		memcache.add("session:" + strSession, t)
 	return t
 
-def add_answer(objStudent, objLesson, strExerciseType, strAnswer):
+def add_answer(objStudent, objLesson, strAnswer):
 	strSession = objLesson.currentSession
 	objSession = get_session(strSession)
 	if strSession in objStudent.answers.keys():

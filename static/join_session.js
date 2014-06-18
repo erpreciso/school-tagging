@@ -40,7 +40,7 @@ Exercise.build = function (exercise, type) {
 			var triggered = event.target.id;
 			$("#target").children().css("background-color", "inherit");
 			$("#target #" + triggered).css("background-color", "yellow");
-			$.post("/exercise/" + type.type, {"answer": triggered});
+			$.post("/s/answer", {"answer": triggered});
 		});
 	}
 	else {
@@ -54,7 +54,7 @@ Exercise.build = function (exercise, type) {
 			var answer_parameter = {"answer": options[i]};
 			$(button).on("click", answer_parameter, function (event) {
 				$(event.target).css("background-color", "blue");
-				$.post("/exercise/" + type.type, {"answer": event.data.answer});
+				$.post("/s/answer", {"answer": event.data.answer});
 				$(".answer").off("click");
 			});
 		}

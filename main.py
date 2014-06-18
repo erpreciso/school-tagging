@@ -76,16 +76,21 @@ class User():
 			else:
 				MyLogs("User.get: Username not found in ndb")
 				return None
-		if self.hashpassword == "":
-			self.salt = appuser.hashpassword.split("|")[1]
-			self.makeHashpassword()
-		if self.hashpassword == appuser.hashpassword:
+		if appuser.role == "teacher":
+			if self.hashpassword == "":
+				self.salt = appuser.hashpassword.split("|")[1]
+				self.makeHashpassword()
+			if self.hashpassword == appuser.hashpassword:
+				self.role = appuser.role
+				self.token = appuser.token
+				return True
+			else:
+				MyLogs("User.get: password in db doesn't match")
+				return False
+		else:
 			self.role = appuser.role
 			self.token = appuser.token
 			return True
-		else:
-			MyLogs("User.get: password in db doesn't match")
-			return False
 	
 	def setUsername(self, username):
 		self.username = username
@@ -260,9 +265,10 @@ class Cookie():
 	def extractValue(self):
 		self.role = self.value.split("|")[0]
 		self.username = self.value.split("|")[1]
-		self.password = self.value.split("|")[2]
-		self.salt = self.value.split("|")[3]
-		self.hashpassword = self.password + "|" + self.salt
+		if len(self.value.split("|")) > 3:
+			self.password = self.value.split("|")[2]
+			self.salt = self.value.split("|")[3]
+			self.hashpassword = self.password + "|" + self.salt
 
 class MyLogs():
 	def __init__(self, *a):
@@ -334,38 +340,62 @@ class ConnectionHandler(MainHandler):
 		if action == "disconnected" and user:
 			logic.disconnect_student(username)
 
-class LoginPageHandler(MainHandler):
+class TeacherHandler(MainHandler):
 	error = ""
-
-	def enterLesson(self, user):
-		if user.role == "teacher":
-			self.redirect("/lesson/start_lesson")
-		elif user.role == "student":
-			#~ logic.connect_student(user.username)
-			self.redirect("/lesson/join_lesson")
-		else:
-			raise Exception("Login role not valid")
-	
-	def write_check_page(self, template):
-		self.render_page(template, error=self.error)
-
-	def get(self, action):
-		if action == "up":
-			template = "signup.html"
-		elif action == "in":
-			template = "login.html"
-		elif action == "out":
-			self.logout()
-			template = "login.html"
-		self.write_check_page(template)
 		
+	def get(self, action):
+		if action == "signup":
+			return self.render_page("signup.html", error=self.error)
+		elif action == "login":
+			return self.render_page("login.html", error=self.error)
+		elif action == "logout":
+			self.logout()
+			return self.render_page("login.html", error=self.error)
+		user = self.validUserFromCookie()
+		if user:
+			if action == "dashboard":
+				exerciseList = getExerciseList()
+				studentsList = logic.getStudentList(user.username) or []
+				self.render_page("teacher_dashboard.html",
+							username = user.username,
+							token = user.token,
+							exercise_list = exerciseList,
+							students_list = studentsList,
+							)
+			elif action == "exercise_list_request":
+				message = {
+					"type": "exercises_list",
+					"message": getExerciseList(),
+					}
+				message = json.dumps(message)
+				channel.send_message(user.token, message)
+		else:
+			return self.redirect("/t/login")
+		return
+	
 	def post(self, action):
 		self.clearCookies()
-		if action == "up":
-			self.signup()
-		elif action == "in":
-			self.login()
-		
+		if action == "signup":
+			return self.signup()
+		elif action == "login":
+			return self.login()
+		user = self.validUserFromCookie()
+		if user:
+			if action == "exercise_request":
+					type = self.request.get("type")
+					id = self.request.get("id")
+					exerciseList = getExerciseList()
+					objLesson = logic.get_lesson(self.getLessonCookie())
+					objExercise = [e for e in exerciseList if e["id"] == id][0]
+					objType = [t for t in objExercise["goals"] if t["type"] == type][0]
+					strIdSession = logic.add_session(objLesson, objExercise, objType)
+					objSession = logic.get_session(strIdSession)
+					self.sendExerciseToStudents(
+								objExercise,
+								objSession.students,
+								objType,
+								)
+	
 	def login(self):
 		user = User()
 		user.setUsername(self.request.get("username"))
@@ -380,14 +410,16 @@ class LoginPageHandler(MainHandler):
 							user.hashpassword,
 							)
 				cookie.send(self)
-				
-				self.enterLesson(user)
-				return
+				strLessonName = self.request.get("lessonName")
+				logic.addLesson(user.username, user.token, strLessonName)
+				self.setLessonCookie(strLessonName)
+				return self.redirect("/t/dashboard")
+
 			else:
 				self.error = "Invalid login"
 		else:
 			self.error = "Username not valid"
-		self.write_check_page("login.html")
+		return self.render_page("login.html", error=self.error)
 
 	def signup(self):
 		user = User()
@@ -407,8 +439,10 @@ class LoginPageHandler(MainHandler):
 								user.hashpassword,
 								)
 					cookie.send(self)
-					self.enterLesson(user)
-					return
+					strLessonName = self.request.get("lessonName")
+					logic.addLesson(user.username, user.token, strLessonName)
+					self.setLessonCookie(strLessonName)
+					return self.redirect("/t/dashboard")
 
 				else:
 					self.error = "Password not valid"
@@ -416,7 +450,7 @@ class LoginPageHandler(MainHandler):
 				self.error = "Username not valid"
 		else:
 			self.error = "Username already existing"
-		self.write_check_page("signup.html")
+		return self.render_page("signup.html", error=self.error)
 
 	def logout(self):
 		cookie = Cookie(self.getUserCookie())
@@ -431,50 +465,7 @@ class LoginPageHandler(MainHandler):
 				MyLogs("Invalid cookie")
 		else:
 			MyLogs("cookie is not existing or has not value")
-		self.redirect("/check/in")
-
-
-class ExerciseHandler(MainHandler):
-	def post(self, strExerciseType):
-		user = self.validUserFromCookie()
-		if user:
-			assert user.role == "student"
-			objStudent = logic.getStudent(user.username)
-			objLesson = logic.get_lesson(self.getLessonCookie())
-			strTeacher = objLesson.teacher
-			objTeacher = logic.getTeacher(strTeacher)
-			strAnswer = self.request.get("answer")
-			logic.add_answer(objStudent, objLesson, strExerciseType, strAnswer)
-			message = {
-					"type": "student_choice",
-					"content": {
-						"student": user.username,
-						"answer": strAnswer,
-						},
-					}
-			message = json.dumps(message)
-			channel.send_message(objTeacher.token, message)
-		else:
-			self.redirect("/check/in")
-
-class SessionHandler(MainHandler):
-	def post(self, command):
-		user = self.validUserFromCookie()
-		if user:
-			if command == "exercise_request":
-				type = self.request.get("type")
-				id = self.request.get("id")
-				exerciseList = getExerciseList()
-				objLesson = logic.get_lesson(self.getLessonCookie())
-				objExercise = [e for e in exerciseList if e["id"] == id][0]
-				objType = [t for t in objExercise["goals"] if t["type"] == type][0]
-				strIdSession = logic.add_session(objLesson, objExercise, objType)
-				objSession = logic.get_session(strIdSession)
-				self.sendExerciseToStudents(
-							objExercise,
-							objSession.students,
-							objType,
-							)
+		self.redirect("/t/login")
 	
 	def sendExerciseToStudents(self, exercise, students, type):
 		message = {
@@ -486,120 +477,110 @@ class SessionHandler(MainHandler):
 			}
 		message = json.dumps(message)
 		for student in students:
-			
 			user = logic.getStudent(student)
 			channel.send_message(user.token, message)
-
-class LessonHandler(MainHandler):
-
-	def post(self, command):
-		user = self.validUserFromCookie()
-		if user:
 			
-			if command == "start_lesson":
-				assert user.role == "teacher"
-				strLessonName = self.request.get("lesson")
-				logic.addLesson(user.username, user.token, strLessonName)
-				self.setLessonCookie(strLessonName)
-				return self.redirect("/lesson/dashboard")
-			elif command == "join_lesson":
-				assert user.role == "student"
-				strTeacherName = self.request.get("teacher")
-				strLessonName = logic.joinLesson(user.username, user.token, strTeacherName)
-				self.setLessonCookie(strLessonName)
-				return self.redirect("/lesson/join_session")
-		else:
-			return self.redirect("/check/in")
-
-	def get(self, command):
-		
+class StudentHandler(MainHandler):
+	error = ""		
+	
+	def get(self, action):
+		if action == "login":
+			self.render_page("student_login.html", error=self.error)
+		elif action == "dashboard":
+			user = self.validUserFromCookie()
+			assert user.role == "student"
+			strLessonName = self.getLessonCookie()
+			if not logic.checkInLesson(user.username, strLessonName):
+				self.response.delete_cookie('schooltagging-lesson', path = '/')
+			#~ logic.connect_student(user.username)
+			self.render_page("student_dashboard.html",
+						username = user.username,
+						token = user.token,
+						)
+	
+	def post(self, action):
+		if action == "login":
+			return self.login()
 		user = self.validUserFromCookie()
-		#~ raise Exception
 		if user:
-			if command == "dashboard":
-				exerciseList = getExerciseList()
-				studentsList = logic.getCurrentLessonStudentList(user.username) or []
-				self.render_page("dashboard.html",
-							username = user.username,
-							token = user.token,
-							exercise_list = exerciseList,
-							students_list = studentsList,
-							)
-				return
-							
-			elif command == "start_lesson":
-				assert user.role == "teacher"
-				self.render_page("start_lesson.html",
-							username = user.username,
-							token = user.token,
-							)
-				return
-			elif command == "join_lesson":
-				assert user.role == "student"
-				currentTeachers = logic.getTeachersList()
-				self.render_page("join_lesson.html",
-							username = user.username,
-							token = user.token,
-							current_teachers = currentTeachers,
-							)
-				return
-			elif command == "join_session":
-				assert user.role == "student"
-				strLessonName = self.getLessonCookie()
-				if not logic.checkInLesson(user.username, strLessonName):
-					self.response.delete_cookie('schooltagging-lesson', path = '/')
-				#~ logic.connect_student(user.username)
-				self.render_page("join_session.html",
-							username = user.username,
-							token = user.token,
-							)
+			if action == "answer":
+				objStudent = logic.getStudent(user.username)
+				objLesson = logic.get_lesson(self.getLessonCookie())
+				strTeacher = objLesson.teacher
+				objTeacher = logic.getTeacher(strTeacher)
+				strAnswer = self.request.get("answer")
+				logic.add_answer(objStudent, objLesson, strAnswer)
+				message = {
+						"type": "student_choice",
+						"content": {
+							"student": user.username,
+							"answer": strAnswer,
+							},
+						}
+				message = json.dumps(message)
+				channel.send_message(objTeacher.token, message)
 		else:
 			self.redirect("/check/in")
-
-class DataHandler(MainHandler):
-
-	def get(self, command):
-		user = self.validUserFromCookie()
-		if user:
-			if command == "exercises_list":
-				message = {
-					"type": "exercises_list",
-					"message": getExerciseList(),
-					}
-				message = json.dumps(message)
-				channel.send_message(user.token, message)
+	
+	def login(self):
+		self.clearCookies()
+		user = User()
+		user.setUsername(self.request.get("username"))
+		strLessonName = self.request.get("lessonName")
+		user.setRole("student")
+		if user.usernameNotYetExisting():
+			if user.usernameIsValid():
+				user.save()
+				user.setChannel()
+				cookie = Cookie()
+				cookie.setValue(
+							user.role,
+							user.username,
+							user.hashpassword,
+							)
+				cookie.send(self)
+				logic.joinLesson(user.username, user.token, strLessonName)
+				self.setLessonCookie(strLessonName)
+				return self.redirect("/s/dashboard")
+				
+			else:
+				self.error = "Username not valid"
 		else:
-			return self.redirect("/check/in")
+			self.error = "Username already existing"
+		self.render_page("student_login.html", error=self.error)
+		
+	def logout(self):
+		cookie = Cookie(self.getUserCookie())
+		if cookie.value:
+			user = User()
+			user.username = cookie.username
+			user.hashpassword = cookie.hashpassword
+			if user.get():
+				user.logout()
+				self.clearCookies()
+			else:
+				MyLogs("Invalid cookie")
+		else:
+			MyLogs("cookie is not existing or has not value")
+		self.redirect("/s/login")	
 
 class JollyHandler(MainHandler):
 	def get(self, *a):
-		return self.redirect("/check/in")
+		return self.redirect("/t/login")
 			
 app = webapp2.WSGIApplication([
 	webapp2.Route(
-			r'/check/<action>',
-			handler=LoginPageHandler,
-			name="login"),
+			r'/t/<action>',
+			handler=TeacherHandler,
+			name="teacher"),
 	webapp2.Route(
-			r'/exercise/<strExerciseType>',
-			handler=ExerciseHandler,
-			name="exercise"),
+			r'/s/<action>',
+			handler=StudentHandler,
+			name="student"),
 	webapp2.Route(
 			r'/_ah/channel/<action>/',
 			handler=ConnectionHandler,
 			name="connection"),
-	webapp2.Route(
-			r'/lesson/<command>',
-			handler=LessonHandler,
-			name="lesson"),
-	webapp2.Route(
-			r'/session/<command>',
-			handler=SessionHandler,
-			name="session"),
-	webapp2.Route(
-			r'/data/<command>',
-			handler=DataHandler,
-			name="data"),
 	webapp2.Route(
 			r'/<:[a-zA-Z0-9]*>',
 			handler=JollyHandler,

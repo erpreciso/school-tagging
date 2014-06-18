@@ -18,14 +18,13 @@ $(document).ready(function () {
 			
 			Chart.initRespondentsChart(studentsCount);
 			Chart.createRespondentsChart($("#chartRespondents .chart"));
-			$.post("/session/exercise_request", param);
+			$.post("/t/exercise_request", param);
 		}
 	});
 	Strg.flush();
-	$.get("/data/exercises_list");
+	$.get("/t/exercise_list_request");
 	$("#askExercises").on("click", function(){
-		$.get("/data/exercises_list");
-		//~ mylog("exercises asked");
+		$.get("/t/exercise_list_request");
 	});
 });
 

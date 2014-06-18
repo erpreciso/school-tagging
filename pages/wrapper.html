@@ -22,12 +22,12 @@
 		<div class="title">School Tagging application</div>
 		<div id="login_tools">
 			{% if not username %}
-			<a href="/check/in">Login</a>
+			<a href="/t/login">Login</a>
 			|
-			<a href="/check/up">Signup</a>
+			<a href="/t/signup">Signup</a>
 			|
 			{% else %}
-			<a href="/check/out">Logout</a>
+			<a href="/t/logout">Logout</a>
 			|
 			{% endif %}
 			Connection status: <strong>{{username}}</strong> <div id="connection_status"></div>
