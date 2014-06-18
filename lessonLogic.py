@@ -31,6 +31,7 @@ class Lesson(ndb.Model):
 	teacher = ndb.StringProperty()
 	students = ndb.StringProperty(repeated=True)
 	currentSession = ndb.StringProperty()
+	status = ndb.StringProperty()
 	
 	def safe_put(self):
 		memcache.set("lesson:" + self.name, self)
@@ -85,9 +86,16 @@ def disconnect_student(strStudent):
 		student.safe_put()
 
 def disconnectTeacher(strTeacher):
-	teacher = getTeacher(strTeacher)
-	if teacher:
-		teacher.token = ""
+	objTeacher = getTeacher(strTeacher)
+	if objTeacher:
+		objTeacher.token = ""
+		objLesson = get_lesson(objTeacher.currentLesson)
+		objLesson.status = "ended"
+		objLesson.safe_put()
+		
+		objTeacher.currentLesson = ""
+		objTeacher.safe_put()
+		
 		
 #~ def connect_student(strStudent):
 	#~ student = getStudent(strStudent)
@@ -129,6 +137,7 @@ def addLesson(strTeacher, strToken, strLesson):
 	objLesson = Lesson(id=strLesson)
 	objLesson.name = strLesson
 	objLesson.teacher = strTeacher
+	objLesson.status = "ongoing"
 	objLesson.safe_put()
 	return objLesson
 
@@ -211,54 +220,4 @@ def add_answer(objStudent, objLesson, strAnswer):
 	else:
 		objStudent.answers[strSession] = [strAnswer]
 	booCorrect = objSession.is_correct(strAnswer)
-	#~ logging.info(booCorrect)
-	
-#~ class Session():
-	#~ def __init__(self, lesson):
-		#~ self.question = None
-		#~ self.lesson = lesson
-		#~ self.students = {}
-	#~ def add_student(self, student):
-		#~ self.students[student] = {"answers": [], "correct": False}
-	#~ def set_question(self, question):
-		#~ self.question = question
-	#~ def assign_to_students(self):
-		#~ for student in self.students.keys():
-			#~ student.assign_session(self)
-	#~ def is_correct_answer(self, answer):
-		#~ return self.question.is_right_answer(answer)
-		
-#~ class Question():
-	#~ def __init__(self):
-		#~ self.id = None
-		#~ self.sentence = None
-		#~ self.words = None
-		#~ self.author = None
-#~ 
-#~ class FindTheElement(Question):
-	#~ def __init__(self):
-		#~ self.description = "Find the Element"
-		#~ self.to_find = None  # what we're looking for
-		#~ self.answers = []  # which word is the correct answer
-	#~ def __repr__(self):
-		#~ result = '\nType:"' + self.description + '"'
-		#~ result = result + "\nInstructions: given the sentence, find the " + self.to_find
-		#~ result = result + "\nSentence:" + self.sentence
-		#~ return result
-	#~ def is_right_answer(self, answer):
-		#~ return answer in self.answers
-#~ 
-#~ class WhichType(Question):
-	#~ def __init__(self):
-		#~ self.description = "Which type is this"
-		#~ self.instructions = ""
-		#~ self.options = []    # options provided
-		#~ self.answer = None    # only one possible answer
-	#~ def __repr__(self):
-		#~ result = '\nType:"' + self.description + '"'
-		#~ result = result + "\nInstructions: select the correct type of the word indicated"
-		#~ result = result + "\nSentence:" + self.sentence
-		#~ result = result + "\nOptions:" + str(self.options)
-		#~ return result
-	#~ def is_right_answer(self, answer):
-		#~ return answer == self.answer
+

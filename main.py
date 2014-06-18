@@ -27,7 +27,7 @@ class AppUser(ndb.Model):
 	role = ndb.StringProperty()
 	token = ndb.StringProperty()
 	hashpassword = ndb.StringProperty()
-	#~ loginStatus = ndb.StringProperty()
+	status = ndb.StringProperty()
 
 class User():
 	RE_USERNAME = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
@@ -41,6 +41,7 @@ class User():
 		self.role = ""
 		self.token = ""
 		self.salt = ""
+		self.status = ""
 		#~ self.loginStatus = ""
 	
 	#~ def __init__(self, salt=""):
@@ -60,7 +61,7 @@ class User():
 		appuser.role = self.role
 		appuser.hashpassword = self.hashpassword
 		appuser.token = self.token
-		#~ appuser.loginStatus = self.loginStatus
+		appuser.status = self.status
 		key = appuser.put()
 		memcache.set("%s:appuser" % self.username, self)
 		return key
@@ -83,6 +84,7 @@ class User():
 			if self.hashpassword == appuser.hashpassword:
 				self.role = appuser.role
 				self.token = appuser.token
+				self.status = appuser.status
 				return True
 			else:
 				MyLogs("User.get: password in db doesn't match")
@@ -90,6 +92,7 @@ class User():
 		else:
 			self.role = appuser.role
 			self.token = appuser.token
+			self.status = appuser.status
 			return True
 	
 	def setUsername(self, username):
@@ -110,6 +113,10 @@ class User():
 	
 	def setRole(self, role):
 		self.role = role
+		return
+	
+	def setStatus(self, status):
+		self.status = status
 		return
 		
 	def makeSalt(self):
@@ -166,6 +173,7 @@ class User():
 			token = channel.create_channel(self.username)
 			if token:
 				self.token = token
+				self.status = "connected"
 				self.save()
 			else:
 				MyLogs("Channel creation failure")
@@ -184,7 +192,7 @@ class User():
 
 	def logout(self):
 		self.token = ""
-		#~ self.loginStatus = "registered"
+		self.status = "disconnected"
 		if self.role == "student":
 			logic.disconnect_student(self.username)
 		else:
@@ -336,9 +344,21 @@ class MainHandler(webapp2.RequestHandler):
 class ConnectionHandler(MainHandler):
 	def post(self, action):
 		username = self.request.get('from')
-		user = logic.getStudent(username)
-		if action == "disconnected" and user:
-			logic.disconnect_student(username)
+		user = User()
+		user.setUsername(username)
+		if user.get():
+			if action == "disconnected":
+				user.status = "disconnected"
+				if user.role != "student":
+					logic.disconnectTeacher(user.username)
+			elif action == "connected":
+				user.status = "connected"
+			
+			user.save()
+		return
+		#~ user = logic.getStudent(username)
+		#~ if action == "disconnected" and user:
+			#~ logic.disconnect_student(username)
 
 class TeacherHandler(MainHandler):
 	error = ""
@@ -351,9 +371,9 @@ class TeacherHandler(MainHandler):
 		elif action == "logout":
 			self.logout()
 			return self.render_page("login.html", error=self.error)
-		user = self.validUserFromCookie()
-		if user:
-			if action == "dashboard":
+		elif action == "dashboard":
+			user = self.validUserFromCookie()
+			if user:
 				exerciseList = getExerciseList()
 				studentsList = logic.getStudentList(user.username) or []
 				self.render_page("teacher_dashboard.html",
@@ -362,19 +382,23 @@ class TeacherHandler(MainHandler):
 							exercise_list = exerciseList,
 							students_list = studentsList,
 							)
-			elif action == "exercise_list_request":
+			else:
+				return self.redirect("/t/login")
+		elif action == "exercise_list_request":
+			user = self.validUserFromCookie()
+			if user:
 				message = {
 					"type": "exercises_list",
 					"message": getExerciseList(),
 					}
 				message = json.dumps(message)
 				channel.send_message(user.token, message)
-		else:
+			else:
+				return self.redirect("/t/login")
+		else:  # fallback
 			return self.redirect("/t/login")
-		return
 	
 	def post(self, action):
-		self.clearCookies()
 		if action == "signup":
 			return self.signup()
 		elif action == "login":
@@ -397,6 +421,7 @@ class TeacherHandler(MainHandler):
 								)
 	
 	def login(self):
+		self.clearCookies()
 		user = User()
 		user.setUsername(self.request.get("username"))
 		user.setPassword(self.request.get("password"))
@@ -422,6 +447,7 @@ class TeacherHandler(MainHandler):
 		return self.render_page("login.html", error=self.error)
 
 	def signup(self):
+		self.clearCookies()
 		user = User()
 		user.setUsername(self.request.get("username"))
 		user.setPassword(self.request.get("password"))
@@ -485,7 +511,7 @@ class StudentHandler(MainHandler):
 	
 	def get(self, action):
 		if action == "login":
-			self.render_page("student_login.html", error=self.error)
+			return self.render_page("student_login.html", error=self.error)
 		elif action == "dashboard":
 			user = self.validUserFromCookie()
 			assert user.role == "student"
@@ -493,17 +519,19 @@ class StudentHandler(MainHandler):
 			if not logic.checkInLesson(user.username, strLessonName):
 				self.response.delete_cookie('schooltagging-lesson', path = '/')
 			#~ logic.connect_student(user.username)
-			self.render_page("student_dashboard.html",
+			return self.render_page("student_dashboard.html",
 						username = user.username,
 						token = user.token,
 						)
+		else:  # fallback
+			return self.redirect("/s/login")
 	
 	def post(self, action):
 		if action == "login":
 			return self.login()
-		user = self.validUserFromCookie()
-		if user:
-			if action == "answer":
+		elif action == "answer":
+			user = self.validUserFromCookie()
+			if user:
 				objStudent = logic.getStudent(user.username)
 				objLesson = logic.get_lesson(self.getLessonCookie())
 				strTeacher = objLesson.teacher
@@ -519,8 +547,8 @@ class StudentHandler(MainHandler):
 						}
 				message = json.dumps(message)
 				channel.send_message(objTeacher.token, message)
-		else:
-			self.redirect("/check/in")
+			else:
+				self.redirect("/check/in")
 	
 	def login(self):
 		self.clearCookies()
@@ -567,7 +595,15 @@ class StudentHandler(MainHandler):
 class JollyHandler(MainHandler):
 	def get(self, *a):
 		return self.redirect("/t/login")
-			
+
+class DeleteHandler(MainHandler):
+	def get(self):
+		ndb.delete_multi(logic.Lesson.query().fetch(keys_only=True))
+		ndb.delete_multi(logic.Session.query().fetch(keys_only=True))
+		ndb.delete_multi(logic.Student.query().fetch(keys_only=True))
+		ndb.delete_multi(logic.Teacher.query().fetch(keys_only=True))
+		return self.redirect("/t/login")
+
 app = webapp2.WSGIApplication([
 	webapp2.Route(
 			r'/t/<action>',
@@ -580,6 +616,10 @@ app = webapp2.WSGIApplication([
 	webapp2.Route(
 			r'/_ah/channel/<action>/',
 			handler=ConnectionHandler,
+			name="connection"),
+	webapp2.Route(
+			r'/delete',
+			handler=DeleteHandler,
 			name="connection"),
 	webapp2.Route(
 			r'/<:[a-zA-Z0-9]*>',
