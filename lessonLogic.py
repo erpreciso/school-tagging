@@ -68,6 +68,15 @@ def updateTeachersList(command, strTeacher):
 	memcache.set("teachers_list", lst)
 	return
 
+def updateLessonList(command, strLesson):
+	lst = getLessonList()
+	if command == "add":
+		lst.append(strLesson)
+	elif command == "remove":
+		lst.remove(strLesson)
+	memcache.set("lesson_list", lst)
+	return
+	
 def addStudent(strStudent, strToken, strLesson):
 	objStudent = Student(id=strStudent)
 	objStudent.name = strStudent
@@ -89,7 +98,7 @@ def disconnectTeacher(strTeacher):
 	objTeacher = getTeacher(strTeacher)
 	if objTeacher:
 		objTeacher.token = ""
-		objLesson = get_lesson(objTeacher.currentLesson)
+		objLesson = getLesson(objTeacher.currentLesson)
 		objLesson.status = "ended"
 		objLesson.safe_put()
 		
@@ -108,7 +117,7 @@ def getStudentList(strTeacher):
 	objTeacher = getTeacher(strTeacher)
 	if objTeacher:
 		strCurrentLesson = objTeacher.currentLesson
-		objCurrentLesson = get_lesson(strCurrentLesson)
+		objCurrentLesson = getLesson(strCurrentLesson)
 		students = [s for s in objCurrentLesson.students \
 							if getStudent(s).token != ""]
 		return students
@@ -137,11 +146,12 @@ def addLesson(strTeacher, strToken, strLesson):
 	objLesson = Lesson(id=strLesson)
 	objLesson.name = strLesson
 	objLesson.teacher = strTeacher
-	objLesson.status = "ongoing"
+	objLesson.status = "running"
 	objLesson.safe_put()
+	updateLessonList("add", strLesson)
 	return objLesson
 
-def get_lesson(strLesson):
+def getLesson(strLesson):
 	t = memcache.get("lesson:" + strLesson)
 	if not t:
 		k = ndb.Key("Lesson", strLesson)
@@ -149,11 +159,26 @@ def get_lesson(strLesson):
 		memcache.add("lesson:" + strLesson, t)
 	return t
 
+def getLessonList():
+	lst = memcache.get("lesson_list")
+	if not lst:
+		lst = []
+		q = Lesson.query()
+		if q.get():
+			lst = [t.name for t in q]
+		memcache.add("lesson_list", lst)
+	return lst
+
+def getRunningLessonList():
+	lst = getLessonList()
+	return [lesson for lesson in lst if getLesson(lesson).status == "running"]
+		
+
 def joinLesson(strStudent, strToken, strLesson):
 	#~ objTeacher = getTeacher(strTeacher)
 	#~ strLesson = objTeacher.currentLesson
 	objStudent = addStudent(strStudent, strToken, strLesson)
-	objLesson = get_lesson(strLesson)
+	objLesson = getLesson(strLesson)
 	if strStudent not in objLesson.students:
 		objLesson.students.append(strStudent)
 	objLesson.safe_put()
@@ -162,7 +187,7 @@ def joinLesson(strStudent, strToken, strLesson):
 def checkInLesson(strStudent, strLesson):
 	objStudent = getStudent(strStudent)
 	if objStudent and objStudent.currentLesson == strLesson:
-		objLesson = get_lesson(strLesson)
+		objLesson = getLesson(strLesson)
 		if strStudent not in objLesson.students:
 			objLesson.students.append(strStudent)
 			objLesson.safe_put()
