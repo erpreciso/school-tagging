@@ -45,7 +45,13 @@ class User():
 		self.currentLesson = ""
 	
 	def save(self):
-		appuser = AppUser(id=self.username)
+		#~ appuser = AppUser(id=self.username)
+		#~ appuser = AppUser()
+		q = AppUser.query(AppUser.username == self.username,
+							AppUser.currentLesson == self.currentLesson)
+		appuser = q.get()
+		if not appuser:
+			appuser = AppUser()
 		appuser.username = self.username
 		appuser.role = self.role
 		appuser.hashpassword = self.hashpassword
@@ -53,17 +59,21 @@ class User():
 		appuser.status = self.status
 		appuser.currentLesson = self.currentLesson
 		key = appuser.put()
-		memcache.set("%s:appuser" % self.username, self)
+		#~ memcache.set("%s:appuser" % self.username, self)
+		memcache.set("%s:appuser|%s:currentLesson" % \
+						(self.username, self.currentLesson), self)
 		return key
 		
 	def get(self):
 		"""overwrite self with appuser from ndb. return true if OK"""
-		appuser = memcache.get("%s:appuser" % self.username)
+		appuser = memcache.get("%s:appuser|%s:currentLesson" % \
+						(self.username, self.currentLesson))
 		if appuser is None:
 			q = AppUser.query(AppUser.username == self.username)
 			if q.get():
 				appuser = q.get()
-				memcache.add("%s:appuser" % self.username, appuser)
+				memcache.add("%s:appuser|%s:currentLesson" % \
+						(self.username, self.currentLesson), appuser)
 			else:
 				MyLogs("User.get: Username not found in ndb")
 				return None
@@ -72,29 +82,31 @@ class User():
 				self.salt = appuser.hashpassword.split("|")[1]
 				self.makeHashpassword()
 			if self.hashpassword == appuser.hashpassword:
-				self.role = appuser.role
+				#~ self.role = appuser.role
 				self.token = appuser.token
 				self.status = appuser.status
-				self.currentLesson = appuser.currentLesson
+				#~ self.currentLesson = appuser.currentLesson
 				return True
 			else:
 				MyLogs("User.get: password in db doesn't match")
 				return False
 		else:
-			self.role = appuser.role
+			#~ self.role = appuser.role
 			self.token = appuser.token
 			self.status = appuser.status
-			self.currentLesson = appuser.currentLesson
+			#~ self.currentLesson = appuser.currentLesson
 			return True
 	
 	def simple_get(self):
 		"""used only for channel connection or disconnection"""
-		appuser = memcache.get("%s:appuser" % self.username)
+		appuser = memcache.get("%s:appuser|%s:currentLesson" % \
+						(self.username, self.currentLesson))
 		if appuser is None:
 			q = AppUser.query(AppUser.username == self.username)
 			if q.get():
 				appuser = q.get()
-				memcache.add("%s:appuser" % self.username, appuser)
+				memcache.add("%s:appuser|%s:currentLesson" % \
+						(self.username, self.currentLesson), appuser)
 			else:
 				MyLogs("User.simple_get: Username not found in ndb")
 				return None
@@ -253,7 +265,7 @@ class User():
 			#~ MyLogs("Username not in database")
 			#~ return False
 
-class Cookie():
+class UserCookie():
 
 	def __init__(self, value=""):
 		self.username = ""
@@ -285,6 +297,17 @@ class Cookie():
 			self.salt = self.value.split("|")[3]
 			self.hashpassword = self.password + "|" + self.salt
 
+class LessonCookie():
+
+	def __init__(self, lesson=""):
+		self.lesson = lesson
+
+	def setValue(self, lesson):
+		self.lesson = str(lesson)
+
+	def send(self, http_self):
+		http_self.response.set_cookie('schooltagging-lesson', self.lesson)
+			
 class MyLogs():
 	def __init__(self, *a):
 		message = " ".join([str(chunk) for chunk in a])
@@ -309,9 +332,6 @@ class MainHandler(webapp2.RequestHandler):
 	def getUserCookie(self):
 		return self.request.cookies.get("schooltagging-user")
 	
-	def setLessonCookie(self, strLesson):
-		self.response.set_cookie('schooltagging-lesson', strLesson)
-	
 	def getLessonCookie(self):
 		return self.request.cookies.get("schooltagging-lesson")
 		
@@ -320,11 +340,13 @@ class MainHandler(webapp2.RequestHandler):
 		return the user object if valid, else False
 		
 		"""
-		cookie = Cookie(self.getUserCookie())
-		if cookie.value:
+		usercookie = UserCookie(self.getUserCookie())
+		lessoncookie = LessonCookie(self.getLessonCookie())
+		if usercookie.value and lessoncookie.lesson:
 			user = User()
-			user.setUsername(cookie.username)
-			user.setHashpassword(cookie.hashpassword)
+			user.setUsername(usercookie.username)
+			user.setHashpassword(usercookie.hashpassword)
+			user.setCurrentLesson(lessoncookie.lesson)
 			if user.get():
 				return user
 			else:
@@ -341,7 +363,7 @@ class MainHandler(webapp2.RequestHandler):
 		
 		"""
 		self.response.delete_cookie('schooltagging-lesson', path = '/')
-		cookie = Cookie(self.request.cookies.get("schooltagging-user"))
+		cookie = UserCookie(self.request.cookies.get("schooltagging-user"))
 		if cookie.value:
 			self.response.delete_cookie('schooltagging-user', path = '/')
 			return True
@@ -435,7 +457,7 @@ class TeacherHandler(MainHandler):
 		if user.usernameIsValid():
 			if user.get():
 				user.setChannel()
-				cookie = Cookie()
+				cookie = UserCookie()
 				cookie.setValue(
 							user.role,
 							user.username,
@@ -443,8 +465,10 @@ class TeacherHandler(MainHandler):
 							)
 				cookie.send(self)
 				strLessonName = self.request.get("lessonName")
+				lessoncookie = LessonCookie()
+				lessoncookie.setValue(strLessonName)
+				lessoncookie.send(self)
 				logic.addLesson(user.username, user.token, strLessonName)
-				self.setLessonCookie(strLessonName)
 				return self.redirect("/t/dashboard")
 
 			else:
@@ -467,16 +491,18 @@ class TeacherHandler(MainHandler):
 				if user.passwordIsValid():
 					user.save()
 					user.setChannel()
-					cookie = Cookie()
+					cookie = UserCookie()
 					cookie.setValue(
 								user.role,
 								user.username,
 								user.hashpassword,
 								)
 					cookie.send(self)
-					
+					lessoncookie = LessonCookie()
+					lessoncookie.setValue(strLessonName)
+					lessoncookie.send(self)
 					logic.addLesson(user.username, user.token, strLessonName)
-					self.setLessonCookie(strLessonName)
+					
 					return self.redirect("/t/dashboard")
 
 				else:
@@ -488,7 +514,7 @@ class TeacherHandler(MainHandler):
 		return self.render_page("signup.html", error=self.error)
 
 	def logout(self):
-		cookie = Cookie(self.getUserCookie())
+		cookie = UserCookie(self.getUserCookie())
 		if cookie.value:
 			user = User()
 			user.username = cookie.username
@@ -574,15 +600,17 @@ class StudentHandler(MainHandler):
 				if strLessonName in logic.getRunningLessonList():
 					user.save()
 					user.setChannel()
-					cookie = Cookie()
-					cookie.setValue(
+					usercookie = UserCookie()
+					usercookie.setValue(
 								user.role,
 								user.username,
 								user.hashpassword,
 								)
-					cookie.send(self)
+					usercookie.send(self)
+					lessoncookie = LessonCookie()
+					lessoncookie.setValue(strLessonName)
+					lessoncookie.send(self)
 					logic.joinLesson(user.username, user.token, strLessonName)
-					self.setLessonCookie(strLessonName)
 					return self.redirect("/s/dashboard")
 				else:
 					self.error = "Lesson not running now. Please type a valid lesson"
@@ -593,7 +621,7 @@ class StudentHandler(MainHandler):
 		self.render_page("student_login.html", error=self.error)
 		
 	def logout(self):
-		cookie = Cookie(self.getUserCookie())
+		cookie = UserCookie(self.getUserCookie())
 		if cookie.value:
 			user = User()
 			user.username = cookie.username
