@@ -25,6 +25,9 @@ class MainHandler(webapp2.RequestHandler):
 
 	def addCookie(self, kind, value):
 		self.response.set_cookie(kind, value=value, httponly=True)
+	
+	def getCookie(self, kind):
+		return self.request.cookies.get(kind)
 
 class StartPage(MainHandler):
 	def get(self):
@@ -32,7 +35,10 @@ class StartPage(MainHandler):
 		
 class TeacherHandler(MainHandler):
 	def get(self, action):
-		self.renderPage("teacherLogin.html")
+		if action == "dashboard":
+			self.initializeDashboard()
+		else:
+			self.renderPage("teacherLogin.html")
 	
 	def post(self, action):
 		if action == "login":
@@ -46,10 +52,14 @@ class TeacherHandler(MainHandler):
 		if objs.teacherUsernameExists(username):
 			teacher = objs.getTeacher(username)
 			if password == teacher.password:
-				teacher.connect()
-				self.addCookie("schooltagging-role", "teacher")
-				self.addCookie("schooltagging-username", username)
-				return self.startLesson(teacher)
+				if self.read("lessonName"):
+					teacher.connect()
+					self.addCookie("schooltagging-role", "teacher")
+					self.addCookie("schooltagging-username", username)
+					self.startLesson(teacher)
+					return self.redirect("/t/dashboard")
+				else:
+					message = "Please provide a name for the lesson"
 			else:
 				message = "Password not correct"
 		else:
@@ -79,15 +89,54 @@ class TeacherHandler(MainHandler):
 			teacher.assignLesson(lessonName)
 			lesson.save()
 			self.addCookie("schooltagging-lesson", lessonName)
-			self.redirect("/t/dashboard")
+			return self.redirect("/t/dashboard")
 		else:
 			message = "Lesson name currently in use"
 		return self.renderPage("teacherLogin.html", message=message)
+		
+	def initializeDashboard(self):
+		#~ inserisci controllo che ci siano i cookies
+		username = self.getCookie("schooltagging-username")
+		assert self.getCookie("schooltagging-role") == "teacher"
+		lessonName = self.getCookie("schooltagging-lesson")
+		lesson = objs.getLesson(lessonName)
+		#~ continua con disegno dashboard
+		self.renderPage("teacherDashboard.html",
+							teacherName=username,
+							lessonName=lessonName,
+							students=lesson.students,
+							)
 		
 class StudentHandler(MainHandler):
 	def get(self, action):
 		if action == "login":
 			self.renderPage("studentLogin.html")
+		
+	def post(self, action):
+		if action == "login":
+			self.login()
+
+	def login(self):
+		student = Student()
+		student.username = self.read("username")
+		lessonName = self.read("lessonName")
+		if not objs.studentAlreadyConnected(student.username):
+			student.connect()
+			self.addCookie("schooltagging-role", "student")
+			self.addCookie("schooltagging-username", student.username)
+			self.joinLesson(student, lessonName)
+			return self.redirect("/s/dashboard")
+		else:
+			message = "Name already in use"
+		self.renderPage("studentLogin.html")
+		
+	def joinLesson(self, student, lessonName):
+		assert lessonName in objs.getOpenLessonsNames()
+		lesson = objs.getLesson(lessonName)
+		self.addCookie("schooltagging-lesson", lessonName)
+		lesson.addStudent(student)
+		#~ send message to teacher that the user is connected
+		
 		
 app = webapp2.WSGIApplication([
 	webapp2.Route(
@@ -98,10 +147,10 @@ app = webapp2.WSGIApplication([
 			r'/t/<action>',
 			handler = TeacherHandler,
 			name="teacher"),
-	#~ webapp2.Route(
-			#~ r'/s/<action>',
-			#~ handler = StudentHandler,
-			#~ name="student"),
+	webapp2.Route(
+			r'/s/<action>',
+			handler = StudentHandler,
+			name="student"),
 			])
 			
 old_prj = """

@@ -1,0 +1,16 @@
+{% extends "wrapper.html" %}
+
+{% block title %}
+<title>school-tagging|teacher|dashboard</title>
+{% endblock %}
+
+{% block content %}
+<div>Teacher: {{teacherName}}</div>
+<div>Session ID: {{lessonName}}</div>
+<div>Enrolled students:
+	{% for student in students %}
+	<div>{{loop.index}}. {{student.username}}</div>
+	{% endfor %}
+</div>
+<button>Start Exercise</button>
+{% endblock %}
