@@ -287,7 +287,10 @@ class UserCookie():
 
 	def send(self, http_self):
 		self.stringify()
-		http_self.response.set_cookie('schooltagging-user', self.value)
+		http_self.response.set_cookie('schooltagging-user',
+									value=self.value,
+									httponly=True,
+									)
 			
 	def extractValue(self):
 		self.role = self.value.split("|")[0]
@@ -306,7 +309,10 @@ class LessonCookie():
 		self.lesson = str(lesson)
 
 	def send(self, http_self):
-		http_self.response.set_cookie('schooltagging-lesson', self.lesson)
+		http_self.response.set_cookie('schooltagging-lesson',
+									value=self.lesson,
+									httponly=True,
+									)
 			
 class MyLogs():
 	def __init__(self, *a):
