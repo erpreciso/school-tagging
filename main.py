@@ -15,6 +15,9 @@ from google.appengine.api import channel
 from google.appengine.ext import ndb
 from google.appengine.api import memcache
 
+
+old_prj = """
+
 def getExerciseList():
 	lst = memcache.get("exercise_list")
 	if not lst:
@@ -65,7 +68,7 @@ class User():
 		return key
 		
 	def get(self):
-		"""overwrite self with appuser from ndb. return true if OK"""
+		#~ overwrite self with appuser from ndb. return true if OK
 		appuser = memcache.get("%s:appuser|%s:currentLesson" % \
 						(self.username, self.currentLesson))
 		if appuser is None:
@@ -98,7 +101,7 @@ class User():
 			return True
 	
 	def simple_get(self):
-		"""used only for channel connection or disconnection"""
+		#~ used only for channel connection or disconnection
 		appuser = memcache.get("%s:appuser|%s:currentLesson" % \
 						(self.username, self.currentLesson))
 		if appuser is None:
@@ -155,7 +158,7 @@ class User():
 		self.hashpassword = "%s|%s" % (encr_password, self.salt)
 
 	def twoPasswordsMatch(self):
-		""" return True if the two inserted psw match. """
+		#~ return True if the two inserted psw match.
 		match = self.password == self.verifyPassword
 		if match:
 			return True
@@ -163,7 +166,7 @@ class User():
 			MyLogs("The two passwords don't match")
 
 	def passwordMatchesRE(self):
-		""" return True if the psw matches the regular expression. """
+		#~ return True if the psw matches the regular expression. 
 		re_password = re.compile(self.RE_PASSWORD)
 		if re_password.match(self.password):
 			return True
@@ -172,10 +175,9 @@ class User():
 			return False
 	
 	def passwordIsValid(self):
-		""" return True if the password matches the two rules above.
-		also setup the hashpassword.
-		
-		"""
+		#~ return True if the password matches the two rules above.
+		#~ also setup the hashpassword.
+		#~ 
 		result = self.passwordMatchesRE() and self.twoPasswordsMatch()
 		if result:
 			self.makeHashpassword()
@@ -185,7 +187,7 @@ class User():
 			return False
 
 	def usernameIsValid(self):
-		""" return True if the inserted username matchs the re. """
+		#~ return True if the inserted username matchs the re.
 		re_username = re.compile(self.RE_USERNAME)
 		if re_username.match(self.username):
 			return True
@@ -243,11 +245,11 @@ class User():
 		#~ return False
 	
 	#~ def validUser(self):
-		""" check if the user is entitled to login.
-		input=username string and password not hashed
-		return True if user is valid.
+		#~ check if the user is entitled to login.
+		#~ input=username string and password not hashed
+		#~ return True if user is valid.
+		#~ 
 		
-		"""
 		#~ user = self.getAppUser()
 		#~ if user:
 			#~ if self.hashpassword == "":
@@ -342,10 +344,10 @@ class MainHandler(webapp2.RequestHandler):
 		return self.request.cookies.get("schooltagging-lesson")
 		
 	def validUserFromCookie(self):
-		""" check if the request is coming from a valid user.
-		return the user object if valid, else False
+		#~ check if the request is coming from a valid user.
+		#~ return the user object if valid, else False
+		#~ 
 		
-		"""
 		usercookie = UserCookie(self.getUserCookie())
 		lessoncookie = LessonCookie(self.getLessonCookie())
 		if usercookie.value and lessoncookie.lesson:
@@ -362,12 +364,12 @@ class MainHandler(webapp2.RequestHandler):
 		return False
 		
 	def clearCookies(self):
-		""" clear my cookie if existing.
-		input=server response
-		return True if cookie existed and has been eliminated,
-		return False if cookie wasn't existing
+		#~ clear my cookie if existing.
+		#~ input=server response
+		#~ return True if cookie existed and has been eliminated,
+		#~ return False if cookie wasn't existing
+		#~ 
 		
-		"""
 		self.response.delete_cookie('schooltagging-lesson', path = '/')
 		cookie = UserCookie(self.request.cookies.get("schooltagging-user"))
 		if cookie.value:
@@ -732,3 +734,4 @@ dictLabelBook = {
 			},
 		},
 	}
+"""
