@@ -1,0 +1,32 @@
+{% extends "wrapper.html" %}
+
+{% block title %}
+<title>school-tagging|teacher|login</title>
+{% endblock %}
+
+{% block content %}
+<div>Please enter your username and password</div>
+<form method="post" action="/t/login">
+	<label for="un">Username</label>
+	<input type="text" name="username" id="un">
+	<label for="pw">Password</label>
+	<input type="password" name="password" id="pw">
+	{% if message %}
+	<div class="message">{{message}}</div>
+	{% endif %}
+	<label for="ln">Lesson name</label>
+	<input type="text" name="lessonName" id="ln">
+	<input type="submit" value="Login">
+</form>
+<div>Do not have an account yet?</div>
+<form method="post" action="/t/signup">
+	<label for="un">Username</label>
+	<input type="text" name="username" id="un">
+	<label for="pw">Password</label>
+	<input type="password" name="password" id="pw">
+	{% if error %}
+	<div class="error">{{error}}</div>
+	{% endif %}
+	<input type="submit" value="Signup">
+</form>
+{% endblock %}

@@ -1,21 +1,109 @@
 # coding: utf-8
 # [school-tagging] webapp
 
-import lessonLogic as logic
+import objects as objs
 import webapp2
 import jinja2
 import os
-import re
-import random
-import string
-import hashlib
-import logging
-import json
-from google.appengine.api import channel
-from google.appengine.ext import ndb
-from google.appengine.api import memcache
 
+class MainHandler(webapp2.RequestHandler):
+	template_dir = os.path.join(os.path.dirname(__file__), 'pages')
+	jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
+		autoescape = True)
 
+	def write(self, *a, **kw):
+		self.response.out.write(*a, **kw)
+	
+	def read(self,param):
+		return self.request.get(param)
+		
+	def renderStr(self, template, **params):
+		return self.jinja_env.get_template(template).render(params)
+		
+	def renderPage(self, template, **kw):
+		self.write(self.renderStr(template, **kw))
+
+	def addCookie(self, kind, value):
+		self.response.set_cookie(kind, value=value, httponly=True)
+
+class StartPage(MainHandler):
+	def get(self):
+		self.renderPage("start.html")
+		
+class TeacherHandler(MainHandler):
+	def get(self, action):
+		self.renderPage("teacherLogin.html")
+	
+	def post(self, action):
+		if action == "login":
+			self.login()
+		elif action == "signup":
+			self.signup()
+	
+	def login(self):
+		username = self.read("username")
+		password = self.read("password")
+		if objs.teacherUsernameExists(username):
+			teacher = objs.getTeacher(username)
+			if password == teacher.password:
+				teacher.connect()
+				self.addCookie("schooltagging-role", "teacher")
+				self.addCookie("schooltagging-username", username)
+				return self.startLesson(teacher)
+			else:
+				message = "Password not correct"
+		else:
+			message = "Username not existing"
+		return self.renderPage("teacherLogin.html", message=message)
+		
+	def signup(self):
+		teacher = objs.Teacher()
+		teacher.username = self.read("username")
+		if not objs.teacherUsernameExists(teacher.username):
+			teacher.password = self.read("password")
+			teacher.status = ""
+			teacher.save()
+			message = "Please re-enter username and password"
+		else:
+			message = "Username already in use"
+		return self.renderPage("teacherLogin.html", message=message)
+	
+	def startLesson(self, teacher):
+		lessonName = self.read("lessonName")
+		if lessonName not in objs.getOpenLessonsNames():
+			lesson = objs.Lesson()
+			lesson.teacher = teacher.username
+			lesson.status = "open"
+			lesson.students = []
+			lesson.sessions = []
+			teacher.assignLesson(lessonName)
+			lesson.save()
+			self.addCookie("schooltagging-lesson", lessonName)
+			self.redirect("/t/dashboard")
+		else:
+			message = "Lesson name currently in use"
+		return self.renderPage("teacherLogin.html", message=message)
+		
+class StudentHandler(MainHandler):
+	def get(self, action):
+		if action == "login":
+			self.renderPage("studentLogin.html")
+		
+app = webapp2.WSGIApplication([
+	webapp2.Route(
+			r'/start',
+			handler = StartPage,
+			name="startpage"),
+	webapp2.Route(
+			r'/t/<action>',
+			handler = TeacherHandler,
+			name="teacher"),
+	#~ webapp2.Route(
+			#~ r'/s/<action>',
+			#~ handler = StudentHandler,
+			#~ name="student"),
+			])
+			
 old_prj = """
 
 def getExerciseList():
@@ -678,60 +766,5 @@ app = webapp2.WSGIApplication([
 			name="jolly"),
 			])
 
-dictLabelBook = {
-	"TeacherLogin": {
-		"username": {
-			"EN": "Username",
-			"IT": "Nome utente",
-			},
-		"password": {
-			"EN": "Password",
-			"IT": "Password",
-			},
-		"or_signup": {
-			"EN": "or Signup",
-			"IT": "oppure registrati",
-			},
-		"login": {
-			"EN": "Login",
-			"IT": "Entra",
-			},
-		},
-	"TeacherSignup": {
-		"username": {
-			"EN": "Username",
-			"IT": "Nome utente",
-			},
-		"password": {
-			"EN": "Password",
-			"IT": "Password",
-			},
-		"verify": {
-			"EN": "Verify password",
-			"IT": "Ripeti la password",
-			},
-		"register": {
-			"EN": "Register my data",
-			"IT": "Registrami",
-			},
-		},
-	"TeacherLessonStart": {
-		"lesson_name": {
-			"EN": "Lesson name",
-			"IT": "Nome per la lezione",
-			},
-		"": {
-			"EN": "",
-			"IT": "",
-			},
-		"welcome": {
-			"EN": "Welcome",
-			"IT": "Benvenuto",
-			},
-		"start": {
-			"EN": "Start the lesson",
-			"IT": "Inizia la lezione",
-			},
-		},
-	}
+
 """
