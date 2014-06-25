@@ -9,7 +9,7 @@
 <div>Session ID: {{lessonName}}</div>
 <div>Enrolled students:
 	{% for student in students %}
-	<div>{{loop.index}}. {{student.username}}</div>
+	<div>{{loop.index}}. {{student}}</div>
 	{% endfor %}
 </div>
 <button>Start Exercise</button>

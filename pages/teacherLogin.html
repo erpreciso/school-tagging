@@ -12,7 +12,7 @@
 	<label for="pw">Password</label>
 	<input type="password" name="password" id="pw">
 	{% if message %}
-	<div class="message">{{message}}</div>
+	<div>{{message}}</div>
 	{% endif %}
 	<label for="ln">Lesson name</label>
 	<input type="text" name="lessonName" id="ln">
@@ -24,9 +24,6 @@
 	<input type="text" name="username" id="un">
 	<label for="pw">Password</label>
 	<input type="password" name="password" id="pw">
-	{% if error %}
-	<div class="error">{{error}}</div>
-	{% endif %}
 	<input type="submit" value="Signup">
 </form>
 {% endblock %}

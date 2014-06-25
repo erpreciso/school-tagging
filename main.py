@@ -5,6 +5,7 @@ import objects as objs
 import webapp2
 import jinja2
 import os
+import logging
 
 class MainHandler(webapp2.RequestHandler):
 	template_dir = os.path.join(os.path.dirname(__file__), 'pages')
@@ -53,6 +54,7 @@ class TeacherHandler(MainHandler):
 			teacher = objs.getTeacher(username)
 			if password == teacher.password:
 				if self.read("lessonName"):
+					teacher.save()
 					teacher.connect()
 					self.addCookie("schooltagging-role", "teacher")
 					self.addCookie("schooltagging-username", username)
@@ -82,6 +84,7 @@ class TeacherHandler(MainHandler):
 		lessonName = self.read("lessonName")
 		if lessonName not in objs.getOpenLessonsNames():
 			lesson = objs.Lesson()
+			lesson.lessonName = lessonName
 			lesson.teacher = teacher.username
 			lesson.status = "open"
 			lesson.students = []
@@ -95,10 +98,11 @@ class TeacherHandler(MainHandler):
 		return self.renderPage("teacherLogin.html", message=message)
 		
 	def initializeDashboard(self):
-		#~ inserisci controllo che ci siano i cookies
 		username = self.getCookie("schooltagging-username")
-		assert self.getCookie("schooltagging-role") == "teacher"
+		role = self.getCookie("schooltagging-role")
 		lessonName = self.getCookie("schooltagging-lesson")
+		if not username or not role or not lessonName:
+			return self.redirect("/t/login")
 		lesson = objs.getLesson(lessonName)
 		#~ continua con disegno dashboard
 		self.renderPage("teacherDashboard.html",
@@ -117,26 +121,33 @@ class StudentHandler(MainHandler):
 			self.login()
 
 	def login(self):
-		student = Student()
+		student = objs.Student()
 		student.username = self.read("username")
 		lessonName = self.read("lessonName")
-		if not objs.studentAlreadyConnected(student.username):
-			student.connect()
-			self.addCookie("schooltagging-role", "student")
-			self.addCookie("schooltagging-username", student.username)
-			self.joinLesson(student, lessonName)
-			return self.redirect("/s/dashboard")
+		logging.info("open lessons", objs.getOpenLessonsNames())
+		if lessonName in objs.getOpenLessonsNames():
+			if not objs.studentAlreadyConnected(student.username):
+				student.save()
+				student.connect()
+				self.addCookie("schooltagging-role", "student")
+				self.addCookie("schooltagging-username", student.username)
+				student.joinLesson(lessonName)
+				self.addCookie("schooltagging-lesson", lessonName)
+				return self.redirect("/s/dashboard")
+			else:
+				message = "Name already in use"
 		else:
-			message = "Name already in use"
-		self.renderPage("studentLogin.html")
+			message = "Lesson not started yet"
+		self.renderPage("studentLogin.html", message=message)
 		
-	def joinLesson(self, student, lessonName):
-		assert lessonName in objs.getOpenLessonsNames()
-		lesson = objs.getLesson(lessonName)
-		self.addCookie("schooltagging-lesson", lessonName)
-		lesson.addStudent(student)
-		#~ send message to teacher that the user is connected
+	
 		
+class DeleteHandler(MainHandler):
+	def get(self):
+		objs.clean()
+		for name in self.request.cookies.iterkeys():
+			self.response.delete_cookie(name)
+		return self.redirect("/start")
 		
 app = webapp2.WSGIApplication([
 	webapp2.Route(
@@ -151,6 +162,10 @@ app = webapp2.WSGIApplication([
 			r'/s/<action>',
 			handler = StudentHandler,
 			name="student"),
+	webapp2.Route(
+			r'/delete',
+			handler=DeleteHandler,
+			name="delete"),
 			])
 			
 old_prj = """
