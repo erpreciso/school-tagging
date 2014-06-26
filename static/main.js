@@ -1,24 +1,16 @@
-$(document).ready(function() {
-	$("#show_html").on("click", loghtml);
-});
-
-onOpened = function() {
-	$("#connection_status").text("ONLINE")
-	.css("color", "green");
+onMessage = function(message) {
+	var data = JSON.parse(message.data);
+	if (data.type == "student arrived") {
+		var studentName = data.message.studentName;
+		var studentsCount = $(".studentName").length;
+		var txt = (studentsCount + 1).toString() + ". " + studentName;
+		var student = $(document.createElement("div"))
+			.attr("id", studentName)
+			.addClass("studentName")
+			.text(txt);
+		$("#students").append(student);
 	}
-
-onClose = function() {
-	$("#connection_status")
-		.text("OFFLINE")
-		.css("color", "red");
-	}
-
-function mylog(message) {
-	if (window.console && window.console.log) {
-		console.log(message);
-	}
+	
 }
 
-function loghtml(){
-	mylog($("body").html());
-}
+onOpened = function(){}

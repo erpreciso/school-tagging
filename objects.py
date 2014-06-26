@@ -46,7 +46,7 @@ class Student(User):
 		message = {
 			"type": "student arrived",
 			"message": {
-				"student": self.username
+				"studentName": self.username
 				},
 			}
 		message = json.dumps(message)
@@ -70,27 +70,37 @@ def getTeacher(username):
 		q = Teacher.query(Teacher.username == username)
 		teacher = q.get()
 		if teacher:
-			memcache.set("Teacher:" + self.username, self)
+			memcache.set("Teacher:" + username, teacher)
 	if teacher:
 		return teacher
 	else:
 		return False
 
 def getStudent(username, currentLesson):
-	student = memcache.get("Student:" + self.username + \
-					"|CurrentLesson:" + self.currentLesson)
+	student = memcache.get("Student:" + username + \
+					"|CurrentLesson:" + currentLesson)
 	if not student:
 		q = Student.query(Student.username == username,
 							Student.currentLesson == currentLesson)
 		student = q.get()
 		if student:
-			memcache.set("Student:" + self.username + \
-					"|CurrentLesson:" + self.currentLesson, self)
+			memcache.set("Student:" + username + \
+					"|CurrentLesson:" + currentLesson, student)
 	if student:
 		return student
 	else:
 		return False
 		
+def getFromID(id):
+	user = memcache.get("ID:" + id)
+	if not user:
+		user = ndb.Key("Teacher", int(id)).get() \
+							or ndb.Key("Student", int(id)).get()
+		if user:
+			memcache.set("ID:" + str(id), user)
+			return user
+	return False
+	
 def studentAlreadyConnected(username):
 	q = Student.query(Student.username == username, Student.currentLesson != "")
 	if q.get():
@@ -142,5 +152,5 @@ def clean():
 	ndb.delete_multi(Lesson.query().fetch(keys_only=True))
 	#~ ndb.delete_multi(Session.query().fetch(keys_only=True))
 	ndb.delete_multi(Student.query().fetch(keys_only=True))
-	ndb.delete_multi(Teacher.query().fetch(keys_only=True))
+	#~ ndb.delete_multi(Teacher.query().fetch(keys_only=True))
 	memcache.flush_all()

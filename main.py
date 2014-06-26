@@ -100,26 +100,46 @@ class TeacherHandler(MainHandler):
 	def initializeDashboard(self):
 		username = self.getCookie("schooltagging-username")
 		role = self.getCookie("schooltagging-role")
+		assert role == "teacher"
+		teacher = objs.getTeacher(username)
 		lessonName = self.getCookie("schooltagging-lesson")
 		if not username or not role or not lessonName:
 			return self.redirect("/t/login")
 		lesson = objs.getLesson(lessonName)
-		#~ continua con disegno dashboard
 		self.renderPage("teacherDashboard.html",
 							teacherName=username,
 							lessonName=lessonName,
 							students=lesson.students,
+							token=teacher.token,
 							)
 		
 class StudentHandler(MainHandler):
 	def get(self, action):
-		if action == "login":
+		if action == "dashboard":
+			self.initializeDashboard()
+		elif action == "login":
 			self.renderPage("studentLogin.html")
 		
 	def post(self, action):
 		if action == "login":
 			self.login()
-
+	
+	def initializeDashboard(self):
+		#~ TODO merge this reading-cookie part in common teacher student function
+		username = self.getCookie("schooltagging-username")
+		lessonName = self.getCookie("schooltagging-lesson")
+		role = self.getCookie("schooltagging-role")
+		assert role == "student"
+		student = objs.getStudent(username, lessonName)
+		if not username or not role or not lessonName:
+			return self.redirect("/s/login")
+		lesson = objs.getLesson(lessonName)
+		self.renderPage("studentDashboard.html",
+							studentName=username,
+							lessonName=lessonName,
+							token=student.token,
+							)
+	
 	def login(self):
 		student = objs.Student()
 		student.username = self.read("username")
@@ -149,6 +169,16 @@ class DeleteHandler(MainHandler):
 			self.response.delete_cookie(name)
 		return self.redirect("/start")
 		
+class ConnectionHandler(MainHandler):
+	def post(self, action):
+		who = self.request.get('from')
+		logging.info(action + " " + objs.getFromID(who).username)
+		#~ if action == "disconnected":
+			#~ 
+		#~ elif action == "connected":
+			#~ logging.info(who)
+		return
+		
 app = webapp2.WSGIApplication([
 	webapp2.Route(
 			r'/start',
@@ -166,6 +196,10 @@ app = webapp2.WSGIApplication([
 			r'/delete',
 			handler=DeleteHandler,
 			name="delete"),
+	webapp2.Route(
+			r'/_ah/channel/<action>/',
+			handler=ConnectionHandler,
+			name="connection"),
 			])
 			
 old_prj = """

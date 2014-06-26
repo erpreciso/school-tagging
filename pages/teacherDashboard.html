@@ -6,10 +6,10 @@
 
 {% block content %}
 <div>Teacher: {{teacherName}}</div>
-<div>Session ID: {{lessonName}}</div>
-<div>Enrolled students:
+<div>Lesson name: {{lessonName}}</div>
+<div id="students">Enrolled students:
 	{% for student in students %}
-	<div>{{loop.index}}. {{student}}</div>
+	<div id="{{student}}" class="studentName">{{loop.index}}. {{student}}</div>
 	{% endfor %}
 </div>
 <button>Start Exercise</button>
