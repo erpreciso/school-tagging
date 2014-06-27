@@ -3,6 +3,7 @@ from google.appengine.api import memcache
 from google.appengine.api import channel
 import logging
 import json
+import random
 
 class User(ndb.Model):
 	username = ndb.StringProperty()
@@ -38,7 +39,6 @@ class Student(User):
 		self.currentLesson = lessonName
 		self.save()
 		self.alertTeacherImArrived()
-		#~ send message to teacher that the user is connected
 		
 	def alertTeacherImArrived(self):
 		lesson = getLesson(self.currentLesson)
@@ -52,12 +52,32 @@ class Student(User):
 		message = json.dumps(message)
 		channel.send_message(teacher.token, message)
 	
+	def logout(self):
+		self.alertTeacherImLogout()
+		self.token = ""
+		self.currentLesson = ""
+		self.status = ""
+		self.save()
+			
+	def alertTeacherImLogout(self):
+		# TODO merge all messages to alert teacher
+		lesson = getLesson(self.currentLesson)
+		teacher = getTeacher(lesson.teacher)
+		message = {
+			"type": "student logout",
+			"message": {
+				"studentName": self.username
+				},
+			}
+		message = json.dumps(message)
+		channel.send_message(teacher.token, message)
+	
 class Teacher(User):
 	password = ndb.StringProperty()
 	def save(self):
 		memcache.set("Teacher:" + self.username, self)
 		self.put()
-	
+		
 def teacherUsernameExists(username):
 	if getTeacher(username):
 		return True
@@ -123,6 +143,10 @@ class Lesson(ndb.Model):
 		self.students.append(student.username)
 		self.save()
 	
+	def removeStudent(self, student):
+		self.students.remove(student)
+		self.save()
+	
 def getOpenLessonsNames():
 	q = Lesson.query(Lesson.status == "open")
 	if q.count(limit=None) > 0:
@@ -142,11 +166,14 @@ def getLesson(lessonName):
 		return lesson
 	else:
 		return False
+	
+def getSentence():
+	pool = open("sentence-pool.txt").readlines()
+	i = int(random.random() * len(pool))
+	return pool[i]
 
-#~ class Vars(ndb.Model):
-	#~ key = ndb.StringProperty()
-	#~ value = ndb.StringProperty()
-	#~ list = ndb.StringProperty(repeated=True)
+def divideIntoWords(sentence):
+	return
 	
 def clean():
 	ndb.delete_multi(Lesson.query().fetch(keys_only=True))

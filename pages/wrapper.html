@@ -5,10 +5,11 @@
 		{% block title %}{% endblock %}
 		<meta name="description" content="school tagging app">
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-		<script src="/static/main.js"></script>
+		{% block script %}{% endblock %}
 		<script src="/static/jquery-1.11.0.js"></script>
 	</head>
 	<body>
+		{% if token %}
 		<script>
 			openChannel = function() {
 				var token = '{{ token }}';
@@ -25,6 +26,7 @@
 			}
 			setTimeout(openChannel, 100);
 		</script>
+		{% endif %}
 		{% block content %}
 		{% endblock %}
 	</body>

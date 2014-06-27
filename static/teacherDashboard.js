@@ -10,6 +10,11 @@ onMessage = function(message) {
 			.text(txt);
 		$("#students").append(student);
 	}
+	else if (data.type == "student logout") {
+		//~ console.log("hit");
+		$("#" + data.message.studentName).remove();
+		
+	}
 	
 }
 

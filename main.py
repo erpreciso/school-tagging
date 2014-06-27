@@ -29,6 +29,18 @@ class MainHandler(webapp2.RequestHandler):
 	
 	def getCookie(self, kind):
 		return self.request.cookies.get(kind)
+	
+	def getFromCookie(self):
+		username = self.getCookie("schooltagging-username")
+		lessonName = self.getCookie("schooltagging-lesson")
+		role = self.getCookie("schooltagging-role")
+		if not username or not role or not lessonName:
+			return False
+		if role == "student":
+			user = objs.getStudent(username, lessonName)
+		elif role == "teacher":
+			user = objs.getTeacher(username)
+		return user
 
 class StartPage(MainHandler):
 	def get(self):
@@ -98,48 +110,45 @@ class TeacherHandler(MainHandler):
 		return self.renderPage("teacherLogin.html", message=message)
 		
 	def initializeDashboard(self):
-		username = self.getCookie("schooltagging-username")
-		role = self.getCookie("schooltagging-role")
-		assert role == "teacher"
-		teacher = objs.getTeacher(username)
-		lessonName = self.getCookie("schooltagging-lesson")
-		if not username or not role or not lessonName:
+		teacher = self.getFromCookie()
+		if not teacher:
 			return self.redirect("/t/login")
-		lesson = objs.getLesson(lessonName)
+		lesson = objs.getLesson(teacher.currentLesson)
+		test = objs.getSentence()
 		self.renderPage("teacherDashboard.html",
-							teacherName=username,
-							lessonName=lessonName,
+							teacherName=teacher.username,
+							lessonName=teacher.currentLesson,
 							students=lesson.students,
 							token=teacher.token,
+							test=test,
 							)
-		
+
+
+	
 class StudentHandler(MainHandler):
 	def get(self, action):
 		if action == "dashboard":
 			self.initializeDashboard()
 		elif action == "login":
 			self.renderPage("studentLogin.html")
+		elif action == "logout":
+			self.logout()
 		
 	def post(self, action):
 		if action == "login":
 			self.login()
 	
 	def initializeDashboard(self):
-		#~ TODO merge this reading-cookie part in common teacher student function
-		username = self.getCookie("schooltagging-username")
-		lessonName = self.getCookie("schooltagging-lesson")
-		role = self.getCookie("schooltagging-role")
-		assert role == "student"
-		student = objs.getStudent(username, lessonName)
-		if not username or not role or not lessonName:
+		user = self.getFromCookie()
+		if not user:
 			return self.redirect("/s/login")
-		lesson = objs.getLesson(lessonName)
+		lesson = objs.getLesson(user.currentLesson)
 		self.renderPage("studentDashboard.html",
-							studentName=username,
-							lessonName=lessonName,
-							token=student.token,
+							studentName=user.username,
+							lessonName=user.currentLesson,
+							token=user.token,
 							)
-	
+
 	def login(self):
 		student = objs.Student()
 		student.username = self.read("username")
@@ -160,7 +169,11 @@ class StudentHandler(MainHandler):
 			message = "Lesson not started yet"
 		self.renderPage("studentLogin.html", message=message)
 		
-	
+	def logout(self):
+		student = self.getFromCookie()
+		lesson = objs.getLesson(student.currentLesson)
+		student.logout()
+		
 		
 class DeleteHandler(MainHandler):
 	def get(self):
@@ -171,13 +184,10 @@ class DeleteHandler(MainHandler):
 		
 class ConnectionHandler(MainHandler):
 	def post(self, action):
-		who = self.request.get('from')
-		logging.info(action + " " + objs.getFromID(who).username)
-		#~ if action == "disconnected":
-			#~ 
-		#~ elif action == "connected":
-			#~ logging.info(who)
-		return
+		user = objs.getFromID(self.request.get('from'))
+		if user and action == "disconnected":
+			return user.logout()
+		
 		
 app = webapp2.WSGIApplication([
 	webapp2.Route(

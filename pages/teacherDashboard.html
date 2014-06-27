@@ -4,7 +4,12 @@
 <title>school-tagging|teacher|dashboard</title>
 {% endblock %}
 
+{% block script %}
+<script src="/static/teacherDashboard.js"></script>
+{% endblock %}
+
 {% block content %}
+<a href="/t/logout">Logout</a>
 <div>Teacher: {{teacherName}}</div>
 <div>Lesson name: {{lessonName}}</div>
 <div id="students">Enrolled students:
@@ -13,4 +18,5 @@
 	{% endfor %}
 </div>
 <button>Start Exercise</button>
+<div>{{test}}</div>
 {% endblock %}
