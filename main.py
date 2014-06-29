@@ -30,6 +30,9 @@ class MainHandler(webapp2.RequestHandler):
 	def getCookie(self, kind):
 		return self.request.cookies.get(kind)
 	
+	def getRoleFromCookie(self):
+		return self.getCookie("schooltagging-role")
+		
 	def getFromCookie(self):
 		username = self.getCookie("schooltagging-username")
 		lessonName = self.getCookie("schooltagging-lesson")
@@ -66,7 +69,6 @@ class TeacherHandler(MainHandler):
 			teacher = objs.getTeacher(username)
 			if password == teacher.password:
 				if self.read("lessonName"):
-					teacher.save()
 					teacher.connect()
 					self.addCookie("schooltagging-role", "teacher")
 					self.addCookie("schooltagging-username", username)
@@ -114,16 +116,24 @@ class TeacherHandler(MainHandler):
 		if not teacher:
 			return self.redirect("/t/login")
 		lesson = objs.getLesson(teacher.currentLesson)
-		test = objs.getSentence()
 		self.renderPage("teacherDashboard.html",
 							teacherName=teacher.username,
 							lessonName=teacher.currentLesson,
 							students=lesson.students,
 							token=teacher.token,
-							test=test,
 							)
 
-
+class DataHandler(MainHandler):
+	def get(self, kind):
+		requester = self.getFromCookie()
+		requesterRole = self.getRoleFromCookie()
+		if requesterRole == "teacher":
+			if kind == "exercise_request":
+				lessonName = requester.currentLesson
+				session = objs.Session()
+				session.start(lessonName)
+				
+			
 	
 class StudentHandler(MainHandler):
 	def get(self, action):
@@ -206,6 +216,10 @@ app = webapp2.WSGIApplication([
 			r'/delete',
 			handler=DeleteHandler,
 			name="delete"),
+	webapp2.Route(
+			r'/data/<kind>',
+			handler=DataHandler,
+			name="data"),
 	webapp2.Route(
 			r'/_ah/channel/<action>/',
 			handler=ConnectionHandler,

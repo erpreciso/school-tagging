@@ -17,6 +17,6 @@
 	<div id="{{student}}" class="studentName">{{loop.index}}. {{student}}</div>
 	{% endfor %}
 </div>
-<button>Start Exercise</button>
-<div>{{test}}</div>
+<button id="startExercise">Start Exercise</button>
+<div>{% for word in test %}<div>{{word}}</div>{% endfor %}</div>
 {% endblock %}

@@ -1,3 +1,8 @@
+$(document).ready(function () {
+	$("#startExercise").on("click", startExercise);
+	
+});
+
 onMessage = function(message) {
 	var data = JSON.parse(message.data);
 	if (data.type == "student arrived") {
@@ -13,9 +18,15 @@ onMessage = function(message) {
 	else if (data.type == "student logout") {
 		//~ console.log("hit");
 		$("#" + data.message.studentName).remove();
+	}
+	else if (data.type == "exercise to solve") {
+		console.log(data.message);
 		
 	}
-	
 }
 
-onOpened = function(){}
+onOpened = function(){};
+
+startExercise = function () {
+	$.get("/data/exercise_request");
+};
