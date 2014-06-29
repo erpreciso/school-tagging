@@ -132,6 +132,23 @@ class DataHandler(MainHandler):
 				lessonName = requester.currentLesson
 				session = objs.Session()
 				session.start(lessonName)
+	
+	def post(self, kind):
+		requester = self.getFromCookie()
+		requesterRole = self.getRoleFromCookie()
+		if requesterRole == "student":
+			student = requester
+			if kind == "answer":
+				answer = self.read("answer")
+				sessionID = student.currentSession
+				session = objs.getSession(sessionID)
+				sessionAnswer = {"session": sessionID, "answer": answer}
+				student.answers.append(sessionAnswer)
+				student.save()
+				teacherName = session.teacher
+				teacher = objs.getTeacher(teacherName)
+				teacher.addAnswerToDashboard(student, sessionAnswer)
+				pass
 				
 			
 	
@@ -152,7 +169,7 @@ class StudentHandler(MainHandler):
 		user = self.getFromCookie()
 		if not user:
 			return self.redirect("/s/login")
-		lesson = objs.getLesson(user.currentLesson)
+# 		lesson = objs.getLesson(user.currentLesson)
 		self.renderPage("studentDashboard.html",
 							studentName=user.username,
 							lessonName=user.currentLesson,
@@ -181,7 +198,7 @@ class StudentHandler(MainHandler):
 		
 	def logout(self):
 		student = self.getFromCookie()
-		lesson = objs.getLesson(student.currentLesson)
+# 		lesson = objs.getLesson(student.currentLesson)
 		student.logout()
 		
 		

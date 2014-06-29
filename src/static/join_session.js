@@ -5,7 +5,7 @@ onMessage = function (message) {
 		var type = data_arrived.message.type;
 		Exercise.build(exercise, type);
 	}
-}
+};
 
 var Exercise = new Object;
 Exercise.build = function (exercise, type) {
@@ -59,5 +59,5 @@ Exercise.build = function (exercise, type) {
 			});
 		}
 	}
-}
+};
 

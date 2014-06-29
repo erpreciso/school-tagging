@@ -12,10 +12,9 @@ class User(ndb.Model):
 	currentLesson = ndb.StringProperty()
 	lessons = ndb.StringProperty(repeated=True)
 	token = ndb.StringProperty()
-	currentSession = ndb.StringProperty()
+	currentSession = ndb.IntegerProperty()
 
 	def connect(self):
-		logging.info(self.key)
 		self.token = channel.create_channel(str(self.key.id()))
 		self.status = "connected"
 		self.save()
@@ -26,7 +25,8 @@ class User(ndb.Model):
 		self.save()
 
 class Student(User):
-
+	answers = ndb.PickleProperty()
+		
 	def save(self):
 		if self.currentLesson == None:
 			cl = "Empty"
@@ -41,6 +41,7 @@ class Student(User):
 		lesson = getLesson(lessonName)
 		lesson.addStudent(self)
 		self.currentLesson = lessonName
+		self.answers = []
 		self.save()
 		self.alertTeacherImArrived()
 		
@@ -62,6 +63,7 @@ class Student(User):
 		self.currentLesson = ""
 		self.status = ""
 		self.save()
+# 		TODO: remove student from current lesson students list
 			
 	def alertTeacherImLogout(self):
 		# TODO merge all messages to alert teacher
@@ -82,6 +84,10 @@ class Teacher(User):
 		self.put()
 		memcache.set("Teacher:" + self.username, self)
 		
+	def addAnswerToDashboard(self, student, answer):
+# 		TODO: create add answer to teacher dashboard
+		pass
+	
 def teacherUsernameExists(username):
 	if getTeacher(username):
 		return True
@@ -115,14 +121,14 @@ def getStudent(username, currentLesson):
 	else:
 		return False
 		
-def getFromID(id):
-	user = memcache.get("ID:" + id)
+def getFromID(sid):
+	user = memcache.get("ID:" + sid)
 	if not user:
-		user = ndb.Key("Teacher", int(id)).get() \
-							or ndb.Key("Student", int(id)).get()
+		user = ndb.Key("Teacher", int(sid)).get() \
+							or ndb.Key("Student", int(sid)).get()
 		#~ user = ndb.get_by_id(int(id))
 		if user:
-			memcache.set("ID:" + str(id), user)
+			memcache.set("ID:" + str(sid), user)
 			return user
 	return False
 	
@@ -172,6 +178,16 @@ def getLesson(lessonName):
 	else:
 		return False
 	
+def getSession(sessionID):
+	session = memcache.get("Session:" + str(sessionID))
+	if not session:
+		session = ndb.Key("Session", sessionID).get()
+		if session:
+			memcache.set("Session:" + str(sessionID), session)
+			return session
+	return False
+	
+	
 def getSentence():
 	pool = open("sentence-pool.txt").readlines()
 	i = int(random.random() * len(pool))
@@ -179,7 +195,7 @@ def getSentence():
 	
 def clean():
 	ndb.delete_multi(Lesson.query().fetch(keys_only=True))
-	#~ ndb.delete_multi(Session.query().fetch(keys_only=True))
+	ndb.delete_multi(Session.query().fetch(keys_only=True))
 	ndb.delete_multi(Student.query().fetch(keys_only=True))
 	ndb.delete_multi(Teacher.query().fetch(keys_only=True))
 	memcache.flush_all()
@@ -193,6 +209,7 @@ class Session(ndb.Model):
 	target = ndb.IntegerProperty()
 	answersProposed = ndb.StringProperty(repeated=True)
 	exerciseWords = ndb.StringProperty(repeated=True)
+	validatedAnswer = ndb.IntegerProperty()
 	
 
 	def save(self):
@@ -207,19 +224,22 @@ class Session(ndb.Model):
 		self.students = lesson.students
 		self.exerciseText = getSentence()
 		self.exerciseWords = re.split(' ', self.exerciseText)
-		self.answersProposed = ["noun", "adj", "verb"]
+		self.answersProposed = ["Noun", "Adj", "Verb"]
 		self.target = int(random.random() * len(self.exerciseWords))
-		id = self.save()
+		sid = self.save()
 		message = {
 			"type": "session",
 			"message": {
-				"id": id,
+				"id": sid,
 				"wordsList": self.exerciseWords,
-				"answersProposed": self.answersProposed
+				"answersProposed": self.answersProposed,
+				"target": self.target
 				},
 			}
 		message = json.dumps(message)
 		for studentName in self.students:
 			student = getStudent(studentName, self.lesson)
+			student.currentSession = sid
+			student.save()
 			channel.send_message(student.token, message)
 		
