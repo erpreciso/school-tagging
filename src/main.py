@@ -140,17 +140,17 @@ class DataHandler(MainHandler):
 			student = requester
 			if kind == "answer":
 				answer = self.read("answer")
-				sessionID = student.currentSession
-				session = objs.getSession(sessionID)
-				sessionAnswer = {"session": sessionID, "answer": answer}
-				student.answers.append(sessionAnswer)
-				student.save()
-				teacherName = session.teacher
-				teacher = objs.getTeacher(teacherName)
-				teacher.addAnswerToDashboard(student, sessionAnswer)
-				pass
+				student.addAnswer(answer)
+				session = objs.getSession(student.currentSession)
+				session.addStudentAnswer(student.username, answer)
+# 				session.studentAnswers[student.username] = answer
+# 				if not session.answersStudents[answer]:
+# 					session.answersStudents[answer] = [student.username]
+# 				else:
+# 					session.answersStudents[answer].append(student.username)
+# 				session.save()
+				session.sendStatusToTeacher()
 				
-			
 	
 class StudentHandler(MainHandler):
 	def get(self, action):

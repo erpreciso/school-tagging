@@ -1,7 +1,7 @@
 from google.appengine.ext import ndb
 from google.appengine.api import memcache
 from google.appengine.api import channel
-import logging
+# import logging
 import json
 import random
 import re
@@ -26,6 +26,7 @@ class User(ndb.Model):
 
 class Student(User):
 	answers = ndb.PickleProperty()
+# 		{sessionID1: answer, sessionID2: answer}
 		
 	def save(self):
 		if self.currentLesson == None:
@@ -35,7 +36,6 @@ class Student(User):
 		self.put()
 		memcache.set("Student:" + self.username + "|CurrentLesson:" + cl, self)
 		
-	
 	def joinLesson(self, lessonName):
 		assert lessonName in getOpenLessonsNames()
 		lesson = getLesson(lessonName)
@@ -44,6 +44,13 @@ class Student(User):
 		self.answers = []
 		self.save()
 		self.alertTeacherImArrived()
+	
+	def exitLesson(self):
+		assert self.currentLesson in getOpenLessonsNames()
+		lesson = getLesson(self.currentLesson)
+		lesson.removeStudent(self)
+		self.currentLesson = ""
+		self.save()
 		
 	def alertTeacherImArrived(self):
 		lesson = getLesson(self.currentLesson)
@@ -59,12 +66,15 @@ class Student(User):
 	
 	def logout(self):
 		self.alertTeacherImLogout()
+		self.exitLesson()
 		self.token = ""
-		self.currentLesson = ""
 		self.status = ""
 		self.save()
-# 		TODO: remove student from current lesson students list
 			
+	def addAnswer(self, answer):
+		self.answers.append({"session": self.currentSession, "answer": answer})
+		self.save()
+		
 	def alertTeacherImLogout(self):
 		# TODO merge all messages to alert teacher
 		lesson = getLesson(self.currentLesson)
@@ -84,10 +94,6 @@ class Teacher(User):
 		self.put()
 		memcache.set("Teacher:" + self.username, self)
 		
-	def addAnswerToDashboard(self, student, answer):
-# 		TODO: create add answer to teacher dashboard
-		pass
-	
 def teacherUsernameExists(username):
 	if getTeacher(username):
 		return True
@@ -156,6 +162,7 @@ class Lesson(ndb.Model):
 	
 	def removeStudent(self, student):
 		self.students.remove(student)
+# 		FIXME: if students disconnected, or lesson ended, throw exception
 		self.save()
 	
 def getOpenLessonsNames():
@@ -206,16 +213,45 @@ class Session(ndb.Model):
 	lesson = ndb.StringProperty()
 	students = ndb.StringProperty(repeated=True)
 	exerciseText = ndb.StringProperty()
+# 		sentence to be analized from the student
 	target = ndb.IntegerProperty()
+# 		index of the word that the student should recognize
 	answersProposed = ndb.StringProperty(repeated=True)
+# 		options available for the student
 	exerciseWords = ndb.StringProperty(repeated=True)
+# 		list of the words componing the exercise
 	validatedAnswer = ndb.IntegerProperty()
+# 		index of the teacher's validated answer in the answersProposed list
+	studentAnswers = ndb.PickleProperty()
+# 	 	{student1: answer1, student2: answer2}
+	answersStudents = ndb.PickleProperty()
+# 		{answer1:[student1, student2], answer2:[], answer3:[student3]}
+	def addStudentAnswer(self, studentName, answer):
+		self.studentAnswers[studentName] = answer
+		if answer in self.answersStudents.keys():
+			self.answersStudents[answer].append(studentName)
+		else:
+			self.answersStudents[answer] = [studentName]
 	
-
 	def save(self):
 		self.put()
 		memcache.set("Session:" + str(self.key.id), self)
 		return self.key.id()
+		
+	def sendStatusToTeacher(self):
+		teacher = getTeacher(self.teacher)
+# 		TODO: crea una funzione che aggiunga la risposta QUI e toglila dal main
+		status = {
+			"type": "sessionStatus",
+			"message": {
+				"possibleAnswers": self.answersStudents,
+				"totalAnswers": {
+					"answered": len(self.studentAnswers.keys()),
+					"missing": len(self.students) - len(self.studentAnswers.keys())
+					}
+				},
+			}
+		channel.send_message(teacher.token, json.dumps(status))
 		
 	def start(self, lessonName):
 		self.lesson = lessonName
@@ -225,8 +261,11 @@ class Session(ndb.Model):
 		self.exerciseText = getSentence()
 		self.exerciseWords = re.split(' ', self.exerciseText)
 		self.answersProposed = ["Noun", "Adj", "Verb"]
+		self.studentAnswers = {}
+		self.answersStudents = {}
 		self.target = int(random.random() * len(self.exerciseWords))
 		sid = self.save()
+		teacher = getTeacher(self.teacher)
 		message = {
 			"type": "session",
 			"message": {
@@ -236,10 +275,21 @@ class Session(ndb.Model):
 				"target": self.target
 				},
 			}
+# 		status = {
+# 			"type": "sessionStatus",
+# 			"message": {
+# 				"nOfStudents": 0,
+# 				"answers":{}
+# 				},
+# 			}
 		message = json.dumps(message)
+		channel.send_message(teacher.token, message)
 		for studentName in self.students:
 			student = getStudent(studentName, self.lesson)
 			student.currentSession = sid
 			student.save()
 			channel.send_message(student.token, message)
-		
+# 			status["message"]["nOfStudents"] += 1
+# 			status["message"]["answers"][studentName] = ""
+# 		channel.send_message(teacher.token, json.dumps(status))
+		self.sendStatusToTeacher()
