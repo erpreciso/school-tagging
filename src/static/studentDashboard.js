@@ -1,17 +1,15 @@
 $(document).ready(function () {
-	//~ $("#startExercise").on("click", startExercise);
+	
 	
 });
 
 onMessage = function(message) {
 	var data = JSON.parse(message.data);
 	if (data.type == "session") {
-//		$("#exercise").children().remove();
 		$("#exercise, #answers").empty();
 		var words = data.message.wordsList;
 		var target = data.message.target;
 		var answersProposed = data.message.answersProposed;
-		//~ console.log(data.message);
 		for (var i = 0; i < words.length; i++) {
 			var word = $(document.createElement("span"))
 							.attr("id", words[i])

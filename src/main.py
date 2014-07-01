@@ -25,22 +25,28 @@ class MainHandler(webapp2.RequestHandler):
 		self.write(self.renderStr(template, **kw))
 
 	def addCookie(self, kind, value):
-		self.response.set_cookie(kind, value=value, httponly=True)
+		self.response.set_cookie(kind, value=str(value), httponly=True)
 	
 	def getCookie(self, kind):
 		return self.request.cookies.get(kind)
+	
+	def clearCookies(self):
+		self.response.delete_cookie("schooltagging-username")
+		self.response.delete_cookie("schooltagging-lessonID")
+		self.response.delete_cookie("schooltagging-role")
+	
 	
 	def getRoleFromCookie(self):
 		return self.getCookie("schooltagging-role")
 		
 	def getFromCookie(self):
 		username = self.getCookie("schooltagging-username")
-		lessonName = self.getCookie("schooltagging-lesson")
+		lessonStrID = self.getCookie("schooltagging-lessonID")
 		role = self.getCookie("schooltagging-role")
-		if not username or not role or not lessonName:
+		if not username or not role or not lessonStrID:
 			return False
 		if role == "student":
-			user = objs.getStudent(username, lessonName)
+			user = objs.getStudent(username, int(lessonStrID))
 		elif role == "teacher":
 			user = objs.getTeacher(username)
 		return user
@@ -53,6 +59,10 @@ class TeacherHandler(MainHandler):
 	def get(self, action):
 		if action == "dashboard":
 			self.initializeDashboard()
+		elif action == "endLesson":
+			self.endLesson()
+		elif action == "logout":
+			pass # TODO: teacher logout handler
 		else:
 			self.renderPage("teacherLogin.html")
 	
@@ -94,18 +104,20 @@ class TeacherHandler(MainHandler):
 			message = "Username already in use"
 		return self.renderPage("teacherLogin.html", message=message)
 	
+	def endLesson(self):
+		teacher = self.getFromCookie()
+		if not teacher:
+			return self.redirect("/t/login")
+		lesson = objs.getLesson(teacher.currentLessonID)
+		lesson.end()
+		return self.redirect("/t/login")
+
 	def startLesson(self, teacher):
 		lessonName = self.read("lessonName")
 		if lessonName not in objs.getOpenLessonsNames():
 			lesson = objs.Lesson()
-			lesson.lessonName = lessonName
-			lesson.teacher = teacher.username
-			lesson.status = "open"
-			lesson.students = []
-			lesson.sessions = []
-			teacher.assignLesson(lessonName)
-			lesson.save()
-			self.addCookie("schooltagging-lesson", lessonName)
+			lesson.start(lessonName, teacher)
+			self.addCookie("schooltagging-lessonID", str(lesson.key.id()))
 			return self.redirect("/t/dashboard")
 		else:
 			message = "Lesson name currently in use"
@@ -115,13 +127,16 @@ class TeacherHandler(MainHandler):
 		teacher = self.getFromCookie()
 		if not teacher:
 			return self.redirect("/t/login")
-		lesson = objs.getLesson(teacher.currentLesson)
-		self.renderPage("teacherDashboard.html",
+		lesson = objs.getLesson(teacher.currentLessonID)
+		if lesson:
+			return self.renderPage("teacherDashboard.html",
 							teacherName=teacher.username,
-							lessonName=teacher.currentLesson,
+							lessonName=teacher.currentLessonName,
 							students=lesson.students,
 							token=teacher.token,
 							)
+		else:
+			return self.redirect("/t/login")
 
 class DataHandler(MainHandler):
 	def get(self, kind):
@@ -129,9 +144,9 @@ class DataHandler(MainHandler):
 		requesterRole = self.getRoleFromCookie()
 		if requesterRole == "teacher":
 			if kind == "exercise_request":
-				lessonName = requester.currentLesson
+				lessonID = requester.currentLessonID
 				session = objs.Session()
-				session.start(lessonName)
+				session.start(lessonID)
 	
 	def post(self, kind):
 		requester = self.getFromCookie()
@@ -143,12 +158,6 @@ class DataHandler(MainHandler):
 				student.addAnswer(answer)
 				session = objs.getSession(student.currentSession)
 				session.addStudentAnswer(student.username, answer)
-# 				session.studentAnswers[student.username] = answer
-# 				if not session.answersStudents[answer]:
-# 					session.answersStudents[answer] = [student.username]
-# 				else:
-# 					session.answersStudents[answer].append(student.username)
-# 				session.save()
 				session.sendStatusToTeacher()
 				
 	
@@ -169,10 +178,9 @@ class StudentHandler(MainHandler):
 		user = self.getFromCookie()
 		if not user:
 			return self.redirect("/s/login")
-# 		lesson = objs.getLesson(user.currentLesson)
 		self.renderPage("studentDashboard.html",
 							studentName=user.username,
-							lessonName=user.currentLesson,
+							lessonName=user.currentLessonName,
 							token=user.token,
 							)
 
@@ -180,15 +188,14 @@ class StudentHandler(MainHandler):
 		student = objs.Student()
 		student.username = self.read("username")
 		lessonName = self.read("lessonName")
-		logging.info("open lessons", objs.getOpenLessonsNames())
 		if lessonName in objs.getOpenLessonsNames():
 			if not objs.studentAlreadyConnected(student.username):
 				student.save()
 				student.connect()
 				self.addCookie("schooltagging-role", "student")
 				self.addCookie("schooltagging-username", student.username)
-				student.joinLesson(lessonName)
-				self.addCookie("schooltagging-lesson", lessonName)
+				lessonID = student.joinLesson(lessonName)
+				self.addCookie("schooltagging-lessonID", lessonID)
 				return self.redirect("/s/dashboard")
 			else:
 				message = "Name already in use"
@@ -198,9 +205,10 @@ class StudentHandler(MainHandler):
 		
 	def logout(self):
 		student = self.getFromCookie()
-# 		lesson = objs.getLesson(student.currentLesson)
-		student.logout()
-		
+		if student:
+			self.clearCookies()
+			student.logout()
+		return self.redirect("/s/login")
 		
 class DeleteHandler(MainHandler):
 	def get(self):
@@ -211,10 +219,21 @@ class DeleteHandler(MainHandler):
 		
 class ConnectionHandler(MainHandler):
 	def post(self, action):
-		user = objs.getFromID(self.request.get('from'))
-		if user and action == "disconnected":
-			return user.logout()
-		
+		a = self.request.get('from')
+		user = objs.getFromID(a)
+		if user:
+			if user.__class__.__name__ == "Student":
+				student = user
+				if action == "disconnected":
+					if student.currentLessonID:
+						lesson = objs.getLesson(student.currentLessonID)
+						student.logout()
+			elif user.__class__.__name__ == "Teacher":
+				teacher = user
+				if action == "disconnected":
+					lesson = objs.getLesson(teacher.currentLessonID)
+					lesson.end()
+					teacher.logout()
 		
 app = webapp2.WSGIApplication([
 	webapp2.Route(

@@ -9,8 +9,9 @@ import re
 class User(ndb.Model):
 	username = ndb.StringProperty()
 	status = ndb.StringProperty()
-	currentLesson = ndb.StringProperty()
-	lessons = ndb.StringProperty(repeated=True)
+	currentLessonID = ndb.IntegerProperty()
+	currentLessonName = ndb.StringProperty()
+	lessons = ndb.IntegerProperty(repeated=True)
 	token = ndb.StringProperty()
 	currentSession = ndb.IntegerProperty()
 
@@ -19,9 +20,10 @@ class User(ndb.Model):
 		self.status = "connected"
 		self.save()
 	
-	def assignLesson(self, lessonName):
-		self.currentLesson = lessonName
-		self.lessons.append(lessonName)
+	def assignLesson(self, lessonID, lessonName):
+		self.currentLessonID = lessonID
+		self.currentLessonName = lessonName
+		self.lessons.append(lessonID)
 		self.save()
 
 class Student(User):
@@ -29,31 +31,42 @@ class Student(User):
 # 		{sessionID1: answer, sessionID2: answer}
 		
 	def save(self):
-		if self.currentLesson == None:
+		if self.currentLessonID == None:
 			cl = "Empty"
 		else:
-			cl = self.currentLesson
+			cl = self.currentLessonID
 		self.put()
-		memcache.set("Student:" + self.username + "|CurrentLesson:" + cl, self)
+		memcache.set("Student:" + self.username + \
+					"|CurrentLesson:" + str(cl), self)
 		
 	def joinLesson(self, lessonName):
 		assert lessonName in getOpenLessonsNames()
-		lesson = getLesson(lessonName)
+		lesson = getLessonFromName(lessonName)
 		lesson.addStudent(self)
-		self.currentLesson = lessonName
+		self.currentLessonID = lesson.key.id()
+		self.currentLessonName = lessonName
 		self.answers = []
 		self.save()
 		self.alertTeacherImArrived()
+		return lesson.key.id()
 	
 	def exitLesson(self):
-		assert self.currentLesson in getOpenLessonsNames()
-		lesson = getLesson(self.currentLesson)
+		assert self.currentLessonID in getOpenLessonsID()
+		lesson = getLesson(self.currentLessonID)
 		lesson.removeStudent(self)
-		self.currentLesson = ""
+		self.currentLessonID = None
+		self.currentLessonName = ""
 		self.save()
-		
+	
+	def exitSession(self):
+		if self.currentSession:
+			session = getSession(self.currentSession)
+			session.removeStudent(self)
+			self.currentSession = None
+			self.save()
+	
 	def alertTeacherImArrived(self):
-		lesson = getLesson(self.currentLesson)
+		lesson = getLesson(self.currentLessonID)
 		teacher = getTeacher(lesson.teacher)
 		message = {
 			"type": "student arrived",
@@ -67,6 +80,7 @@ class Student(User):
 	def logout(self):
 		self.alertTeacherImLogout()
 		self.exitLesson()
+		self.exitSession()
 		self.token = ""
 		self.status = ""
 		self.save()
@@ -77,7 +91,7 @@ class Student(User):
 		
 	def alertTeacherImLogout(self):
 		# TODO merge all messages to alert teacher
-		lesson = getLesson(self.currentLesson)
+		lesson = getLesson(self.currentLessonID)
 		teacher = getTeacher(lesson.teacher)
 		message = {
 			"type": "student logout",
@@ -93,6 +107,18 @@ class Teacher(User):
 	def save(self):
 		self.put()
 		memcache.set("Teacher:" + self.username, self)
+		
+	def logout(self):
+		self.exitLesson()
+		self.currentSession = None
+		self.token = ""
+		self.status = ""
+		self.save()
+	
+	def exitLesson(self):
+		self.currentLessonID = None
+		self.currentLessonName = ""
+		self.save()
 		
 def teacherUsernameExists(username):
 	if getTeacher(username):
@@ -112,16 +138,16 @@ def getTeacher(username):
 	else:
 		return False
 
-def getStudent(username, currentLesson):
+def getStudent(username, currentLessonID):
 	student = memcache.get("Student:" + username + \
-					"|CurrentLesson:" + currentLesson)
+					"|CurrentLesson:" + str(currentLessonID))
 	if not student:
 		q = Student.query(Student.username == username,
-							Student.currentLesson == currentLesson)
+							Student.currentLessonID == currentLessonID)
 		student = q.get()
 		if student:
 			memcache.set("Student:" + username + \
-					"|CurrentLesson:" + currentLesson, student)
+					"|CurrentLesson:" + str(currentLessonID), student)
 	if student:
 		return student
 	else:
@@ -135,11 +161,14 @@ def getFromID(sid):
 		#~ user = ndb.get_by_id(int(id))
 		if user:
 			memcache.set("ID:" + str(sid), user)
-			return user
-	return False
+	if user:
+		return user
+	else:
+		return False
 	
 def studentAlreadyConnected(username):
-	q = Student.query(Student.username == username, Student.currentLesson != "")
+	q = Student.query(Student.username == username,
+						Student.currentLessonID != None)
 	if q.get():
 		return True
 	else:
@@ -151,20 +180,48 @@ class Lesson(ndb.Model):
 	status = ndb.StringProperty()
 	sessions = ndb.StringProperty(repeated=True)
 	students = ndb.StringProperty(repeated=True)
-	
+# 	TODO: add timestamp
+
+	def end(self):
+		teacher = getTeacher(self.teacher)
+		for studentName in self.students:
+			student = getStudent(studentName, self.key.id())
+			student.exitLesson()
+		teacher.exitLesson()
+		self.status = "closed"
+		self.save()
+		
 	def save(self):
 		self.put()
-		memcache.set("Lesson:" + self.lessonName, self)
+		memcache.set("Lesson:" + str(self.key.id()), self)
+		return self.key.id()
 	
 	def addStudent(self, student):
 		self.students.append(student.username)
 		self.save()
 	
 	def removeStudent(self, student):
-		self.students.remove(student)
-# 		FIXME: if students disconnected, or lesson ended, throw exception
-		self.save()
+		if student.username in self.students:
+			self.students.remove(student.username)
+			self.save()
 	
+	def start(self, lessonName, teacher):
+		self.lessonName = lessonName
+		self.teacher = teacher.username
+		self.status = "open"
+		self.students = []
+		self.sessions = []
+		lessonID = self.save()
+		teacher.assignLesson(lessonID, lessonName)
+
+def getOpenLessonsID():
+	q = Lesson.query(Lesson.status == "open")
+	if q.count(limit=None) > 0:
+		lessons = q.fetch(limit=None)
+		return [lesson.key.id() for lesson in lessons]
+	else:
+		return []
+
 def getOpenLessonsNames():
 	q = Lesson.query(Lesson.status == "open")
 	if q.count(limit=None) > 0:
@@ -172,28 +229,36 @@ def getOpenLessonsNames():
 		return [lesson.lessonName for lesson in lessons]
 	else:
 		return []
-
-def getLesson(lessonName):
-	lesson = memcache.get("Lesson:" + lessonName)
+	
+def getLesson(lessonID):
+	lesson = memcache.get("Lesson:" + str(lessonID))
 	if not lesson:
-		q = Lesson.query(Lesson.lessonName == lessonName)
-		lesson = q.get()
+		lesson = ndb.Key("Lesson", lessonID).get()
 		if lesson:
-			memcache.set("Lesson:" + lessonName, lesson)
+			memcache.set("Lesson:" + str(lessonID), lesson)
 	if lesson:
 		return lesson
 	else:
 		return False
 	
+def getLessonFromName(lessonName):
+	q = Lesson.query(Lesson.lessonName == lessonName)
+	teacher = q.get()
+	if teacher:
+		return teacher
+	else:
+		return False
+
 def getSession(sessionID):
 	session = memcache.get("Session:" + str(sessionID))
 	if not session:
 		session = ndb.Key("Session", sessionID).get()
 		if session:
 			memcache.set("Session:" + str(sessionID), session)
-			return session
-	return False
-	
+	if session:
+		return session
+	else:
+		return False
 	
 def getSentence():
 	pool = open("sentence-pool.txt").readlines()
@@ -210,7 +275,7 @@ def clean():
 
 class Session(ndb.Model):
 	teacher = ndb.StringProperty()
-	lesson = ndb.StringProperty()
+	lesson = ndb.IntegerProperty()
 	students = ndb.StringProperty(repeated=True)
 	exerciseText = ndb.StringProperty()
 # 		sentence to be analized from the student
@@ -226,36 +291,43 @@ class Session(ndb.Model):
 # 	 	{student1: answer1, student2: answer2}
 	answersStudents = ndb.PickleProperty()
 # 		{answer1:[student1, student2], answer2:[], answer3:[student3]}
+	
 	def addStudentAnswer(self, studentName, answer):
 		self.studentAnswers[studentName] = answer
 		if answer in self.answersStudents.keys():
 			self.answersStudents[answer].append(studentName)
 		else:
 			self.answersStudents[answer] = [studentName]
-	
+		self.save()
+		
 	def save(self):
 		self.put()
-		memcache.set("Session:" + str(self.key.id), self)
+		memcache.set("Session:" + str(self.key.id()), self)
 		return self.key.id()
 		
 	def sendStatusToTeacher(self):
 		teacher = getTeacher(self.teacher)
-# 		TODO: crea una funzione che aggiunga la risposta QUI e toglila dal main
 		status = {
 			"type": "sessionStatus",
 			"message": {
 				"possibleAnswers": self.answersStudents,
 				"totalAnswers": {
-					"answered": len(self.studentAnswers.keys()),
-					"missing": len(self.students) - len(self.studentAnswers.keys())
+					"answered": self.studentAnswers.keys(),
+					"missing": [s for s in self.students \
+									if s not in self.studentAnswers.keys()]
 					}
 				},
 			}
 		channel.send_message(teacher.token, json.dumps(status))
-		
-	def start(self, lessonName):
-		self.lesson = lessonName
-		lesson = getLesson(lessonName)
+	
+	def removeStudent(self, student):
+		self.students.remove(student.username)
+		self.save()
+	
+	def start(self, lessonID):
+# 		FIXME: also the teacher should join the session
+		self.lessonID = lessonID
+		lesson = getLesson(lessonID)
 		self.teacher = lesson.teacher
 		self.students = lesson.students
 		self.exerciseText = getSentence()
@@ -275,21 +347,11 @@ class Session(ndb.Model):
 				"target": self.target
 				},
 			}
-# 		status = {
-# 			"type": "sessionStatus",
-# 			"message": {
-# 				"nOfStudents": 0,
-# 				"answers":{}
-# 				},
-# 			}
 		message = json.dumps(message)
 		channel.send_message(teacher.token, message)
 		for studentName in self.students:
-			student = getStudent(studentName, self.lesson)
+			student = getStudent(studentName, self.lessonID)
 			student.currentSession = sid
 			student.save()
 			channel.send_message(student.token, message)
-# 			status["message"]["nOfStudents"] += 1
-# 			status["message"]["answers"][studentName] = ""
-# 		channel.send_message(teacher.token, json.dumps(status))
 		self.sendStatusToTeacher()

@@ -14,3 +14,8 @@ indexes:
   properties:
   - name: username
   - name: currentLesson
+
+- kind: Student
+  properties:
+  - name: username
+  - name: currentLessonID
