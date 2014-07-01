@@ -62,9 +62,16 @@ class TeacherHandler(MainHandler):
 		elif action == "endLesson":
 			self.endLesson()
 		elif action == "logout":
-			pass # TODO: teacher logout handler
+			self.logout()
 		else:
 			self.renderPage("teacherLogin.html")
+	
+	def logout(self):
+		teacher = self.getFromCookie()
+		if teacher:
+			self.clearCookies()
+			teacher.logout()
+		return self.redirect("/t/login")
 	
 	def post(self, action):
 		if action == "login":
@@ -219,6 +226,7 @@ class DeleteHandler(MainHandler):
 		
 class ConnectionHandler(MainHandler):
 	def post(self, action):
+		""" channel service interrupted from yaml"""
 		a = self.request.get('from')
 		user = objs.getFromID(a)
 		if user:
@@ -231,9 +239,10 @@ class ConnectionHandler(MainHandler):
 			elif user.__class__.__name__ == "Teacher":
 				teacher = user
 				if action == "disconnected":
-					lesson = objs.getLesson(teacher.currentLessonID)
-					lesson.end()
-					teacher.logout()
+					if teacher.currentLessonID:
+						lesson = objs.getLesson(teacher.currentLessonID)
+						lesson.end()
+						teacher.logout()
 		
 app = webapp2.WSGIApplication([
 	webapp2.Route(

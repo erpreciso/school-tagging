@@ -51,7 +51,6 @@ class Student(User):
 		return lesson.key.id()
 	
 	def exitLesson(self):
-		assert self.currentLessonID in getOpenLessonsID()
 		lesson = getLesson(self.currentLessonID)
 		lesson.removeStudent(self)
 		self.currentLessonID = None
@@ -109,15 +108,11 @@ class Teacher(User):
 		memcache.set("Teacher:" + self.username, self)
 		
 	def logout(self):
-		self.exitLesson()
+		self.currentLessonID = None
+		self.currentLessonName = ""
 		self.currentSession = None
 		self.token = ""
 		self.status = ""
-		self.save()
-	
-	def exitLesson(self):
-		self.currentLessonID = None
-		self.currentLessonName = ""
 		self.save()
 		
 def teacherUsernameExists(username):
@@ -180,14 +175,16 @@ class Lesson(ndb.Model):
 	status = ndb.StringProperty()
 	sessions = ndb.StringProperty(repeated=True)
 	students = ndb.StringProperty(repeated=True)
-# 	TODO: add timestamp
+	datetime = ndb.DateTimeProperty(auto_now_add=True)
 
 	def end(self):
 		teacher = getTeacher(self.teacher)
 		for studentName in self.students:
 			student = getStudent(studentName, self.key.id())
 			student.exitLesson()
-		teacher.exitLesson()
+		teacher.currentLessonID = None
+		teacher.currentLessonName = ""
+		teacher.save()
 		self.status = "closed"
 		self.save()
 		
@@ -277,6 +274,7 @@ class Session(ndb.Model):
 	teacher = ndb.StringProperty()
 	lesson = ndb.IntegerProperty()
 	students = ndb.StringProperty(repeated=True)
+	datetime = ndb.DateTimeProperty(auto_now_add=True)
 	exerciseText = ndb.StringProperty()
 # 		sentence to be analized from the student
 	target = ndb.IntegerProperty()
@@ -325,7 +323,6 @@ class Session(ndb.Model):
 		self.save()
 	
 	def start(self, lessonID):
-# 		FIXME: also the teacher should join the session
 		self.lessonID = lessonID
 		lesson = getLesson(lessonID)
 		self.teacher = lesson.teacher
@@ -338,6 +335,8 @@ class Session(ndb.Model):
 		self.target = int(random.random() * len(self.exerciseWords))
 		sid = self.save()
 		teacher = getTeacher(self.teacher)
+		teacher.currentSession = self.key.id()
+		teacher.save()
 		message = {
 			"type": "session",
 			"message": {
