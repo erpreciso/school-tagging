@@ -9,7 +9,6 @@
 {% endblock %}
 
 {% block content %}
-<a href="/t/logout">Logout</a>
 <div>Teacher: {{teacherName}}</div>
 <div>Lesson name: {{lessonName}}</div>
 <div id="students">Enrolled students:
@@ -18,6 +17,6 @@
 	{% endfor %}
 </div>
 <button id="startExercise">Start Exercise</button>
-<a href="/t/endLesson">End lesson and view results</a>
+<a href="/t/logout">End lesson and view results</a>
 <div id="dashboard"></div>
 {% endblock %}

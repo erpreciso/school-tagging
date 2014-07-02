@@ -6,6 +6,7 @@ import webapp2
 import jinja2
 import os
 import logging
+from objects import getLesson
 
 class MainHandler(webapp2.RequestHandler):
 	template_dir = os.path.join(os.path.dirname(__file__), 'pages')
@@ -59,8 +60,6 @@ class TeacherHandler(MainHandler):
 	def get(self, action):
 		if action == "dashboard":
 			self.initializeDashboard()
-		elif action == "endLesson":
-			self.endLesson()
 		elif action == "logout":
 			self.logout()
 		else:
@@ -68,6 +67,9 @@ class TeacherHandler(MainHandler):
 	
 	def logout(self):
 		teacher = self.getFromCookie()
+		lesson = getLesson(teacher.currentLessonID)
+		if lesson:
+			lesson.end()
 		if teacher:
 			self.clearCookies()
 			teacher.logout()
@@ -111,14 +113,6 @@ class TeacherHandler(MainHandler):
 			message = "Username already in use"
 		return self.renderPage("teacherLogin.html", message=message)
 	
-	def endLesson(self):
-		teacher = self.getFromCookie()
-		if not teacher:
-			return self.redirect("/t/login")
-		lesson = objs.getLesson(teacher.currentLessonID)
-		lesson.end()
-		return self.redirect("/t/login")
-
 	def startLesson(self, teacher):
 		lessonName = self.read("lessonName")
 		if lessonName not in objs.getOpenLessonsNames():
@@ -182,13 +176,17 @@ class StudentHandler(MainHandler):
 			self.login()
 	
 	def initializeDashboard(self):
-		user = self.getFromCookie()
-		if not user:
+		student = self.getFromCookie()
+		if not student:
+			return self.redirect("/s/login")
+		lesson = student.currentLessonID
+		if lesson not in objs.getOpenLessonsID():
+			self.clearCookies()
 			return self.redirect("/s/login")
 		self.renderPage("studentDashboard.html",
-							studentName=user.username,
-							lessonName=user.currentLessonName,
-							token=user.token,
+							studentName=student.username,
+							lessonName=student.currentLessonName,
+							token=student.token,
 							)
 
 	def login(self):

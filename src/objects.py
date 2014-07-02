@@ -55,6 +55,7 @@ class Student(User):
 		lesson.removeStudent(self)
 		self.currentLessonID = None
 		self.currentLessonName = ""
+# 		TODO: send message to student and redraw their dashboard
 		self.save()
 	
 	def exitSession(self):
