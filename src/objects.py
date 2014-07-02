@@ -86,8 +86,10 @@ class Student(User):
 		self.save()
 			
 	def addAnswer(self, answer):
-		self.answers.append({"session": self.currentSession, "answer": answer})
-		self.save()
+		session = getSession(self.currentSession)
+		if session.open:
+			self.answers.append({"session": self.currentSession, "answer": answer})
+			self.save()
 		
 	def alertTeacherImLogout(self):
 		# TODO merge all messages to alert teacher
@@ -273,6 +275,7 @@ def clean():
 
 class Session(ndb.Model):
 	teacher = ndb.StringProperty()
+	open = ndb.BooleanProperty()
 	lesson = ndb.IntegerProperty()
 	students = ndb.StringProperty(repeated=True)
 	datetime = ndb.DateTimeProperty(auto_now_add=True)
@@ -284,7 +287,7 @@ class Session(ndb.Model):
 # 		options available for the student
 	exerciseWords = ndb.StringProperty(repeated=True)
 # 		list of the words componing the exercise
-	validatedAnswer = ndb.IntegerProperty()
+	validatedAnswer = ndb.StringProperty()
 # 		index of the teacher's validated answer in the answersProposed list
 	studentAnswers = ndb.PickleProperty()
 # 	 	{student1: answer1, student2: answer2}
@@ -292,12 +295,39 @@ class Session(ndb.Model):
 # 		{answer1:[student1, student2], answer2:[], answer3:[student3]}
 	
 	def addStudentAnswer(self, studentName, answer):
-		self.studentAnswers[studentName] = answer
-		if answer in self.answersStudents.keys():
-			self.answersStudents[answer].append(studentName)
-		else:
-			self.answersStudents[answer] = [studentName]
+		if self.open:
+			self.studentAnswers[studentName] = answer
+			if answer in self.answersStudents.keys():
+				self.answersStudents[answer].append(studentName)
+			else:
+				self.answersStudents[answer] = [studentName]
+			self.save()
+		
+	def addValidAnswer(self, validAnswer):
+		self.validatedAnswer = validAnswer
 		self.save()
+		
+	def sendFeedbackToStudents(self):
+		for studentName in self.students:
+			student = getStudent(studentName, self.lesson)
+			myanswer = [a["answer"] for a in student.answers \
+					if a["session"] == self.key.id()]
+			if myanswer:
+				myanswer = myanswer[0]
+				message = {
+					"type": "validAnswer",
+					"message": {
+						"validAnswer": self.validatedAnswer,
+						"myAnswer": myanswer
+						}
+					}
+			else:
+				message = {
+						"type": "sessionExpired",
+						"message": {"validAnswer": self.validatedAnswer}
+						}
+			message = json.dumps(message)
+			channel.send_message(student.token, message)
 		
 	def save(self):
 		self.put()
@@ -323,8 +353,12 @@ class Session(ndb.Model):
 		self.students.remove(student.username)
 		self.save()
 	
+	def end(self):
+		self.open = False
+		self.save()
+		
 	def start(self, lessonID):
-		self.lessonID = lessonID
+		self.lesson = lessonID
 		lesson = getLesson(lessonID)
 		self.teacher = lesson.teacher
 		self.students = lesson.students
@@ -333,6 +367,7 @@ class Session(ndb.Model):
 		self.answersProposed = ["Noun", "Adj", "Verb"]
 		self.studentAnswers = {}
 		self.answersStudents = {}
+		self.open = True
 		self.target = int(random.random() * len(self.exerciseWords))
 		sid = self.save()
 		teacher = getTeacher(self.teacher)
@@ -350,8 +385,11 @@ class Session(ndb.Model):
 		message = json.dumps(message)
 		channel.send_message(teacher.token, message)
 		for studentName in self.students:
-			student = getStudent(studentName, self.lessonID)
+			student = getStudent(studentName, self.lesson)
 			student.currentSession = sid
 			student.save()
 			channel.send_message(student.token, message)
 		self.sendStatusToTeacher()
+		
+		def pushResultsToTeacher(self):
+			pass

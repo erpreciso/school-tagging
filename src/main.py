@@ -5,8 +5,7 @@ import objects as objs
 import webapp2
 import jinja2
 import os
-import logging
-from objects import getLesson
+# import logging
 
 class MainHandler(webapp2.RequestHandler):
 	template_dir = os.path.join(os.path.dirname(__file__), 'pages')
@@ -62,18 +61,10 @@ class TeacherHandler(MainHandler):
 			self.initializeDashboard()
 		elif action == "logout":
 			self.logout()
+		elif action == "timeIsUp":
+			self.endSession()
 		else:
 			self.renderPage("teacherLogin.html")
-	
-	def logout(self):
-		teacher = self.getFromCookie()
-		lesson = getLesson(teacher.currentLessonID)
-		if lesson:
-			lesson.end()
-		if teacher:
-			self.clearCookies()
-			teacher.logout()
-		return self.redirect("/t/login")
 	
 	def post(self, action):
 		if action == "login":
@@ -81,6 +72,7 @@ class TeacherHandler(MainHandler):
 		elif action == "signup":
 			self.signup()
 	
+
 	def login(self):
 		username = self.read("username")
 		password = self.read("password")
@@ -101,6 +93,19 @@ class TeacherHandler(MainHandler):
 			message = "Username not existing"
 		return self.renderPage("teacherLogin.html", message=message)
 		
+	def logout(self):
+		teacher = self.getFromCookie()
+		session = objs.getSession(teacher.currentSession)
+		if session:
+			session.end()
+		lesson = objs.getLesson(teacher.currentLessonID)
+		if lesson:
+			lesson.end()
+		if teacher:
+			self.clearCookies()
+			teacher.logout()
+		return self.redirect("/t/login")
+	
 	def signup(self):
 		teacher = objs.Teacher()
 		teacher.username = self.read("username")
@@ -139,6 +144,12 @@ class TeacherHandler(MainHandler):
 		else:
 			return self.redirect("/t/login")
 
+	def endSession(self):
+		teacher = self.getFromCookie()
+		session = objs.getSession(teacher.currentSession)
+		if session:
+			session.end()
+
 class DataHandler(MainHandler):
 	def get(self, kind):
 		requester = self.getFromCookie()
@@ -152,10 +163,17 @@ class DataHandler(MainHandler):
 	def post(self, kind):
 		requester = self.getFromCookie()
 		requesterRole = self.getRoleFromCookie()
+		if requesterRole == "teacher":
+			teacher = requester
+			if kind == "teacherValidation":
+				valid = self.read("valid").strip()
+				session = objs.getSession(teacher.currentSession)
+				session.addValidAnswer(valid)
+				session.sendFeedbackToStudents()
 		if requesterRole == "student":
 			student = requester
 			if kind == "answer":
-				answer = self.read("answer")
+				answer = self.read("answer").strip()
 				student.addAnswer(answer)
 				session = objs.getSession(student.currentSession)
 				session.addStudentAnswer(student.username, answer)
@@ -175,19 +193,6 @@ class StudentHandler(MainHandler):
 		if action == "login":
 			self.login()
 	
-	def initializeDashboard(self):
-		student = self.getFromCookie()
-		if not student:
-			return self.redirect("/s/login")
-		lesson = student.currentLessonID
-		if lesson not in objs.getOpenLessonsID():
-			self.clearCookies()
-			return self.redirect("/s/login")
-		self.renderPage("studentDashboard.html",
-							studentName=student.username,
-							lessonName=student.currentLessonName,
-							token=student.token,
-							)
 
 	def login(self):
 		student = objs.Student()
@@ -208,6 +213,20 @@ class StudentHandler(MainHandler):
 			message = "Lesson not started yet"
 		self.renderPage("studentLogin.html", message=message)
 		
+	def initializeDashboard(self):
+		student = self.getFromCookie()
+		if not student:
+			self.clearCookies()
+			return self.redirect("/s/login")
+		lesson = student.currentLessonID
+		if lesson not in objs.getOpenLessonsID():
+			self.clearCookies()
+			return self.redirect("/s/login")
+		self.renderPage("studentDashboard.html",
+							studentName=student.username,
+							lessonName=student.currentLessonName,
+							token=student.token,
+							)
 	def logout(self):
 		student = self.getFromCookie()
 		if student:

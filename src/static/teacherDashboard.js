@@ -38,7 +38,7 @@ function buildExercise(message){
 	var answersProposed = message.answersProposed;
 	for (var i = 0; i < words.length; i++) {
 		var word = $(document.createElement("span"))
-						.attr("id", words[i])
+//						.attr("id", words[i])
 						.text(words[i] + " ");
 		$("#exercise").append(word);
 		if (i == target) {
@@ -47,7 +47,7 @@ function buildExercise(message){
 	}
 	for (var i = 0; i < answersProposed.length; i++ ){
 		var answer = $(document.createElement("span"))
-			.attr("id", answersProposed[i])
+//			.attr("id", answersProposed[i])
 			.text(answersProposed[i] + " ");
 		$("#answers").append(answer);
 		var par = {"answer": answersProposed[i]};
@@ -70,7 +70,7 @@ buildDashboard = function (status){
 			.attr("id", "timeIsUp")
 			.text("Time is up!")
 			.on("click", function(){
-				alert("hit");
+				askValidation();
 			}));
 	}
 	
@@ -82,8 +82,10 @@ buildDashboard = function (status){
 				.attr("id", "studentAnswers")
 				.text("STUDENT ANSWERS: "));
 		for (var answer in answers) {
-			var a = $(document.createElement("div"))
-					.text(answer.toUpperCase());
+			var a = $(document.createElement("div"));
+			$(a).append($(document.createElement("div"))
+					.addClass("title")
+					.text(answer.toUpperCase()));
 			$("#studentAnswers").append(a);
 			for (var i = 0; i < answers[answer].length; i++){
 				var b = $(document.createElement("div"))
@@ -111,6 +113,31 @@ startExercise = function () {
 	$.get("/data/exercise_request");
 };
 
+askValidation = function () {
+	if ($("#askValidation").length == 0) {
+		$.get("/t/timeIsUp");
+		$("#answers").children().css("background-color", "Aqua");
+		var instr = $(document.createElement("span"))
+			.attr("id", "askValidation")
+			.css("background-color", "GreenYellow")
+			.text(" <-- Please click on the correct answer");
+		$("#answers").append(instr);
+		$("#answers").children().on("click", function (event){
+			var valid = event.target.innerText.trim();
+			$("#askValidation").remove();
+			$(event.target).css("background-color", "GreenYellow");
+			var studentAnswers = $("#studentAnswers").children(); 
+			for (var i = 0; i < studentAnswers.length; i++) {
+				if ($(studentAnswers[i]).children(".title")[0].innerText 
+											== valid.toUpperCase()){
+					$(studentAnswers[i]).css("background-color", "GreenYellow");					
+				}
+			}
+			$.post("/data/teacherValidation", {"valid": valid});
+			$("#answers").children().off("click");
+		});
+	}
+};
 endLesson = function () {
 //	viewLessonStats(); //TODO create lesson statistics process
 };
