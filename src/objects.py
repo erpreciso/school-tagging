@@ -67,18 +67,6 @@ class Student(User):
 			self.currentSession = None
 			self.save()
 	
-	def alertTeacherImArrived(self):
-		lesson = getLesson(self.currentLessonID)
-		teacher = getTeacher(lesson.teacher)
-		message = {
-			"type": "studentArrived",
-			"message": {
-				"studentName": self.username
-				},
-			}
-		message = json.dumps(message)
-		channel.send_message(teacher.token, message)
-	
 	def logout(self):
 		self.alertTeacherImLogout()
 		self.exitLesson()
@@ -93,46 +81,33 @@ class Student(User):
 			self.answers.append({"session": self.currentSession, "answer": answer})
 			self.save()
 		
-	def alertTeacherImLogout(self):
-		# TODO: merge all messages to alert teacher
+	def sendMessageToTeacher(self, message):
 		lesson = getLesson(self.currentLessonID)
 		teacher = getTeacher(lesson.teacher)
+		message = json.dumps(message)
+		return channel.send_message(teacher.token, message)
+		
+	def alertTeacherImArrived(self):
+		message = {"type": "studentArrived",
+			"message": {"studentName": self.username}}
+		self.sendMessageToTeacher(message)
+		
+	def alertTeacherImLogout(self):
 		message = {
 			"type": "studentLogout",
-			"message": {
-				"studentName": self.username
-				},
+			"message": {"studentName": self.username}
 			}
-		message = json.dumps(message)
-		channel.send_message(teacher.token, message)
+		return self.sendMessageToTeacher(message)
 	
 	def alertTeacherImAlive(self):
-		# TODO: merge all messages to alert teacher
-		lesson = getLesson(self.currentLessonID)
-		teacher = getTeacher(lesson.teacher)
-		message = {
-			"type": "studentAlive",
-			"message": {
-				"studentName": self.username
-				},
-			}
-		message = json.dumps(message)
-		channel.send_message(teacher.token, message)
+		message = {"type": "studentAlive",
+			"message": {"studentName": self.username}}
+		self.sendMessageToTeacher(message)
 	
-	def warnTeacherImOffline(self):
-		# TODO: merge all messages to alert teacher
-		lesson = getLesson(self.currentLessonID)
-		teacher = getTeacher(lesson.teacher)
-		message = {
-			"type": "studentDisconnected",
-			"message": {
-				"studentName": self.username
-				},
-			}
-		message = json.dumps(message)
-		channel.send_message(teacher.token, message)
-		
-		
+	def alertTeacherImOffline(self):
+		message = {"type": "studentDisconnected",
+			"message": {"studentName": self.username}}
+		self.sendMessageToTeacher(message)
 		
 class Teacher(User):
 	password = ndb.StringProperty()
@@ -149,7 +124,6 @@ class Teacher(User):
 		self.save()
 		
 	def sendPingToStudent(self, studentName):
-		lesson = getLesson(self.currentLessonID)
 		student = getStudent(studentName, self.currentLessonID)
 		message = {"type": "pingFromTeacher"}
 		message = json.dumps(message)

@@ -4,10 +4,35 @@
 <title>school-tagging|start</title>
 {% endblock %}
 
+{% block script %}
+
+<script>
+$(document).ready(function () {if (navigator.cookieEnabled){
+	$("noscript").remove();
+	$("#start").append(
+		$(document.createElement("div")).append(
+			$(document.createElement("a"))
+				.attr("href", "/s/login").text("I'm a student")));
+	$("#start").append(
+		$(document.createElement("div")).append(
+			$(document.createElement("a"))
+			.attr("href", "/t/login").text("I'm a teacher")));
+	{% if resumeDashboardLink %}
+	$("#start").append(
+		$(document.createElement("div")).append(
+		$(document.createElement("a"))
+		.attr("href", "{{resumeDashboardLink}}")
+		.text("Looks like we know who you are, click here to resume lesson")));
+	{% endif %}
+	}
+	else {
+		$("#start").append($(document.createElement("div"))
+			.text("Cookies must be enable to continue"));
+	}});
+</script>
+{% endblock %}
+
 {% block content %}
-<div><a href="/s/login">I'm a student</a></div>
-<div><a href="/t/login">I'm a teacher</a></div>
-{% if resumeDashboardLink %}
-<a href="{{resumeDashboardLink}}">Looks like we know who you are, click here to resume lesson</a>
-{% endif %}
+<noscript>JavaScript should be enable to continue</noscript>
+<div id="start"></div>
 {% endblock %}

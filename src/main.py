@@ -282,7 +282,7 @@ class ConnectionHandler(MainHandler):
 			if user.__class__.__name__ == "Student":
 				student = user
 				if action == "disconnected":
-					return student.warnTeacherImOffline()
+					return student.alertTeacherImOffline()
 # 			elif user.__class__.__name__ == "Teacher":
 # 				teacher = user
 # 				if action == "disconnected":
