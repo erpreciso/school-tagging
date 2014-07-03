@@ -53,9 +53,11 @@ class Student(User):
 	def exitLesson(self):
 		lesson = getLesson(self.currentLessonID)
 		lesson.removeStudent(self)
+		message = {"type": "lessonTerminated"}
+		message = json.dumps(message)
+		channel.send_message(self.token, message)
 		self.currentLessonID = None
 		self.currentLessonName = ""
-# 		TODO: send message to student and redraw their dashboard
 		self.save()
 	
 	def exitSession(self):
@@ -69,7 +71,7 @@ class Student(User):
 		lesson = getLesson(self.currentLessonID)
 		teacher = getTeacher(lesson.teacher)
 		message = {
-			"type": "student arrived",
+			"type": "studentArrived",
 			"message": {
 				"studentName": self.username
 				},
@@ -92,11 +94,11 @@ class Student(User):
 			self.save()
 		
 	def alertTeacherImLogout(self):
-		# TODO merge all messages to alert teacher
+		# TODO: merge all messages to alert teacher
 		lesson = getLesson(self.currentLessonID)
 		teacher = getTeacher(lesson.teacher)
 		message = {
-			"type": "student logout",
+			"type": "studentLogout",
 			"message": {
 				"studentName": self.username
 				},
@@ -104,6 +106,34 @@ class Student(User):
 		message = json.dumps(message)
 		channel.send_message(teacher.token, message)
 	
+	def alertTeacherImAlive(self):
+		# TODO: merge all messages to alert teacher
+		lesson = getLesson(self.currentLessonID)
+		teacher = getTeacher(lesson.teacher)
+		message = {
+			"type": "studentAlive",
+			"message": {
+				"studentName": self.username
+				},
+			}
+		message = json.dumps(message)
+		channel.send_message(teacher.token, message)
+	
+	def warnTeacherImOffline(self):
+		# TODO: merge all messages to alert teacher
+		lesson = getLesson(self.currentLessonID)
+		teacher = getTeacher(lesson.teacher)
+		message = {
+			"type": "studentDisconnected",
+			"message": {
+				"studentName": self.username
+				},
+			}
+		message = json.dumps(message)
+		channel.send_message(teacher.token, message)
+		
+		
+		
 class Teacher(User):
 	password = ndb.StringProperty()
 	def save(self):
@@ -118,6 +148,13 @@ class Teacher(User):
 		self.status = ""
 		self.save()
 		
+	def sendPingToStudent(self, studentName):
+		lesson = getLesson(self.currentLessonID)
+		student = getStudent(studentName, self.currentLessonID)
+		message = {"type": "pingFromTeacher"}
+		message = json.dumps(message)
+		channel.send_message(student.token, message)
+	
 def teacherUsernameExists(username):
 	if getTeacher(username):
 		return True
@@ -164,9 +201,9 @@ def getFromID(sid):
 	else:
 		return False
 	
-def studentAlreadyConnected(username):
+def studentAlreadyConnected(username, lessonName):
 	q = Student.query(Student.username == username,
-						Student.currentLessonID != None)
+						Student.currentLessonName == lessonName)
 	if q.get():
 		return True
 	else:
@@ -176,9 +213,23 @@ class Lesson(ndb.Model):
 	lessonName = ndb.StringProperty()
 	teacher = ndb.StringProperty()
 	status = ndb.StringProperty()
-	sessions = ndb.StringProperty(repeated=True)
+	sessions = ndb.IntegerProperty(repeated=True)
 	students = ndb.StringProperty(repeated=True)
 	datetime = ndb.DateTimeProperty(auto_now_add=True)
+
+	def start(self, lessonName, teacher):
+		self.lessonName = lessonName
+		self.teacher = teacher.username
+		self.status = "open"
+		self.students = []
+		self.sessions = []
+		lessonID = self.save()
+		teacher.assignLesson(lessonID, lessonName)
+
+	def save(self):
+		self.put()
+		memcache.set("Lesson:" + str(self.key.id()), self)
+		return self.key.id()
 
 	def end(self):
 		teacher = getTeacher(self.teacher)
@@ -191,13 +242,12 @@ class Lesson(ndb.Model):
 		self.status = "closed"
 		self.save()
 		
-	def save(self):
-		self.put()
-		memcache.set("Lesson:" + str(self.key.id()), self)
-		return self.key.id()
-	
 	def addStudent(self, student):
 		self.students.append(student.username)
+		self.save()
+	
+	def addSession(self, sessionID):
+		self.sessions.append(sessionID)
 		self.save()
 	
 	def removeStudent(self, student):
@@ -205,15 +255,35 @@ class Lesson(ndb.Model):
 			self.students.remove(student.username)
 			self.save()
 	
-	def start(self, lessonName, teacher):
-		self.lessonName = lessonName
-		self.teacher = teacher.username
-		self.status = "open"
-		self.students = []
-		self.sessions = []
-		lessonID = self.save()
-		teacher.assignLesson(lessonID, lessonName)
-
+	def produceAndSendStats(self):
+		teacher = getTeacher(self.teacher)
+		stats = None
+		if self.sessions:
+			stats = []
+			for sessionID in self.sessions:
+				ses = getSession(sessionID)
+				if ses:
+					students = ses.studentAnswers.keys()
+					if students:
+						corrects = [st for st in students \
+							if ses.studentAnswers[st] == ses.validatedAnswer]
+						stats += corrects
+# 		TODO: include names even if they're 0
+		statsDict = {}
+		for name in stats:
+			if name in statsDict.keys():
+				statsDict[name] += 1
+			else:
+				statsDict[name] = 1 
+		message = {
+			"type": "lessonStats",
+			"message": {
+				"stats": statsDict
+				},
+			}
+		message = json.dumps(message)
+		channel.send_message(teacher.token, message)
+	
 def getOpenLessonsID():
 	q = Lesson.query(Lesson.status == "open")
 	if q.count(limit=None) > 0:
@@ -243,9 +313,9 @@ def getLesson(lessonID):
 	
 def getLessonFromName(lessonName):
 	q = Lesson.query(Lesson.lessonName == lessonName)
-	teacher = q.get()
-	if teacher:
-		return teacher
+	lesson = q.get()
+	if lesson:
+		return lesson
 	else:
 		return False
 
@@ -335,19 +405,20 @@ class Session(ndb.Model):
 		return self.key.id()
 		
 	def sendStatusToTeacher(self):
-		teacher = getTeacher(self.teacher)
-		status = {
-			"type": "sessionStatus",
-			"message": {
-				"possibleAnswers": self.answersStudents,
-				"totalAnswers": {
-					"answered": self.studentAnswers.keys(),
-					"missing": [s for s in self.students \
-									if s not in self.studentAnswers.keys()]
-					}
-				},
-			}
-		channel.send_message(teacher.token, json.dumps(status))
+		if self.open:
+			teacher = getTeacher(self.teacher)
+			status = {
+				"type": "sessionStatus",
+				"message": {
+					"possibleAnswers": self.answersStudents,
+					"totalAnswers": {
+						"answered": self.studentAnswers.keys(),
+						"missing": [s for s in self.students \
+										if s not in self.studentAnswers.keys()]
+						}
+					},
+				}
+			channel.send_message(teacher.token, json.dumps(status))
 	
 	def removeStudent(self, student):
 		self.students.remove(student.username)
@@ -370,11 +441,12 @@ class Session(ndb.Model):
 		self.open = True
 		self.target = int(random.random() * len(self.exerciseWords))
 		sid = self.save()
+		lesson.addSession(sid)
 		teacher = getTeacher(self.teacher)
 		teacher.currentSession = self.key.id()
 		teacher.save()
 		message = {
-			"type": "session",
+			"type": "sessionExercise",
 			"message": {
 				"id": sid,
 				"wordsList": self.exerciseWords,

@@ -1,10 +1,35 @@
 $(document).ready(function () {
-	$("#startExercise").on("click", startExercise);
+	newExercise();
 });
+
+newExercise = function (){
+	$("#dashboard").before($(document.createElement("button"))
+			.attr("id", "startExercise")
+			.text("Start Exercise")
+			.on("click", startExercise));
+	$("#dashboard").after($(document.createElement("button"))
+			.attr("id", "showStats")
+			.text("Show Lesson Statistics")
+			.on("click", function(){$.get("/t/askStats");}));
+};
+
+showStats = function (message) {
+	$("#exercise, #answers, #showStats, #studentAnswers").remove();
+	var stats = message.stats;
+	$("#dashboard").append($(document.createElement("div"))
+			.attr("id", "stats")
+			.text("LESSON STATISTICS"));
+	for (name in stats) {
+		$("#stats").append($(document.createElement("div"))
+				.text(name + ": " + stats[name] + " correct answers"));
+	}
+	
+	
+};
 
 onMessage = function(message) {
 	var data = JSON.parse(message.data);
-	if (data.type == "student arrived") {
+	if (data.type == "studentArrived") {
 		var studentName = data.message.studentName;
 		var studentsCount = $(".studentName").length;
 		var txt = (studentsCount + 1).toString() + ". " + studentName;
@@ -14,31 +39,58 @@ onMessage = function(message) {
 			.text(txt);
 		$("#students").append(student);
 	}
-	else if (data.type == "student logout") {
+	else if (data.type == "studentLogout") {
 		$("#" + data.message.studentName).remove();
 	}
-	else if (data.type == "session") {
+	else if (data.type == "studentDisconnected") {
+		var studentName = data.message.studentName;
+		if ($("#" + studentName).children(".pingRequest").length == 0){
+			$("#" + studentName).append($(document.createElement("button"))
+				.addClass("pingRequest")
+				.text("It seems I'm offline: ping me...")
+				.on("click", function(event){
+					var student = event.target.parentElement.id;
+					$.post("/ping", {"student": student});
+				}));
+		}
+	}
+	else if (data.type == "studentAlive") {
+		var studentName = data.message.studentName;
+		if ($("#" + studentName).children(".pingRequest").length > 0){
+			$("#" + studentName).children(".pingRequest").remove();
+		}
+	}
+	else if (data.type == "sessionExercise") {
 		buildExercise(data.message);
 	}
 	else if (data.type == "sessionStatus") {
 		buildDashboard(data);
 	}
+	else if (data.type == "lessonStats") {
+		showStats(data.message);
+	}
 };
 
 function buildExercise(message){
-	$("#exercise, #answers").remove();
+	$("#exercise, #answers, #startExercise, #showStats, #stats").remove();
 	$("#dashboard").append($(document.createElement("div"))
 			.attr("id", "exercise")
+			.css("font-weight", "bold")
 			.text("EXERCISE: "));
 	$("#dashboard").append($(document.createElement("div"))
 			.attr("id", "answers")
 			.text("OPTIONS: "));
+	$("#dashboard").after($(document.createElement("button"))
+				.attr("id", "timeIsUp")
+				.text("Time is up!")
+				.on("click", function(){
+					askValidation();
+				}));
 	var words = message.wordsList;
 	var target = message.target;
 	var answersProposed = message.answersProposed;
 	for (var i = 0; i < words.length; i++) {
 		var word = $(document.createElement("span"))
-//						.attr("id", words[i])
 						.text(words[i] + " ");
 		$("#exercise").append(word);
 		if (i == target) {
@@ -47,17 +99,8 @@ function buildExercise(message){
 	}
 	for (var i = 0; i < answersProposed.length; i++ ){
 		var answer = $(document.createElement("span"))
-//			.attr("id", answersProposed[i])
-			.text(answersProposed[i] + " ");
+						.text(answersProposed[i] + " ");
 		$("#answers").append(answer);
-		var par = {"answer": answersProposed[i]};
-		$(answer).on("click", par ,function(event){
-//			var triggered = event.target.id;
-//			$("#" + triggered).css("background-color", "green");
-//			$.post("/data/answer", {"answer": triggered});
-//			$("#answers").children().off("click");
-//			$("#answers").after("Waiting for teacher to assess...");
-		});
 	}
 }
 
@@ -65,15 +108,6 @@ buildDashboard = function (status){
 	cleanDashboard();
 	statusBar(status.message.totalAnswers);
 	answersGraph(status.message.possibleAnswers);
-	if ($("#timeIsUp").length == 0) {
-		$("#statusBar").after($(document.createElement("button"))
-			.attr("id", "timeIsUp")
-			.text("Time is up!")
-			.on("click", function(){
-				askValidation();
-			}));
-	}
-	
 	function cleanDashboard () {
 		$("#studentAnswers, #statusBar").remove();
 	};
@@ -91,10 +125,12 @@ buildDashboard = function (status){
 				var b = $(document.createElement("div"))
 						.text(answers[answer][i]);
 				a.append(b);
-			}
-		}
+			};
+		};
 	}
 	function statusBar(status){
+//		TODO message when all students answered
+//		TODO transform in graphics
 		$("#dashboard").append($(document.createElement("div"))
 				.attr("id", "statusBar")
 				.text("STATUS BAR: "));
@@ -104,7 +140,7 @@ buildDashboard = function (status){
 		t = " Missing: "+status.missing.length+" --> "+status.missing;
 		$("#statusBar").append($(document.createElement("span"))
 				.text(t));
-	}
+	};
 };
 
 onOpened = function(){};
@@ -115,12 +151,13 @@ startExercise = function () {
 
 askValidation = function () {
 	if ($("#askValidation").length == 0) {
+		$("#timeIsUp").remove();
 		$.get("/t/timeIsUp");
 		$("#answers").children().css("background-color", "Aqua");
 		var instr = $(document.createElement("span"))
 			.attr("id", "askValidation")
 			.css("background-color", "GreenYellow")
-			.text(" <-- Please click on the correct answer");
+			.text(" <-- Click on the correct part of the speech");
 		$("#answers").append(instr);
 		$("#answers").children().on("click", function (event){
 			var valid = event.target.innerText.trim();
@@ -135,9 +172,7 @@ askValidation = function () {
 			}
 			$.post("/data/teacherValidation", {"valid": valid});
 			$("#answers").children().off("click");
+			newExercise();
 		});
 	}
-};
-endLesson = function () {
-//	viewLessonStats(); //TODO create lesson statistics process
 };

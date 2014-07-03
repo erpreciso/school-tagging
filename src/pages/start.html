@@ -7,4 +7,7 @@
 {% block content %}
 <div><a href="/s/login">I'm a student</a></div>
 <div><a href="/t/login">I'm a teacher</a></div>
+{% if resumeDashboardLink %}
+<a href="{{resumeDashboardLink}}">Looks like we know who you are, click here to resume lesson</a>
+{% endif %}
 {% endblock %}
