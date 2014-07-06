@@ -96,9 +96,11 @@ class Student(User):
 		
 	def sendMessageToTeacher(self, message):
 		lesson = getLesson(self.currentLessonID)
-		teacher = getTeacher(lesson.teacher)
-		message = json.dumps(message)
-		return channel.send_message(teacher.token, message)
+		if lesson and lesson.teacher:
+			teacher = getTeacher(lesson.teacher)
+			if teacher and teacher.token:
+				message = json.dumps(message)
+				return channel.send_message(teacher.token, message)
 		
 	def alertTeacherImArrived(self):
 		message = {"type": "studentArrived",
@@ -328,11 +330,12 @@ def getSentence():
 	return pool[i]
 	
 def clean():
-	ndb.delete_multi(Lesson.query().fetch(keys_only=True))
-	ndb.delete_multi(Session.query().fetch(keys_only=True))
-	ndb.delete_multi(Student.query().fetch(keys_only=True))
-	ndb.delete_multi(Teacher.query().fetch(keys_only=True))
-	memcache.flush_all()
+# 	ndb.delete_multi(Lesson.query().fetch(keys_only=True))
+# 	ndb.delete_multi(Session.query().fetch(keys_only=True))
+# 	ndb.delete_multi(Student.query().fetch(keys_only=True))
+# 	ndb.delete_multi(Teacher.query().fetch(keys_only=True))
+# 	memcache.flush_all()
+	pass
 
 
 class Session(ndb.Model):
@@ -427,7 +430,7 @@ class Session(ndb.Model):
 		self.students = lesson.students
 		self.exerciseText = getSentence()
 		self.exerciseWords = re.split(' ', self.exerciseText)
-		self.answersProposed = ["Noun", "Adjective", "Verb", "Adverb"]
+		self.answersProposed = ["Noun", "Adjective", "Verb", "Adverb", "Other"]
 		self.studentAnswers = {}
 		self.answersStudents = {}
 		self.open = True

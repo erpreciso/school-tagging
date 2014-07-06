@@ -128,7 +128,7 @@ class TeacherHandler(MainHandler):
 		if not objs.teacherUsernameExists(username):
 			password = self.read("password")
 			objs.createTeacher(username, password)
-			message = "Please re-enter username and password"
+			message = "Please re-enter username and password in the LOGIN area"
 		else:
 			message = "Username already in use"
 		return self.renderPage("teacherLogin.html", message=message)

@@ -50,6 +50,7 @@ function presentExercise(message) {
 		for (var i = 0; i < answersProposed.length; i++ ){
 			var answer = $(document.createElement("span"))
 				.attr("id", answersProposed[i])
+				.css("background-color", "Moccasin")
 				.text(answersProposed[i] + " ");
 			$("#answers").append(answer);
 			var par = {"answer": answersProposed[i]};
