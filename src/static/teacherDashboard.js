@@ -129,17 +129,25 @@ buildDashboard = function (status){
 		};
 	}
 	function statusBar(status){
-//		TODO message when all students answered
 //		TODO transform in graphics
 		$("#dashboard").append($(document.createElement("div"))
 				.attr("id", "statusBar")
 				.text("STATUS BAR: "));
-		var t = " Answered: "+status.answered.length+" --> "+status.answered;
+		var txt;
+		txt = " Answered: "+status.answered.length+" --> "+status.answered;
 		$("#statusBar").append($(document.createElement("span"))
-				.text(t));
-		t = " Missing: "+status.missing.length+" --> "+status.missing;
-		$("#statusBar").append($(document.createElement("span"))
-				.text(t));
+				.text(txt));
+		if (status.missing.length > 0){
+			txt = " Missing: "+status.missing.length+" --> "+status.missing;
+			color = null;
+		}
+		else {
+			txt = " All students answered";
+			color = "YellowGreen";
+		}
+		var missing = $(document.createElement("span")).text(txt);
+		if (color) {$(missing).css("background-color", color);};
+		$("#statusBar").append(missing);
 	};
 };
 

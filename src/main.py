@@ -92,7 +92,6 @@ class TeacherHandler(MainHandler):
 			if password == teacher.password:
 				lessonName = self.read("lessonName")
 				if lessonName:
-# 					TODO: if lesson name in lesson in use, redirect immediately to login
 					if lessonName not in objs.getOpenLessonsNames():
 						teacher.connect()
 						self.addCookie("schooltagging-role", "teacher")
@@ -125,12 +124,10 @@ class TeacherHandler(MainHandler):
 		return self.redirect("/t/login")
 	
 	def signup(self):
-		teacher = objs.Teacher()
-		teacher.username = self.read("username")
-		if not objs.teacherUsernameExists(teacher.username):
-			teacher.password = self.read("password")
-			teacher.status = ""
-			teacher.save()
+		username = self.read("username")
+		if not objs.teacherUsernameExists(username):
+			password = self.read("password")
+			objs.createTeacher(username, password)
 			message = "Please re-enter username and password"
 		else:
 			message = "Username already in use"
@@ -303,8 +300,21 @@ class PingHandler(MainHandler):
 			student = requester
 			return student.alertTeacherImAlive()
 			
-			
+class ExportPage(MainHandler):
+	def get(self):
+		data = objs.exportJson()
+		return self.write(data)
+		
+class JollyHandler(MainHandler):
+	def get(self, jolly):
+		return self.redirect("/start")
+	
+PAGE_RE = r'(/(?:[a-zA-Z0-9_-]+/?)*)'
 app = webapp2.WSGIApplication([
+	webapp2.Route(
+			r'/export',
+			handler = ExportPage,
+			name="exportpage"),
 	webapp2.Route(
 			r'/start',
 			handler = StartPage,
@@ -333,4 +343,5 @@ app = webapp2.WSGIApplication([
 			r'/_ah/channel/<action>/',
 			handler=ConnectionHandler,
 			name="connection"),
+	(PAGE_RE, JollyHandler),
 			])

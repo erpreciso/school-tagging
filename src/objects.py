@@ -6,9 +6,24 @@ import json
 import random
 import re
 
+def exportJson():
+	j = None
+	q = Lesson.query()
+	if q.count(limit=None) > 0:
+		j = q.fetch(limit=None)
+	q = Teacher.query()
+	if q.count(limit=None) > 0:
+		j += q.fetch(limit=None)
+	q = Student.query()
+	if q.count(limit=None) > 0:
+		j += q.fetch(limit=None)
+	q = Session.query()
+	if q.count(limit=None) > 0:
+		j += q.fetch(limit=None)
+	return j
+
 class User(ndb.Model):
 	username = ndb.StringProperty()
-	status = ndb.StringProperty()
 	currentLessonID = ndb.IntegerProperty()
 	currentLessonName = ndb.StringProperty()
 	lessons = ndb.IntegerProperty(repeated=True)
@@ -17,7 +32,6 @@ class User(ndb.Model):
 
 	def connect(self):
 		self.token = channel.create_channel(str(self.key.id()))
-		self.status = "connected"
 		self.save()
 	
 	def assignLesson(self, lessonID, lessonName):
@@ -72,7 +86,6 @@ class Student(User):
 		self.exitLesson()
 		self.exitSession()
 		self.token = ""
-		self.status = ""
 		self.save()
 			
 	def addAnswer(self, answer):
@@ -120,7 +133,6 @@ class Teacher(User):
 		self.currentLessonName = ""
 		self.currentSession = None
 		self.token = ""
-		self.status = ""
 		self.save()
 		
 	def sendPingToStudent(self, studentName):
@@ -134,6 +146,13 @@ def teacherUsernameExists(username):
 		return True
 	else:
 		return False
+
+def createTeacher(username, password):
+	teacher = Teacher()
+	teacher.username = username
+	teacher.password = password
+	teacher.save()
+	return
 
 def getTeacher(username):
 	teacher = memcache.get("Teacher:" + username)
@@ -186,7 +205,7 @@ def studentAlreadyConnected(username, lessonName):
 class Lesson(ndb.Model):
 	lessonName = ndb.StringProperty()
 	teacher = ndb.StringProperty()
-	status = ndb.StringProperty()
+	open = ndb.BooleanProperty()
 	sessions = ndb.IntegerProperty(repeated=True)
 	students = ndb.StringProperty(repeated=True)
 	datetime = ndb.DateTimeProperty(auto_now_add=True)
@@ -194,7 +213,7 @@ class Lesson(ndb.Model):
 	def start(self, lessonName, teacher):
 		self.lessonName = lessonName
 		self.teacher = teacher.username
-		self.status = "open"
+		self.open = True
 		self.students = []
 		self.sessions = []
 		lessonID = self.save()
@@ -213,7 +232,7 @@ class Lesson(ndb.Model):
 		teacher.currentLessonID = None
 		teacher.currentLessonName = ""
 		teacher.save()
-		self.status = "closed"
+		self.open = False
 		self.save()
 		
 	def addStudent(self, student):
@@ -231,6 +250,7 @@ class Lesson(ndb.Model):
 	
 	def produceAndSendStats(self):
 		teacher = getTeacher(self.teacher)
+		allStudents = []
 		stats = None
 		if self.sessions:
 			stats = []
@@ -238,28 +258,26 @@ class Lesson(ndb.Model):
 				ses = getSession(sessionID)
 				if ses:
 					students = ses.studentAnswers.keys()
+					allStudents += self.students
 					if students:
 						corrects = [st for st in students \
 							if ses.studentAnswers[st] == ses.validatedAnswer]
 						stats += corrects
-# 		TODO: include names even if they're 0
 		statsDict = {}
 		for name in stats:
 			if name in statsDict.keys():
 				statsDict[name] += 1
 			else:
-				statsDict[name] = 1 
-		message = {
-			"type": "lessonStats",
-			"message": {
-				"stats": statsDict
-				},
-			}
+				statsDict[name] = 1
+		for student in students:
+			if student not in statsDict.keys():
+				statsDict[student]= 0
+		message = {"type": "lessonStats", "message": {"stats": statsDict}}
 		message = json.dumps(message)
 		channel.send_message(teacher.token, message)
 	
 def getOpenLessonsID():
-	q = Lesson.query(Lesson.status == "open")
+	q = Lesson.query(Lesson.open == True)
 	if q.count(limit=None) > 0:
 		lessons = q.fetch(limit=None)
 		return [lesson.key.id() for lesson in lessons]
@@ -267,7 +285,7 @@ def getOpenLessonsID():
 		return []
 
 def getOpenLessonsNames():
-	q = Lesson.query(Lesson.status == "open")
+	q = Lesson.query(Lesson.open == True)
 	if q.count(limit=None) > 0:
 		lessons = q.fetch(limit=None)
 		return [lesson.lessonName for lesson in lessons]
@@ -436,6 +454,3 @@ class Session(ndb.Model):
 			student.save()
 			channel.send_message(student.token, message)
 		self.sendStatusToTeacher()
-		
-		def pushResultsToTeacher(self):
-			pass
