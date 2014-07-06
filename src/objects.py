@@ -427,7 +427,7 @@ class Session(ndb.Model):
 		self.students = lesson.students
 		self.exerciseText = getSentence()
 		self.exerciseWords = re.split(' ', self.exerciseText)
-		self.answersProposed = ["Noun", "Adj", "Verb"]
+		self.answersProposed = ["Noun", "Adjective", "Verb", "Adverb"]
 		self.studentAnswers = {}
 		self.answersStudents = {}
 		self.open = True

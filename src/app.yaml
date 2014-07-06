@@ -1,5 +1,5 @@
 application: school-tagging
-version: 5b
+version: 6
 runtime: python27
 api_version: 1
 threadsafe: yes
