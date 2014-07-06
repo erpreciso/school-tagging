@@ -309,6 +309,10 @@ class JollyHandler(MainHandler):
 	def get(self, jolly):
 		return self.redirect("/start")
 	
+class HelpHandler(MainHandler):
+	def get(self):
+		return self.renderPage("helpIndex.html")
+	
 PAGE_RE = r'(/(?:[a-zA-Z0-9_-]+/?)*)'
 app = webapp2.WSGIApplication([
 	webapp2.Route(
@@ -343,5 +347,6 @@ app = webapp2.WSGIApplication([
 			r'/_ah/channel/<action>/',
 			handler=ConnectionHandler,
 			name="connection"),
+	("/help", HelpHandler),
 	(PAGE_RE, JollyHandler),
 			])
