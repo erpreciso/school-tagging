@@ -129,7 +129,6 @@ buildDashboard = function (status){
 		};
 	}
 	function statusBar(status){
-//		TODO transform in graphics
 		$("#dashboard").append($(document.createElement("div"))
 				.attr("id", "statusBar")
 				.text("STATUS BAR: "));

@@ -5,6 +5,7 @@ from google.appengine.api import channel
 import json
 import random
 import re
+import codecs
 
 def exportJson():
 	j = None
@@ -325,7 +326,7 @@ def getSession(sessionID):
 		return False
 	
 def getSentence():
-	pool = open("sentence-pool.txt").readlines()
+	pool = codecs.open("sentence-pool.txt", encoding="latin-1").readlines()
 	i = int(random.random() * len(pool))
 	return pool[i]
 	
