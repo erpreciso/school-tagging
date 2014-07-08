@@ -2,6 +2,12 @@ $(document).ready(function () {
 	initializeDashboard();
 });
 
+onError = function (){
+	askMeRefresh();
+	$.get("/channelExpired");
+};
+onClose = function (){};
+
 onMessage = function(message) {
 	var data = JSON.parse(message.data);
 	if (data.type == "sessionExercise")
@@ -22,6 +28,11 @@ onMessage = function(message) {
 	}
 };
 
+function askMeRefresh () {
+	$("#lessonName").after($(document.createElement("div"))
+			.text("Please refresh this page")
+			.css("background-color", "red"));
+}
 function lessonTerminated () {
 	$("#lessonName").text("Lesson terminated by teacher");
 	$("#exercise, #answers").remove();

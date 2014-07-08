@@ -11,7 +11,7 @@
 {% block content %}
 <a href="/t/logout">Logout</a>
 <div>Teacher: {{teacherName}}</div>
-<div>Lesson name (pass to students): {{lessonName}}</div>
+<div id="lessonName">Lesson name (pass to students): {{lessonName}}</div>
 <div id="students">Enrolled students:
 	{% for student in students %}
 	<div id="{{student}}" class="studentName">{{loop.index}}. {{student}}</div>

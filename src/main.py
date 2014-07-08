@@ -5,7 +5,8 @@ import objects as objs
 import webapp2
 import jinja2
 import os
-# import logging
+import logging
+import datetime
 
 class MainHandler(webapp2.RequestHandler):
 	template_dir = os.path.join(os.path.dirname(__file__), 'pages')
@@ -288,6 +289,16 @@ class ConnectionHandler(MainHandler):
 # 						lesson.end()
 # 						teacher.logout()
 		
+class ChannelHandler(MainHandler):
+	def get(self):
+		requester = self.getFromCookie()
+		idle = datetime.datetime.now() - requester.lastAction
+		threshold = 15 # minutes
+		if idle < datetime.timedelta(minutes=threshold):
+			return requester.connect()
+		else:
+			return requester.logout()
+		
 class PingHandler(MainHandler):
 	def post(self):
 		requester = self.getFromCookie()
@@ -315,38 +326,19 @@ class HelpHandler(MainHandler):
 	
 PAGE_RE = r'(/(?:[a-zA-Z0-9_-]+/?)*)'
 app = webapp2.WSGIApplication([
-	webapp2.Route(
-			r'/export',
-			handler = ExportPage,
-			name="exportpage"),
-	webapp2.Route(
-			r'/start',
-			handler = StartPage,
-			name="startpage"),
-	webapp2.Route(
-			r'/t/<action>',
-			handler = TeacherHandler,
-			name="teacher"),
-	webapp2.Route(
-			r'/s/<action>',
-			handler = StudentHandler,
-			name="student"),
-	webapp2.Route(
-			r'/delete',
-			handler=DeleteHandler,
-			name="delete"),
-	webapp2.Route(
-			r'/data/<kind>',
-			handler=DataHandler,
-			name="data"),
-	webapp2.Route(
-			r'/ping',
-			handler=PingHandler,
-			name="ping"),
-	webapp2.Route(
-			r'/_ah/channel/<action>/',
-			handler=ConnectionHandler,
-			name="connection"),
+	webapp2.Route(r'/t/<action>',
+			handler = TeacherHandler, name="teacher"),
+	webapp2.Route(r'/s/<action>',
+			handler = StudentHandler, name="student"),
+	webapp2.Route(r'/data/<kind>',
+			handler=DataHandler, name="data"),
+	webapp2.Route(r'/_ah/channel/<action>/',
+			handler=ConnectionHandler, name="connection"),
+	("/export", ExportPage),
+	("/start", StartPage),
+	("/delete", DeleteHandler),
+	("/ping", PingHandler),
 	("/help", HelpHandler),
+	("/channelExpired", ChannelHandler),
 	(PAGE_RE, JollyHandler),
 			])

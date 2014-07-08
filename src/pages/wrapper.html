@@ -13,6 +13,7 @@
 </head>
 	<body>
 		<div><a href="/help" target="_blank">Click here for help</a></div>
+		{% block content %}{% endblock %}
 		{% if token %}
 		<script>
 			openChannel = function() {
@@ -21,8 +22,8 @@
 				var handler = {
 					'onopen': onOpened,
 					'onmessage': onMessage,
-					'onerror': function() {},
-					'onclose': function() {}
+					'onerror': onError,
+					'onclose': onClose
 				};
 				var socket = channel.open(handler);
 				socket.onopen = onOpened;
@@ -31,7 +32,5 @@
 			setTimeout(openChannel, 100);
 		</script>
 		{% endif %}
-		{% block content %}
-		{% endblock %}
 	</body>
 </html>

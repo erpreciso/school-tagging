@@ -2,6 +2,12 @@ $(document).ready(function () {
 	newExercise();
 });
 
+onError = function (){
+	askMeRefresh();
+	$.get("/channelExpired");
+};
+onClose = function (){};
+
 newExercise = function (){
 	$("#dashboard").before($(document.createElement("button"))
 			.attr("id", "startExercise")
@@ -13,6 +19,11 @@ newExercise = function (){
 			.on("click", function(){$.get("/t/askStats");}));
 };
 
+function askMeRefresh () {
+	$("#lessonName").after($(document.createElement("div"))
+			.text("Please refresh this page")
+			.css("background-color", "red"));
+}
 showStats = function (message) {
 	$("#exercise, #answers, #showStats, #studentAnswers").remove();
 	var stats = message.stats;

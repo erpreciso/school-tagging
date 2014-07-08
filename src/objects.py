@@ -7,21 +7,6 @@ import random
 import re
 import codecs
 
-def exportJson():
-	j = None
-	q = Lesson.query()
-	if q.count(limit=None) > 0:
-		j = q.fetch(limit=None)
-	q = Teacher.query()
-	if q.count(limit=None) > 0:
-		j += q.fetch(limit=None)
-	q = Student.query()
-	if q.count(limit=None) > 0:
-		j += q.fetch(limit=None)
-	q = Session.query()
-	if q.count(limit=None) > 0:
-		j += q.fetch(limit=None)
-	return j
 
 class User(ndb.Model):
 	username = ndb.StringProperty()
@@ -30,9 +15,12 @@ class User(ndb.Model):
 	lessons = ndb.IntegerProperty(repeated=True)
 	token = ndb.StringProperty()
 	currentSession = ndb.IntegerProperty()
+	lastAction = ndb.DateTimeProperty(auto_now=True)
 
 	def connect(self):
-		self.token = channel.create_channel(str(self.key.id()))
+		duration = 60 # minutes
+		self.token = channel.create_channel(str(self.key.id()),
+										duration_minutes=duration)
 		self.save()
 	
 	def assignLesson(self, lessonID, lessonName):
@@ -40,7 +28,12 @@ class User(ndb.Model):
 		self.currentLessonName = lessonName
 		self.lessons.append(lessonID)
 		self.save()
-
+		
+	def askMeToRefresh(self):
+		message = json.dumps({"type": "askMeRefresh"})
+		channel.send_message(self.token, message)
+		
+		
 class Student(User):
 	answers = ndb.PickleProperty()
 # 		{sessionID1: answer, sessionID2: answer}
@@ -331,11 +324,11 @@ def getSentence():
 	return pool[i]
 	
 def clean():
-# 	ndb.delete_multi(Lesson.query().fetch(keys_only=True))
-# 	ndb.delete_multi(Session.query().fetch(keys_only=True))
-# 	ndb.delete_multi(Student.query().fetch(keys_only=True))
-# 	ndb.delete_multi(Teacher.query().fetch(keys_only=True))
-# 	memcache.flush_all()
+	ndb.delete_multi(Lesson.query().fetch(keys_only=True))
+	ndb.delete_multi(Session.query().fetch(keys_only=True))
+	ndb.delete_multi(Student.query().fetch(keys_only=True))
+	ndb.delete_multi(Teacher.query().fetch(keys_only=True))
+	memcache.flush_all()
 	pass
 
 
@@ -458,3 +451,19 @@ class Session(ndb.Model):
 			student.save()
 			channel.send_message(student.token, message)
 		self.sendStatusToTeacher()
+
+def exportJson():
+	j = None
+	q = Lesson.query()
+	if q.count(limit=None) > 0:
+		j = q.fetch(limit=None)
+	q = Teacher.query()
+	if q.count(limit=None) > 0:
+		j += q.fetch(limit=None)
+	q = Student.query()
+	if q.count(limit=None) > 0:
+		j += q.fetch(limit=None)
+	q = Session.query()
+	if q.count(limit=None) > 0:
+		j += q.fetch(limit=None)
+	return j
