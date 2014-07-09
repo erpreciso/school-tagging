@@ -6,6 +6,7 @@ import json
 import random
 import re
 import codecs
+import string
 import datetime
 
 MAX_IDLE_ALLOWED = 45 # minutes
@@ -359,6 +360,25 @@ def getSentence():
 	pool = codecs.open("sentence-pool.txt", encoding="latin-1").readlines()
 	i = int(random.random() * len(pool))
 	return pool[i]
+
+def getWords(sentence):
+	"""return word list, random choice within words."""
+	r = re.compile('[^%s]+' % re.escape(string.punctuation))
+	raw_pool = re.split(' ', sentence)
+	pool = [r.match(p) for p in raw_pool]
+	goods = []
+	words = []
+	for p in range(len(pool)):
+		if pool[p]:
+			goods += [True]
+			words += [pool[p].group()]
+		else:
+			goods += [False]
+			words += [raw_pool[p]]
+	target = int(random.random() * len(words))
+	while not goods[target]:
+		target = int(random.random() * len(words))
+	return words, target
 	
 def clean():
 	ndb.delete_multi(Lesson.query().fetch(keys_only=True))
@@ -460,12 +480,11 @@ class Session(ndb.Model):
 		self.teacher = lesson.teacher
 		self.students = lesson.students
 		self.exerciseText = getSentence()
-		self.exerciseWords = re.split(' ', self.exerciseText)
+		self.exerciseWords, self.target = getWords(self.exerciseText)
 		self.answersProposed = ["Noun", "Adjective", "Verb", "Adverb", "Other"]
 		self.studentAnswers = {}
 		self.answersStudents = {}
 		self.open = True
-		self.target = int(random.random() * len(self.exerciseWords))
 		sid = self.save()
 		lesson.addSession(sid)
 		teacher = getTeacher(self.teacher)
