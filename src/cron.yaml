@@ -1,0 +1,4 @@
+cron:
+- description: cleaning idle objects
+  url: /admin/clean
+  schedule: every 60 minutes from 0:00 to 23:00

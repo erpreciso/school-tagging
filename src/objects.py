@@ -6,8 +6,43 @@ import json
 import random
 import re
 import codecs
+import datetime
 
+MAX_IDLE_ALLOWED = 45 # minutes
 
+def cleanIdleObjects():
+	q = Teacher.query(Teacher.currentLessonID != None)
+	if q.count(limit=None) > 0:
+		teachers = q.fetch(limit=None)
+		for teacher in teachers:
+			idle = datetime.datetime.now() - teacher.lastAction
+			if idle > datetime.timedelta(minutes=MAX_IDLE_ALLOWED):
+				lesson = getLesson(teacher.currentLessonID)
+				if lesson:
+					lesson.end()
+				teacher.logout()
+	q = Student.query(Student.currentLessonID != None)
+	if q.count(limit=None) > 0:
+		students = q.fetch(limit=None)
+		for student in students:
+			idle = datetime.datetime.now() - teacher.lastAction
+			if idle > datetime.timedelta(minutes=MAX_IDLE_ALLOWED):
+				student.logout()
+	q = Lesson.query(Lesson.open == True)
+	if q.count(limit=None) > 0:
+		lessons = q.fetch(limit=None)
+		for lesson in lessons:
+			teacher = getTeacher(lesson.teacher)
+			if teacher and teacher.currentLessonID == None:
+				lesson.end()
+	q = Session.query(Session.open == True)
+	if q.count(limit=None) > 0:
+		sessions = q.fetch(limit=None)
+		for session in sessions:
+			teacher = getTeacher(session.teacher)
+			if teacher and teacher.currentLessonID == None:
+				session.end()
+	
 class User(ndb.Model):
 	username = ndb.StringProperty()
 	currentLessonID = ndb.IntegerProperty()
@@ -59,14 +94,16 @@ class Student(User):
 		return lesson.key.id()
 	
 	def exitLesson(self):
-		lesson = getLesson(self.currentLessonID)
-		lesson.removeStudent(self)
-		message = {"type": "lessonTerminated"}
-		message = json.dumps(message)
-		channel.send_message(self.token, message)
-		self.currentLessonID = None
-		self.currentLessonName = ""
-		self.save()
+		if self.currentLessonID:
+			lesson = getLesson(self.currentLessonID)
+			if lesson:
+				lesson.removeStudent(self)
+				message = {"type": "lessonTerminated"}
+				message = json.dumps(message)
+				channel.send_message(self.token, message)
+				self.currentLessonID = None
+				self.currentLessonName = None
+				self.save()
 	
 	def exitSession(self):
 		if self.currentSession:
@@ -79,7 +116,7 @@ class Student(User):
 		self.alertTeacherImLogout()
 		self.exitLesson()
 		self.exitSession()
-		self.token = ""
+		self.token = None
 		self.save()
 			
 	def addAnswer(self, answer):
@@ -117,7 +154,7 @@ class Student(User):
 		message = {"type": "studentDisconnected",
 			"message": {"studentName": self.username}}
 		self.sendMessageToTeacher(message)
-		
+
 class Teacher(User):
 	password = ndb.StringProperty()
 	def save(self):
@@ -126,9 +163,9 @@ class Teacher(User):
 		
 	def logout(self):
 		self.currentLessonID = None
-		self.currentLessonName = ""
+		self.currentLessonName = None
 		self.currentSession = None
-		self.token = ""
+		self.token = None
 		self.save()
 		
 	def sendPingToStudent(self, studentName):
@@ -136,7 +173,7 @@ class Teacher(User):
 		message = {"type": "pingFromTeacher"}
 		message = json.dumps(message)
 		channel.send_message(student.token, message)
-	
+
 def teacherUsernameExists(username):
 	if getTeacher(username):
 		return True
@@ -226,7 +263,7 @@ class Lesson(ndb.Model):
 			student = getStudent(studentName, self.key.id())
 			student.exitLesson()
 		teacher.currentLessonID = None
-		teacher.currentLessonName = ""
+		teacher.currentLessonName = None
 		teacher.save()
 		self.open = False
 		self.save()

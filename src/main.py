@@ -8,6 +8,8 @@ import os
 import logging
 import datetime
 
+
+
 class MainHandler(webapp2.RequestHandler):
 	template_dir = os.path.join(os.path.dirname(__file__), 'pages')
 	jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
@@ -270,7 +272,9 @@ class DeleteHandler(MainHandler):
 		for name in self.request.cookies.iterkeys():
 			self.response.delete_cookie(name)
 		return self.redirect("/start")
-		
+
+
+
 class ConnectionHandler(MainHandler):
 	def post(self, action):
 		""" channel service interrupted from yaml"""
@@ -283,18 +287,25 @@ class ConnectionHandler(MainHandler):
 					return student.alertTeacherImOffline()
 # 			elif user.__class__.__name__ == "Teacher":
 # 				teacher = user
+# 				global TICKTACK
 # 				if action == "disconnected":
 # 					if teacher.currentLessonID:
 # 						lesson = objs.getLesson(teacher.currentLessonID)
-# 						lesson.end()
-# 						teacher.logout()
-		
+# 						TICKTACK = threading.Timer(20, lessonTimeOut,
+# 									{"lesson": lesson, "teacher": teacher})
+# 						TICKTACK.start()
+# 				elif action == "connected" and TICKTACK:
+# 					if teacher.currentLessonID:
+# 						lesson = objs.getLesson(teacher.currentLessonID)
+# 						TICKTACK.cancel()
+						
+
+						
 class ChannelHandler(MainHandler):
 	def get(self):
 		requester = self.getFromCookie()
 		idle = datetime.datetime.now() - requester.lastAction
-		threshold = 15 # minutes
-		if idle < datetime.timedelta(minutes=threshold):
+		if idle < datetime.timedelta(minutes=objs.MAX_IDLE_ALLOWED):
 			return requester.connect()
 		else:
 			return requester.logout()
@@ -323,7 +334,11 @@ class JollyHandler(MainHandler):
 class HelpHandler(MainHandler):
 	def get(self):
 		return self.renderPage("helpIndex.html")
-	
+
+class CleanIdle(MainHandler):
+	def get(self):
+		objs.cleanIdleObjects()
+
 PAGE_RE = r'(/(?:[a-zA-Z0-9_-]+/?)*)'
 app = webapp2.WSGIApplication([
 	webapp2.Route(r'/t/<action>',
@@ -336,9 +351,10 @@ app = webapp2.WSGIApplication([
 			handler=ConnectionHandler, name="connection"),
 	("/export", ExportPage),
 	("/start", StartPage),
-	("/delete", DeleteHandler),
+	("/admin/delete", DeleteHandler),
 	("/ping", PingHandler),
 	("/help", HelpHandler),
+	("/admin/clean", CleanIdle),
 	("/channelExpired", ChannelHandler),
 	(PAGE_RE, JollyHandler),
 			])
