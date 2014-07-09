@@ -322,6 +322,17 @@ class PingHandler(MainHandler):
 			student = requester
 			return student.alertTeacherImAlive()
 			
+class ForceLogoutStudentHandler(MainHandler):
+	def post(self):
+		requester = self.getFromCookie()
+		requesterRole = self.getRoleFromCookie()
+		if requesterRole == "teacher":
+			teacher = requester
+			studentName = self.read("student")
+			student = objs.getStudent(studentName, teacher.currentLessonID)
+			if student:
+				return student.logout()
+		
 class ExportPage(MainHandler):
 	def get(self):
 		data = objs.exportJson()
@@ -353,6 +364,7 @@ app = webapp2.WSGIApplication([
 	("/start", StartPage),
 	("/admin/delete", DeleteHandler),
 	("/ping", PingHandler),
+	("/forceLogoutStudent", ForceLogoutStudentHandler),
 	("/help", HelpHandler),
 	("/admin/clean", CleanIdle),
 	("/channelExpired", ChannelHandler),

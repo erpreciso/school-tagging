@@ -80,6 +80,7 @@ class Student(User):
 		else:
 			cl = self.currentLessonID
 		self.put()
+		memcache.flush_all()
 		memcache.set("Student:" + self.username + \
 					"|CurrentLesson:" + str(cl), self)
 		
@@ -467,8 +468,9 @@ class Session(ndb.Model):
 			channel.send_message(teacher.token, json.dumps(status))
 	
 	def removeStudent(self, student):
-		self.students.remove(student.username)
-		self.save()
+		if student.username in self.students:
+			self.students.remove(student.username)
+			self.save()
 	
 	def end(self):
 		self.open = False

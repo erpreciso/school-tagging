@@ -34,8 +34,6 @@ showStats = function (message) {
 		$("#stats").append($(document.createElement("div"))
 				.text(name + ": " + stats[name] + " correct answers"));
 	}
-	
-	
 };
 
 onMessage = function(message) {
@@ -57,18 +55,26 @@ onMessage = function(message) {
 		var studentName = data.message.studentName;
 		if ($("#" + studentName).children(".pingRequest").length == 0){
 			$("#" + studentName).append($(document.createElement("button"))
-				.addClass("pingRequest")
-				.text("It seems I'm offline: ping me...")
-				.on("click", function(event){
-					var student = event.target.parentElement.id;
-					$.post("/ping", {"student": student});
-				}));
+					.addClass("pingRequest")
+					.text("It seems I'm offline: ping me...")
+					.on("click", function(event){
+						var student = event.target.parentElement.id;
+						$.post("/ping", {"student": student});
+					}));
+			$("#" + studentName).append($(document.createElement("button"))
+					.addClass("logoutStudent")
+					.text(".. or kick me out of the lesson")
+					.on("click", function(event){
+						var student = event.target.parentElement.id;
+						$.post("/forceLogoutStudent", {"student": student});
+					}));
 		}
 	}
 	else if (data.type == "studentAlive") {
 		var studentName = data.message.studentName;
 		if ($("#" + studentName).children(".pingRequest").length > 0){
 			$("#" + studentName).children(".pingRequest").remove();
+			$("#" + studentName).children(".logoutStudent").remove();
 		}
 	}
 	else if (data.type == "sessionExercise") {
