@@ -381,6 +381,9 @@ def getWords(sentence):
 		target = int(random.random() * len(words))
 	return words, target
 	
+def getAnswersProposed():
+	return ["Noun", "Adjective", "Verb", "Adverb", "Other"]
+
 def clean():
 	ndb.delete_multi(Lesson.query().fetch(keys_only=True))
 	ndb.delete_multi(Session.query().fetch(keys_only=True))
@@ -483,7 +486,7 @@ class Session(ndb.Model):
 		self.students = lesson.students
 		self.exerciseText = getSentence()
 		self.exerciseWords, self.target = getWords(self.exerciseText)
-		self.answersProposed = ["Noun", "Adjective", "Verb", "Adverb", "Other"]
+		self.answersProposed = getAnswersProposed()
 		self.studentAnswers = {}
 		self.answersStudents = {}
 		self.open = True

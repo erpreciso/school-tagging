@@ -40,6 +40,17 @@ function lessonTerminated () {
 		$("#feedback").remove();
 	}
 }
+
+function mixArray(arr) {
+	var mixed = [];
+	var howmany = arr.length * 1;
+	for (var i = 0; i < howmany; i++){
+		var pos = Math.floor(Math.random() * arr.length);
+		mixed[i] = arr.splice(pos, 1);
+		
+	}
+	return mixed;
+}
 function presentExercise(message) {
 	{
 		$("#exercise, #answers").empty();
@@ -48,7 +59,7 @@ function presentExercise(message) {
 		}
 		var words = message.wordsList;
 		var target = message.target;
-		var answersProposed = message.answersProposed;
+		var answersProposed = mixArray(message.answersProposed);
 		for (var i = 0; i < words.length; i++) {
 			var word = $(document.createElement("span"))
 							.attr("id", words[i])
