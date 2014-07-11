@@ -5,7 +5,6 @@ import objects as objs
 import webapp2
 import jinja2
 import os
-import logging
 import datetime
 
 
@@ -265,10 +264,10 @@ class StudentHandler(MainHandler):
 		if not student:
 			self.clearCookies()
 			return self.redirect("/s/login")
-		lesson = student.currentLessonID
-		if lesson not in objs.getOpenLessonsID():
-			self.clearCookies()
-			return self.redirect("/s/login")
+# 		lesson = student.currentLessonID
+# 		if lesson not in objs.getOpenLessonsID():
+# 			self.clearCookies()
+# 			return self.redirect("/s/login")
 		self.renderPage("studentDashboard.html",
 							studentName=student.username,
 							lessonName=student.currentLessonName,

@@ -1,7 +1,6 @@
 from google.appengine.ext import ndb
 from google.appengine.api import memcache
 from google.appengine.api import channel
-# import logging
 import json
 import random
 import re
