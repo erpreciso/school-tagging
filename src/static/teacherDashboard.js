@@ -1,5 +1,9 @@
 $(document).ready(function () {
 	newExercise();
+	$(".studentName").on("click", function(event){
+		var student = event.target.id;
+		$.post("/t/askStudentStats", {"student": student});
+	});
 });
 
 onError = function (){
@@ -24,6 +28,26 @@ function askMeRefresh () {
 			.text("Please refresh this page")
 			.css("background-color", "red"));
 }
+
+studentStats = function (message) {
+	var student = message.student;
+	var stats = "Correct: " + message.stats.correct;
+	stats += ", Wrong: " + message.stats.wrong;
+	stats += ", Missing: " + message.stats.missing;
+	var s = $(document.createElement("div")).text(stats);
+	$("#" + student)
+		.append(s)
+		.css("background-color", "AntiqueWhite")
+		.off("click").on("click", function(){
+			$(this).children().remove();
+			$(this).css("background-color", "transparent");
+			$(this).off("click").on("click", function(event){
+				var student = event.target.id;
+				$.post("/t/askStudentStats", {"student": student});
+			});
+		});
+};
+
 showStats = function (message) {
 	$("#exercise, #answers, #showStats, #studentAnswers").remove();
 	var stats = message.stats;
@@ -45,7 +69,11 @@ onMessage = function(message) {
 		var student = $(document.createElement("div"))
 			.attr("id", studentName)
 			.addClass("studentName")
-			.text(txt);
+			.text(txt)
+			.on("click", function(event){
+				var student = event.target.id;
+				$.post("/t/askStudentStats", {"student": student});
+			});
 		$("#students").append(student);
 	}
 	else if (data.type == "studentLogout") {
@@ -85,6 +113,9 @@ onMessage = function(message) {
 	}
 	else if (data.type == "lessonStats") {
 		showStats(data.message);
+	}
+	else if (data.type == "studentStats") {
+		studentStats(data.message);
 	}
 };
 

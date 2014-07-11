@@ -74,6 +74,25 @@ class Student(User):
 	answers = ndb.PickleProperty()
 # 		{sessionID1: answer, sessionID2: answer}
 		
+	def produceAndSendOwnStats(self):
+		statsDict = {"correct": 0, "wrong": 0, "missing": 0}
+		sessions = [s["session"] for s in self.answers]
+		for sessionID in sessions:
+			session = getSession(sessionID)
+			if session:
+				for sa in self.answers:
+					if sa["session"] == sessionID:
+						answer = sa["answer"]
+						if answer == "MISSING":
+							statsDict["missing"] += 1
+						elif answer == session.validatedAnswer:
+							statsDict["correct"] += 1
+						elif answer != session.validatedAnswer:
+							statsDict["wrong"] += 1
+		message = {"type": "studentStats",
+				"message": {"stats": statsDict, "student": self.username}}
+		self.sendMessageToTeacher(message)
+	
 	def save(self):
 		if self.currentLessonID == None:
 			cl = "Empty"
@@ -134,7 +153,7 @@ class Student(User):
 			if teacher and teacher.token:
 				message = json.dumps(message)
 				return channel.send_message(teacher.token, message)
-		
+	
 	def alertTeacherImArrived(self):
 		message = {"type": "studentArrived",
 			"message": {"studentName": self.username}}
@@ -432,7 +451,7 @@ class Session(ndb.Model):
 			student = getStudent(studentName, self.lesson)
 			myanswer = [a["answer"] for a in student.answers \
 					if a["session"] == self.key.id()]
-			if myanswer:
+			if myanswer and myanswer[0] != "MISSING":
 				myanswer = myanswer[0]
 				message = {
 					"type": "validAnswer",
@@ -476,6 +495,14 @@ class Session(ndb.Model):
 			self.save()
 	
 	def end(self):
+		for studentName in self.students:
+			student = getStudent(studentName, self.lesson)
+			if student:
+				sessions = [s["session"] for s in student.answers]
+				if self.key.id() not in sessions:
+					a = {"session": self.key.id(), "answer": "MISSING"}
+					student.answers.append(a)
+					student.save()
 		self.open = False
 		self.save()
 		

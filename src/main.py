@@ -85,6 +85,8 @@ class TeacherHandler(MainHandler):
 			self.login()
 		elif action == "signup":
 			self.signup()
+		elif action == "askStudentStats":
+			self.produceStudentStats(self.read("student"))
 	
 
 	def login(self):
@@ -158,6 +160,19 @@ class TeacherHandler(MainHandler):
 			return lesson.produceAndSendStats()
 		else:
 			return self.redirect("/t/login")
+	
+	def produceStudentStats(self, studentName):
+		teacher = self.getFromCookie()
+		if not teacher:
+			return self.redirect("/t/login")
+		if not teacher.currentLessonID:
+			return self.redirect("/t/login")
+		student = objs.getStudent(studentName, teacher.currentLessonID)
+		if student:
+			return student.produceAndSendOwnStats()
+		else:
+			return self.redirect("/t/login")
+		
 		
 	def initializeDashboard(self):
 		teacher = self.getFromCookie()
