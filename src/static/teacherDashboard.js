@@ -32,19 +32,6 @@ newExercise = function (){
 			.on("click", function(){$.get("/t/askStats");}));
 };
 
-function askMeRefresh () {
-	var language = getLanguage();
-	if (language == "EN") {
-		var t1 ="Please refresh this page";
-	}
-	else if (language == "IT") {
-		var t1 = "Pregasi aggiornare la pagina tramite l'apposito comando nel menù di navigazione";
-	}
-	$("#lessonName").after($(document.createElement("div"))
-			.text(t1)
-			.css("background-color", "red"));
-}
-
 studentStats = function (message) {
 	var language = getLanguage();
 	if (language == "EN"){
@@ -273,12 +260,10 @@ startExercise = function () {
 
 askValidation = function () {
 	var language = getLanguage();
-	if (language == "EN"){
+	if (language == "EN")
 		var t1 = " <-- Click on the correct part of the speech";
-	}
-	else if (language == "IT"){
+	else if (language == "IT")
 		var t1 = " <-- Clicca sulla corretta parte del discorso";
-	}
 	if ($("#askValidation").length == 0) {
 		$("#timeIsUp").remove();
 		$.get("/t/timeIsUp");
@@ -286,7 +271,7 @@ askValidation = function () {
 		var instr = $(document.createElement("span"))
 			.attr("id", "askValidation")
 			.css("background-color", "GreenYellow")
-			.text(t1); // TODO to maintain??
+			.text(t1);
 		$("#answers").append(instr);
 		$("#answers").children().on("click", function (event){
 			var valid = event.target.innerText.trim();

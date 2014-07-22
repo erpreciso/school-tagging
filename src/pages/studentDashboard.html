@@ -1,7 +1,7 @@
 {% extends "wrapper.html" %}
 
 {% block title %}
-<title>school-tagging|student|dashboard</title>
+<title>{{labels["page_title"]}}</title>
 {% endblock %}
 
 {% block script %}
@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block content %}
-<a href="/s/logout">Logout</a>
-<div>Student: {{studentName}}</div>
-<div id="lessonName">Lesson name: {{lessonName}}</div>
+<a href="/s/logout">{{labels["logout"]}}</a>
+<div>{{labels["student_title"]}}: {{studentName}}</div>
+<div id="lessonName">{{labels["lesson_name_title"]}}: {{lessonName}}</div>
 {% endblock %}

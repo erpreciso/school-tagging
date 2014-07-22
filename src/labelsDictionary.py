@@ -96,7 +96,37 @@ def labels(template, language):
                     },
                 "enrolled_students": {
                     "EN": "Enrolled students (click to view stats)",
-                    "IT": "Studenti collegati (cliccare sul nome per visualizzare le statistiche",
+                    "IT": "Studenti collegati (cliccare sul nome per visualizzare le statistiche)",
+                    },
+                "": {
+                    "EN": "",
+                    "IT": "",
+                    },
+              },
+        "studentDashboard.html": {
+                "page_title": {
+                    "EN": "school-tagging|student|dashboard",
+                    "IT": "school-tagging|studente|dashboard",
+                    },
+                "logout": {
+                    "EN": "Logout",
+                    "IT": "Disconnetti",
+                    },
+                "lesson_name_title": {
+                    "EN": "Lesson name",
+                    "IT": "Nome della lezione",
+                    },
+                "student_title": {
+                    "EN": "Student",
+                    "IT": "Studente",
+                    },
+                "": {
+                    "EN": "",
+                    "IT": "",
+                    },
+                "": {
+                    "EN": "",
+                    "IT": "",
                     },
                 "": {
                     "EN": "",

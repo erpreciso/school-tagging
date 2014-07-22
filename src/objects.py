@@ -404,6 +404,13 @@ def getWords(sentence):
 	
 def getAnswersProposed():
 	return ["Noun", "Adjective", "Verb", "Adverb", "Other"]
+# 	return [
+# 		{"EN": "Noun", "IT": "Nome"},
+# 		{"EN": "Adjective", "IT": "Aggettivo"},
+# 		{"EN": "Verb", "IT": "Verbo"},
+# 		{"EN": "Adverb", "IT": "Avverbio"},
+# 		{"EN": "Other", "IT": "Altro"}
+# 		]
 
 def clean():
 	ndb.delete_multi(Lesson.query().fetch(keys_only=True))
@@ -533,6 +540,7 @@ class Session(ndb.Model):
 				"target": self.target
 				},
 			}
+		
 		message = json.dumps(message)
 		channel.send_message(teacher.token, message)
 		for studentName in self.students:

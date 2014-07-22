@@ -276,15 +276,15 @@ class StudentHandler(MainHandler):
 		if not student:
 			self.clearCookies()
 			return self.redirect("/s/login")
-# 		lesson = student.currentLessonID
-# 		if lesson not in objs.getOpenLessonsID():
-# 			self.clearCookies()
-# 			return self.redirect("/s/login")
-		self.renderPage("studentDashboard.html",
-							studentName=student.username,
-							lessonName=student.currentLessonName,
-							token=student.token,
-							)
+		templ = "studentDashboard.html"
+		language = student.language or objs.DEFAULT_LANGUAGE
+		self.renderPage(templ,
+					studentName=student.username,
+					lessonName=student.currentLessonName,
+					token=student.token,
+					language=language,
+					labels=labdict.labels(templ, language),
+					)
 	def logout(self):
 		student = self.getFromCookie()
 		if student:
