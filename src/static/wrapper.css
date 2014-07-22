@@ -1,0 +1,21 @@
+body {
+	font-family: "Trebuchet MS", Helvetica, sans-serif;
+}
+
+.language {
+	display: inline;
+	background-color: #eee;
+	color: #000;
+	margin: 2px;
+	padding: 1px;
+}
+
+.current {
+	color: #0f0;
+}
+
+header {
+}
+
+#content {
+}

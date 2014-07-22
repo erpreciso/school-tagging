@@ -9,6 +9,7 @@ import string
 import datetime
 
 MAX_IDLE_ALLOWED = 45 # minutes
+DEFAULT_LANGUAGE = "IT"
 
 def cleanIdleObjects():
 	q = Teacher.query(Teacher.currentLessonID != None)
@@ -51,6 +52,7 @@ class User(ndb.Model):
 	token = ndb.StringProperty()
 	currentSession = ndb.IntegerProperty()
 	lastAction = ndb.DateTimeProperty(auto_now=True)
+	language = ndb.StringProperty()
 
 	def connect(self):
 		duration = 60 # minutes
@@ -204,6 +206,7 @@ def createTeacher(username, password):
 	teacher = Teacher()
 	teacher.username = username
 	teacher.password = password
+	teacher.language = DEFAULT_LANGUAGE
 	teacher.save()
 	return
 

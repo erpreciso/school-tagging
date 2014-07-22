@@ -2,12 +2,11 @@
 # [school-tagging] webapp
 
 import objects as objs
+import labelsDictionary as labdict
 import webapp2
 import jinja2
 import os
 import datetime
-
-
 
 class MainHandler(webapp2.RequestHandler):
 	template_dir = os.path.join(os.path.dirname(__file__), 'pages')
@@ -77,8 +76,16 @@ class TeacherHandler(MainHandler):
 		elif action == "askStats":
 			self.sendStats()
 		else:
-			self.renderPage("teacherLogin.html")
+			self.renderLoginPage()
 	
+	def renderLoginPage(self, message=None):
+		t = "teacherLogin.html"
+		if message:
+			m = labdict.labels(t, "IT")[message]
+		else:
+			m = None
+		self.renderPage(t, labels=labdict.labels(t, "IT"), message=m)
+		
 	def post(self, action):
 		if action == "login":
 			self.login()
@@ -103,14 +110,14 @@ class TeacherHandler(MainHandler):
 						self.startLesson(teacher)
 						return self.redirect("/t/dashboard")
 					else:
-						message = "Lesson name already in use"
+						message = "lesson_name_in_use"
 				else:
-					message = "Please provide a name for the lesson"
+					message = "provide_lesson_name"
 			else:
-				message = "Password not correct"
+				message = "password_not_correct"
 		else:
-			message = "Username not existing"
-		return self.renderPage("teacherLogin.html", message=message)
+			message = "username_not_existing"
+		return self.renderLoginPage(message)
 		
 	def logout(self):
 		teacher = self.getFromCookie()
@@ -132,10 +139,10 @@ class TeacherHandler(MainHandler):
 		if not objs.teacherUsernameExists(username):
 			password = self.read("password")
 			objs.createTeacher(username, password)
-			message = "Please re-enter username and password in the LOGIN area"
+			message = "re-enter_login"
 		else:
-			message = "Username already in use"
-		return self.renderPage("teacherLogin.html", message=message)
+			message = "username_already_used"
+		return self.renderLoginPage(message)
 	
 	def startLesson(self, teacher):
 		lessonName = self.read("lessonName")
@@ -145,8 +152,8 @@ class TeacherHandler(MainHandler):
 			self.addCookie("schooltagging-lessonID", str(lesson.key.id()))
 			return self.redirect("/t/dashboard")
 		else:
-			message = "Lesson name currently in use"
-		return self.renderPage("teacherLogin.html", message=message)
+			message = "lesson_name_in_use"
+		return self.renderLoginPage(message)
 	
 	def sendStats(self):
 		teacher = self.getFromCookie()
@@ -179,13 +186,17 @@ class TeacherHandler(MainHandler):
 			return self.redirect("/t/login")
 		if not teacher.currentLessonID:
 			return self.redirect("/t/login")
+		language = teacher.language or objs.DEFAULT_LANGUAGE
 		lesson = objs.getLesson(teacher.currentLessonID)
 		if lesson:
-			return self.renderPage("teacherDashboard.html",
+			templ = "teacherDashboard.html"
+			return self.renderPage(templ ,
 							teacherName=teacher.username,
 							lessonName=teacher.currentLessonName,
 							students=lesson.students,
 							token=teacher.token,
+							language=language,
+							labels=labdict.labels(templ, language),
 							)
 		else:
 			return self.redirect("/t/login")
@@ -243,6 +254,7 @@ class StudentHandler(MainHandler):
 	def login(self):
 		student = objs.Student()
 		student.username = self.read("username")
+		student.language = objs.DEFAULT_LANGUAGE
 		lessonName = self.read("lessonName")
 		if lessonName in objs.getOpenLessonsNames():
 			if not objs.studentAlreadyConnected(student.username, lessonName):
@@ -364,6 +376,16 @@ class CleanIdle(MainHandler):
 	def get(self):
 		objs.cleanIdleObjects()
 
+class LanguageHandler(MainHandler):
+	def post(self):
+		requester = self.getFromCookie()
+		if requester:
+			language = self.read("language")
+			requester.language = language
+			requester.save()
+			return
+		
+		
 PAGE_RE = r'(/(?:[a-zA-Z0-9_-]+/?)*)'
 app = webapp2.WSGIApplication([
 	webapp2.Route(r'/t/<action>',
@@ -382,5 +404,7 @@ app = webapp2.WSGIApplication([
 	("/help", HelpHandler),
 	("/admin/clean", CleanIdle),
 	("/channelExpired", ChannelHandler),
+	("/language", LanguageHandler),
 	(PAGE_RE, JollyHandler),
 			])
+

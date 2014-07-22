@@ -1,0 +1,14 @@
+
+
+input {
+	display: block;
+}
+
+label {
+	display: inline;
+}
+
+form {
+	float: left;
+	background-color: #eee;
+}

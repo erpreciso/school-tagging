@@ -1,32 +1,35 @@
 {% extends "wrapper.html" %}
 
 {% block title %}
-<title>school-tagging|teacher|login</title>
+<title>{{labels["page_title"]}}</title>
 {% endblock %}
 
+{% block style %}
+<link rel="stylesheet" type="text/css" href="/static/teacherLogin.css" />
+{% endblock %}
 {% block content %}
-<div>LOGIN</div>
-<div>Please enter your username and password</div>
 <form method="post" action="/t/login">
-	<label for="un">Username</label>
+	<div>{{labels["login_title"]}}</div>
+	<div>{{labels["insert_username_password"]}}</div>
+	<label for="un">{{labels["username"]}}</label>
 	<input type="text" name="username" id="un">
-	<label for="pw">Password</label>
+	<label for="pw">{{labels["password"]}}</label>
 	<input type="password" name="password" id="pw">
-	<label for="ln">Lesson name</label>
+	<label for="ln">{{labels["lesson_name"]}}</label>
 	<input type="text" name="lessonName" id="ln">
-	<input type="submit" value="Login">
+	<input type="submit" value="{{labels['login_button']}}">
 </form>
-<div>SIGNUP</div>
-<div>Do not have an account yet?</div>
 <form method="post" action="/t/signup">
-	<label for="un">Username</label>
+	<div>{{labels["signup_title"]}}</div>
+	<div>{{labels["do_not_have_account"]}}</div>
+	<label for="un">{{labels["username"]}}</label>
 	<input type="text" name="username" id="un">
-	<label for="pw">Password</label>
+	<label for="pw">{{labels["password"]}}</label>
 	<input type="password" name="password" id="pw">
-	<input type="submit" value="Signup">
+	<input type="submit" value="{{labels['signup_button']}}">
 </form>
 {% if message %}
-<div>MESSAGE</div>
+<div>{{labels["message_title"]}}</div>
 <div><strong>{{message}}</strong></div>
 {% endif %}
 

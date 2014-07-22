@@ -1,7 +1,7 @@
 {% extends "wrapper.html" %}
 
 {% block title %}
-<title>school-tagging|teacher|dashboard</title>
+<title>{{labels["page_title"]}}</title>
 {% endblock %}
 
 {% block script %}
@@ -9,10 +9,10 @@
 {% endblock %}
 
 {% block content %}
-<a href="/t/logout">Logout</a>
-<div>Teacher: {{teacherName}}</div>
-<div id="lessonName">Lesson name (pass to students): {{lessonName}}</div>
-<div id="students">Enrolled students (click to view stats):
+<a href="/t/logout">{{labels["logout"]}}</a>
+<div>{{labels["teacher_title"]}}: {{teacherName}}</div>
+<div id="lessonName">{{labels["lesson_name_title"]}}: {{lessonName}}</div>
+<div id="students">{{labels["enrolled_students"]}}:
 	{% for student in students %}
 	<div id="{{student}}" class="studentName">{{loop.index}}. {{student}}</div>
 	{% endfor %}
