@@ -120,33 +120,39 @@ def labels(template, language):
                     "EN": "Student",
                     "IT": "Studente",
                     },
-                "": {
-                    "EN": "",
-                    "IT": "",
+              },
+         "studentLogin.html": {
+                "page_title": {
+                    "EN": "school-tagging|student|login",
+                    "IT": "school-tagging|studente|entra",
                     },
-                "": {
-                    "EN": "",
-                    "IT": "",
+                "enter_username_and_lesson": {
+                    "EN": "Please enter your name and your session ID provided by your teacher",
+                    "IT": "Prego inserisci il tuo nome e l'identificativo della lezione che l'insegnante ti ha comunicato",
                     },
-                "": {
-                    "EN": "",
-                    "IT": "",
+                "name_and_surname": {
+                    "EN": "Name and Last Name",
+                    "IT": "Nome e Cognome",
                     },
-                "": {
-                    "EN": "",
-                    "IT": "",
+                "session_id": {
+                    "EN": "Session ID",
+                    "IT": "Identificativo della lezione",
                     },
-                "": {
-                    "EN": "",
-                    "IT": "",
+                "login_button": {
+                    "EN": "Go to class exercise",
+                    "IT": "Entra nella lezione",
                     },
-                "": {
-                    "EN": "",
-                    "IT": "",
+                "name_already_in_use": {
+                    "EN": "Name already in use",
+                    "IT": "Nome già utilizzato",
                     },
-                "": {
-                    "EN": "",
-                    "IT": "",
+                "lesson_not_started": {
+                    "EN": "Lesson not started yet",
+                    "IT": "Lezione non ancora iniziata",
+                    },
+                "message_title": {
+                    "EN": "MESSAGE",
+                    "IT": "ATTENZIONE",
                     },
                },
     }

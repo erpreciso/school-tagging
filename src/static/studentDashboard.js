@@ -63,11 +63,7 @@ function presentExercise(message) {
 	}
 	var words = message.wordsList;
 	var target = message.target;
-	console.log("raw from py");
-	console.log(message.answersProposed);
 	var answersProposed = mixArray(message.answersProposed);
-	console.log("mixed");
-	console.log(answersProposed);
 	for (var i = 0; i < words.length; i++) {
 		var word = $(document.createElement("span"))
 						.attr("id", words[i])
@@ -78,7 +74,6 @@ function presentExercise(message) {
 		}
 	}
 	for (var i = 0; i < answersProposed.length; i++ ){
-		console.log(answersProposed[i][0]["EN"]);
 		var answer = $(document.createElement("span"))
 			.attr("id", answersProposed[i][0]["EN"])
 			.css("background-color", "Moccasin")
