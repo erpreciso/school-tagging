@@ -8,7 +8,7 @@ import codecs
 import string
 import datetime
 
-MAX_IDLE_ALLOWED = 45 # minutes
+MAX_IDLE_ALLOWED = 1 # minutes
 DEFAULT_LANGUAGE = "IT"
 
 def cleanIdleObjects():
@@ -403,14 +403,14 @@ def getWords(sentence):
 	return words, target
 	
 def getAnswersProposed():
-	return ["Noun", "Adjective", "Verb", "Adverb", "Other"]
-# 	return [
-# 		{"EN": "Noun", "IT": "Nome"},
-# 		{"EN": "Adjective", "IT": "Aggettivo"},
-# 		{"EN": "Verb", "IT": "Verbo"},
-# 		{"EN": "Adverb", "IT": "Avverbio"},
-# 		{"EN": "Other", "IT": "Altro"}
-# 		]
+# 	return ["Noun", "Adjective", "Verb", "Adverb", "Other"]
+	return [
+		{"EN": "Noun", "IT": "Nome"},
+		{"EN": "Adjective", "IT": "Aggettivo"},
+		{"EN": "Verb", "IT": "Verbo"},
+		{"EN": "Adverb", "IT": "Avverbio"},
+		{"EN": "Other", "IT": "Altro"}
+		]
 
 def clean():
 	ndb.delete_multi(Lesson.query().fetch(keys_only=True))
@@ -431,7 +431,8 @@ class Session(ndb.Model):
 # 		sentence to be analized from the student
 	target = ndb.IntegerProperty()
 # 		index of the word that the student should recognize
-	answersProposed = ndb.StringProperty(repeated=True)
+# 	answersProposed = ndb.StringProperty(repeated=True)
+	answersProposed = ndb.PickleProperty(repeated=True)
 # 		options available for the student
 	exerciseWords = ndb.StringProperty(repeated=True)
 # 		list of the words componing the exercise

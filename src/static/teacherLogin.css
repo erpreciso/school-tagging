@@ -5,10 +5,8 @@ input {
 }
 
 label {
-	display: inline;
 }
 
 form {
-	float: left;
-	background-color: #eee;
+	background-color: #eff;
 }

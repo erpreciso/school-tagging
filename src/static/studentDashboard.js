@@ -9,7 +9,9 @@ onError = function (){
 onClose = function (){};
 
 onMessage = function(message) {
+	console.log(message);
 	var data = JSON.parse(message.data);
+	console.log(data);
 	var language = getLanguage(); 
 	if (language == "EN")
 		var t1 = "Session aborted by teacher; correct answer was ";
@@ -61,7 +63,11 @@ function presentExercise(message) {
 	}
 	var words = message.wordsList;
 	var target = message.target;
+	console.log("raw from py");
+	console.log(message.answersProposed);
 	var answersProposed = mixArray(message.answersProposed);
+	console.log("mixed");
+	console.log(answersProposed);
 	for (var i = 0; i < words.length; i++) {
 		var word = $(document.createElement("span"))
 						.attr("id", words[i])
@@ -72,12 +78,13 @@ function presentExercise(message) {
 		}
 	}
 	for (var i = 0; i < answersProposed.length; i++ ){
+		console.log(answersProposed[i][0]["EN"]);
 		var answer = $(document.createElement("span"))
-			.attr("id", answersProposed[i])
+			.attr("id", answersProposed[i][0]["EN"])
 			.css("background-color", "Moccasin")
-			.text(answersProposed[i] + " ");
+			.text(answersProposed[i][0][language] + " ");
 		$("#answers").append(answer);
-		var par = {"answer": answersProposed[i]};
+		var par = {"answer": answersProposed[i][0]["EN"]};
 		$(answer).on("click", par ,function(event){
 			var triggered = event.target.id;
 			$("#" + triggered).css("background-color", "green");

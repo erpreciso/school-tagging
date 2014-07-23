@@ -188,7 +188,8 @@ function buildExercise(message){
 	}
 	for (var i = 0; i < answersProposed.length; i++ ){
 		var answer = $(document.createElement("span"))
-						.text(answersProposed[i] + " ");
+						.attr("id", answersProposed[i]["EN"])
+						.text(answersProposed[i][language] + " ");
 		$("#answers").append(answer);
 	}
 }
@@ -274,7 +275,8 @@ askValidation = function () {
 			.text(t1);
 		$("#answers").append(instr);
 		$("#answers").children().on("click", function (event){
-			var valid = event.target.innerText.trim();
+			var valid = event.target.id;
+//			var valid = event.target.innerText.trim();
 			$("#askValidation").remove();
 			$(event.target).css("background-color", "GreenYellow");
 			var studentAnswers = $("#studentAnswers").children(); 
