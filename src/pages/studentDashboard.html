@@ -9,7 +9,11 @@
 {% endblock %}
 
 {% block content %}
-<a href="/s/logout">{{labels["logout"]}}</a>
+<div class="student_block">
+<div class="student_disconnect"><a href="/s/logout">{{labels["logout"]}}</a></div>
+<div class="student_content">
 <div>{{labels["student_title"]}}: {{studentName}}</div>
-<div id="lessonName">{{labels["lesson_name_title"]}}: {{lessonName}}</div>
+<div id="lessonName">{{labels["lesson_name_title"]}}: {{lessonName}}<hr/></div>
+</div>
+</div>
 {% endblock %}

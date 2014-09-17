@@ -379,7 +379,7 @@ def getSession(sessionID):
 		return False
 	
 def getSentence():
-	pool = codecs.open("sentence-pool.txt", encoding="latin-1").readlines()
+	pool = codecs.open("sentence-pool.txt", encoding="UTF-8").readlines()
 	i = int(random.random() * len(pool))
 	return pool[i]
 

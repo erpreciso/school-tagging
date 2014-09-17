@@ -5,16 +5,25 @@
   src: local('Open Sans'), local('OpenSans'), url(http://themes.googleusercontent.com/static/fonts/opensans/v8/cJZKeOuBrn4kERxqtaUH3T8E0i7KZn-EPnyo3HZu7kw.woff) format('woff');
 }
 
+@font-face {
+  font-family: KGSecondChancesSketch;
+  font-style: normal;
+  src: local('KG Second Chances Sketch'), local('KGSecondChancesSketch'), url('fonts/kgsecondchancessketch-webfont.woff') format('woff');
+}
+
+
+
+
 body {
-	font-family: OpenSans, "Trebuchet MS", "Sans-Serif";
-	font-size: 1.1em;
+	margin: 0px;
+	padding: 0px;
 }
 
 .language {
 	display: inline;
 	background-color: #eee;
 	color: #000;
-	margin: 2px;
+	margin-left: 5px;
 	padding: 1px;
 }
 
@@ -23,7 +32,9 @@ body {
 }
 
 header {
+
 }
 
 #content {
+margin-top: 40px;
 }

@@ -1,0 +1,39 @@
+@font-face {
+  font-family: CrayonCrumble;
+  font-style: normal;
+  src: local('DK Crayon Crumble'), local('DKCrayonCrumble'), url('fonts/dk_crayon_crumble-webfont.woff') format('woff');
+}
+
+@font-face {
+  font-family: LearningCurve;
+  font-style: normal;
+  src: local('Learning Curve'), local('LearningCurve'), url('fonts/learningcurve-webfont.woff') format('woff');
+}
+
+.teacher_blockquote { 
+background: #fff url(images/paper_texture.jpg); 
+margin: 0px; 
+padding: 0px 20px 20px 20px; 
+color:#000; 
+font: bold 1.4em  "Comic Sans MS", verdana; 
+height: 100%;
+width: 100%;
+position:absolute;
+} 
+
+
+blockquote p { 
+margin: 0; 
+}
+
+.excercise{
+	 text-align: center;
+	
+}
+
+.teacher_disconnect{
+	position:absolute; 
+	top: 8px;
+	z-index:10000;
+	right :20px;
+}

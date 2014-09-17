@@ -7,7 +7,11 @@ $(document).ready(function(){
 });
 
 function getLanguage() {
-	return $("#language_switch .current").text();
+	//return $("#language_switch .current").text();
+	// ho forzato la lingua in italian
+	
+	return "IT";
+	
 }
 
 function askMeRefresh () {
@@ -16,7 +20,7 @@ function askMeRefresh () {
 		var t1 ="Please refresh this page";
 	}
 	else if (language == "IT") {
-		var t1 = "Pregasi aggiornare la pagina tramite l'apposito comando nel menù di navigazione";
+		var t1 = "Pregasi aggiornare la pagina tramite l'apposito comando nel menÃ¹ di navigazione";
 	}
 	$("#lessonName").after($(document.createElement("div"))
 			.text(t1)
