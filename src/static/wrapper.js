@@ -8,10 +8,7 @@ $(document).ready(function(){
 
 function getLanguage() {
 	//return $("#language_switch .current").text();
-	// ho forzato la lingua in italian
-	
 	return "IT";
-	
 }
 
 function askMeRefresh () {
@@ -24,5 +21,5 @@ function askMeRefresh () {
 	}
 	$("#lessonName").after($(document.createElement("div"))
 			.text(t1)
-			.css("background-color", "red"));
+			.css("color", "red"));
 }

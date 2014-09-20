@@ -287,32 +287,16 @@ $('#container').highcharts({
 }
 
 
-function updateChartData(answers){
+function updateChartData(answers, answersDict){
 	var chart = $('#container').highcharts();
 	var data = chart.series[0].data;
 	for (var answer in answers) {
-	
-	
-		/* c'è ma  non ci dovrebbe essere */
 		var label = "";
-		if (answer.toLowerCase() == "noun"){
-				label = "Nome";
-		} else if (answer.toLowerCase() == "adjective"){
-				label = "Aggettivo";
-		}else if (answer.toLowerCase() == "verb"){
-				label = "Verbo";
-		}else if (answer.toLowerCase() == "adverb"){
-				label = "Avverbio";
-		}else if (answer.toLowerCase() == "other"){
-				label = "Altro";
-		}else {
-			label = answer.toLowerCase()
+		for (var i = 0; i < answersDict.length; i++){
+			if (answersDict[i]["EN"] == answer){
+				label = answersDict[i]["IT"];
+			}
 		}
-		/*    */
-		
-		
-		
-		
 		for (var i = 0; i < data.length; i++ ){
 			if (data[i].category == label){
 				data[i].y = answers[answer].length;
@@ -429,7 +413,7 @@ buildDashboard = function (status){
 	}
 	cleanDashboard();
 	statusBar(status.message.totalAnswers);
-	answersGraph(status.message.possibleAnswers);
+	answersGraph(status.message.possibleAnswers, status.message.dictAnswers);
 
 	
 	
@@ -441,7 +425,7 @@ buildDashboard = function (status){
 	
 	
 	
-	function answersGraph(answers){
+	function answersGraph(answers, dictAnswers){
 		$("#dashboard").append($(document.createElement("div"))
 				.attr("id", "studentAnswers")
 				.css("display","none")
@@ -461,7 +445,7 @@ buildDashboard = function (status){
 				a.append(b);
 			};	
 		};
-		updateChartData(answers);
+		updateChartData(answers, dictAnswers);
 	}
 	
 	
@@ -542,7 +526,6 @@ askValidation = function () {
 		$("#answers").append(instr);
 		$("#answers").children().on("click", function (event){
 			var valid = event.target.id;
-//			var valid = event.target.innerText.trim();
 			$("#askValidation").remove();
 			$(event.target).css("background-color", "GreenYellow");
 			var studentAnswers = $("#studentAnswers").children(); 

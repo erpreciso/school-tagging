@@ -130,7 +130,13 @@ function feedbackFromTeacher(message) {
 		background = "GreenYellow";
 	}
 	else {
-		feedback = t2 + message.validAnswer;
+		var italianAnswer = "";
+		for (var i = 0; i < message.dict.length; i++){
+			if (message.dict[i]["EN"] == message.validAnswer){
+				italianAnswer = message.dict[i]["IT"];
+			}
+		}
+		feedback = t2 + italianAnswer;
 		background = "Red";
 	}
 	$("#feedback").text(feedback).css("color", background);

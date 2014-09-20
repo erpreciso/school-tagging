@@ -1,7 +1,7 @@
 {% extends "wrapper.html" %}
 
 {% block title %}
-<title>school-tagging|start</title>
+<title>school-tagging|inizio</title>
 {% endblock %}
 {% block script %}
 <script>
@@ -10,17 +10,17 @@ $(document).ready(function () {if (navigator.cookieEnabled){
 	$("#start").append(
 		$(document.createElement("div")).append(
 			$(document.createElement("a"))
-				.attr("href", "/s/login").text("I'm a student")));
+				.attr("href", "/s/login").text("Sono una studentessa / uno studente")));
 	$("#start").append(
 		$(document.createElement("div")).append(
 			$(document.createElement("a"))
-			.attr("href", "/t/login").text("I'm a teacher")));
+			.attr("href", "/t/login").text("Sono una / un insegnante")));
 	{% if resumeDashboardLink %}
 	$("#start").append(
 		$(document.createElement("div")).append(
 		$(document.createElement("a"))
 		.attr("href", "{{resumeDashboardLink}}")
-		.text("Looks like we know who you are, click here to resume lesson")));
+		.text("Hai interrotto una sessione? Prova a cliccare qui per riprenderla")));
 	{% endif %}
 	}
 	else {

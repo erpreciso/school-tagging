@@ -1,21 +1,21 @@
 {% extends "wrapper.html" %}
 
 {% block title %}
-<title>school-tagging|student|login</title>
+<title>{{labels["page_title"]}}</title>
 {% endblock %}
 
 {% block content %}
-<div>Please enter your name and your session ID provided by your teacher</div>
+<div>{{labels["enter_username_and_lesson"]}}</div>
 <form method="post" action="/s/login">
-	<label for="un">Name and Last Name</label>
+	<label for="un">{{labels["name_and_surname"]}}</label>
 	<input type="text" name="username" id="un">
-	<label for="ln">Session ID</label>
+	<label for="ln">{{labels["session_id"]}}</label>
 	<input type="text" name="lessonName" id="ln">
 	{% if message %}
-	<div>MESSAGE</div>
+	<div>{{labels["message_title"]}}</div>
 	<div><strong>{{message}}</strong></div>
 	{% endif %}
-	<input type="submit" value="Go to class exercise">
+	<input type="submit" value="{{labels['login_button']}}">
 </form>
 
 {% endblock %}

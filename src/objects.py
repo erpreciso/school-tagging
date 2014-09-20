@@ -8,7 +8,7 @@ import codecs
 import string
 import datetime
 
-MAX_IDLE_ALLOWED = 1 # minutes
+MAX_IDLE_ALLOWED = 100 # minutes
 DEFAULT_LANGUAGE = "IT"
 
 def cleanIdleObjects():
@@ -403,7 +403,6 @@ def getWords(sentence):
 	return words, target
 	
 def getAnswersProposed():
-# 	return ["Noun", "Adjective", "Verb", "Adverb", "Other"]
 	return [
 		{"EN": "Noun", "IT": "Nome"},
 		{"EN": "Adjective", "IT": "Aggettivo"},
@@ -467,7 +466,8 @@ class Session(ndb.Model):
 					"type": "validAnswer",
 					"message": {
 						"validAnswer": self.validatedAnswer,
-						"myAnswer": myanswer
+						"myAnswer": myanswer,
+						"dict": getAnswersProposed()
 						}
 					}
 			else:
@@ -489,6 +489,7 @@ class Session(ndb.Model):
 			status = {
 				"type": "sessionStatus",
 				"message": {
+					"dictAnswers": getAnswersProposed(),
 					"possibleAnswers": self.answersStudents,
 					"totalAnswers": {
 						"answered": self.studentAnswers.keys(),

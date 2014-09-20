@@ -81,10 +81,10 @@ class TeacherHandler(MainHandler):
 	def renderLoginPage(self, message=None):
 		t = "teacherLogin.html"
 		if message:
-			m = labdict.labels(t, "IT")[message]
+			m = labdict.labels(t, objs.DEFAULT_LANGUAGE)[message]
 		else:
 			m = None
-		self.renderPage(t, labels=labdict.labels(t, "IT"), message=m)
+		self.renderPage(t, labels=labdict.labels(t, objs.DEFAULT_LANGUAGE), message=m)
 		
 	def post(self, action):
 		if action == "login":
@@ -242,7 +242,7 @@ class StudentHandler(MainHandler):
 		if action == "dashboard":
 			self.initializeDashboard()
 		elif action == "login":
-			self.renderPage("studentLogin.html")
+			self.renderLoginPage()
 		elif action == "logout":
 			self.logout()
 		
@@ -250,6 +250,13 @@ class StudentHandler(MainHandler):
 		if action == "login":
 			self.login()
 	
+	def renderLoginPage(self, message=None):
+		t = "studentLogin.html"
+		if message:
+			m = labdict.labels(t, objs.DEFAULT_LANGUAGE)[message]
+		else:
+			m = None
+		self.renderPage(t, labels=labdict.labels(t, objs.DEFAULT_LANGUAGE), message=m)
 
 	def login(self):
 		student = objs.Student()
@@ -266,10 +273,10 @@ class StudentHandler(MainHandler):
 				self.addCookie("schooltagging-lessonID", lessonID)
 				return self.redirect("/s/dashboard")
 			else:
-				message = "Name already in use"
+				message = "name_already_in_use"
 		else:
-			message = "Lesson not started yet"
-		self.renderPage("studentLogin.html", message=message)
+			message = "lesson_not_started"
+		self.renderLoginPage(message)
 		
 	def initializeDashboard(self):
 		student = self.getFromCookie()
@@ -369,6 +376,8 @@ class JollyHandler(MainHandler):
 		return self.redirect("/start")
 	
 class HelpHandler(MainHandler):
+	# currently the hyperlink to get here, originally in "wrapper.html",
+	# has been removed.
 	def get(self):
 		return self.renderPage("helpIndex.html")
 
