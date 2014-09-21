@@ -13,8 +13,35 @@
 
 
 
+ol{
+	padding: 0px; 
+    list-style-position:inside;
+}
+
+ol li{
+	float:left;
+	margin-right: 40px;
+	cursor: pointer;
+}
+
+
+
+.start_button{
+	border-style: none;
+	border-width: thin;
+	border-radius: 6px;
+	border-color: #a79f9f;
+	margin-left: 10px;
+	margin-right: 10px;
+	width:auto;
+}
+
+.start_button :hover{
+	color: #756e6e;
+}
 
 body {
+
 	margin: 0px;
 	padding: 0px;
 }

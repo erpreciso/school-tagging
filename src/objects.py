@@ -473,8 +473,11 @@ class Session(ndb.Model):
 			else:
 				message = {
 						"type": "sessionExpired",
-						"message": {"validAnswer": self.validatedAnswer}
+						"message": {
+                                                    "validAnswer": self.validatedAnswer,
+                                                    "dict": getAnswersProposed()
 						}
+                        }
 			message = json.dumps(message)
 			channel.send_message(student.token, message)
 		

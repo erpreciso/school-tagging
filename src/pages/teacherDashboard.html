@@ -9,16 +9,25 @@
 {% endblock %}
 
 {% block content %}
+
 <div class="student_disconnect"><a href="/t/logout">{{labels["logout"]}}</a></div>
 <div class="teacher_blockquote">
-
 <div style="padding:0px;line-height: 150% ">{{labels["teacher_title"]}}: <span style="color:green">{{teacherName}}</div>
-<div style="padding:0px;line-height: 150% "id="lessonName">{{labels["lesson_name_title"]}}:<span style="color:red"> {{lessonName}}</span></div>
-<div style="padding:0px;line-height: 150% "id="students">{{labels["enrolled_students"]}}:
+<div style="padding:0px;line-height: 150% " id="lessonName">{{labels["lesson_name_title"]}}:<span style="color:red"> {{lessonName}}</span></div>
+<p>{{labels["enrolled_students"]}}:</p>
+<ol  id="students" class="student_list">
 	{% for student in students %}
-	<div id="{{student}}" class="studentName">{{loop.index}}. {{student}}</div>
+	<li id="{{student}}" class="student_list"> {{student}}</li>
 	{% endfor %}
+</ol>
+<br style="clear:both"/>
+<div id="dashboard" style="margin-top: 30px;">
+<div id="buttons" style="padding: 0px;margin-bottom:15px;margin-top:-25px;"></div>
+<div style="clear:both"></div>
+
 </div>
-<div id="dashboard" style="margin-top: 30px;"></div>
+<div style="height:30px;">
+&nbsp;
+</div>
 </div>
 {% endblock %}

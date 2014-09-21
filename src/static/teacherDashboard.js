@@ -13,6 +13,7 @@ $(document).ready(function () {
 		var student = event.target.id;
 		$.post("/t/askStudentStats", {"student": student});
 	});
+	$("body").css("background","url(../static/images/paper_texture.jpg)" );
 });
 
 
@@ -55,24 +56,33 @@ newExercise = function (){
 	
 	
 	if ($("#newExercise").length > 0){
-		 	 $('#newExercise').remove();
+		 	 $("#newExercise").remove();
+		 	 $("#showStats").remove();
+		 	 $('#buttons').empty();
+		 	 
 	}
 	
 	
 	
-	$("#dashboard").before($(document.createElement("button"))
+	$("#buttons").append($(document.createElement("div"))
 			.attr("id", "newExercise")
-			.text(t1)
+			.css("float","left")
+			.css("display","inline")
+			.css("margin-top","20px")
 			.on("click", startExercise));
+						
 			
-			
-			
-			
-			
-	$("#dashboard").after($(document.createElement("button"))
+	$("#buttons").append($(document.createElement("div"))
 			.attr("id", "showStats")
-			.text(t2)
+			.css("float","left")
+			.css("display","inline")
+			.css("margin-top","20px")
 			.on("click", function(){$.get("/t/askStats");}));
+			
+	$("#newExercise").html('<center><div style="margin:0px;font-size:12px;cursor:pointer;"><div class="start_button"><i class="fa fa fa-pencil-square-o" style="color:#000;font-size:40px;"></i><br/> '+t1+'</div></div></center>');		
+			
+	$("#showStats").html('<center><div style="margin:0px;font-size:12px;cursor:pointer;"><div class="start_button"><i class="fa fa-bar-chart" style="color:#000;font-size:40px;"></i><br/> '+t2+'</div></div></center>');		
+			
 			
 			
 
@@ -113,8 +123,6 @@ studentStats = function (message) {
 
 
 showStats = function (message) {
-
-
 	var language = getLanguage();
 	if (language == "EN"){
 		var t1 = "LESSON STATISTICS";
@@ -126,7 +134,7 @@ showStats = function (message) {
 	
 	$("#progress_text").remove();
 	$('#progressbar').remove();
-	
+		 $('#progress_container').remove();
 	
 	
 	if ($("#container").length > 0){
@@ -134,12 +142,14 @@ showStats = function (message) {
 		 	 $('#container').remove();
 	}
 	
+	
 	$("#dashboard").append($(document.createElement("div"))
 				.attr("id", "container")
 				.css("min-width","310px")
 				.css("height","300px")
 				.css("margin","0 auto")
 				.css("width","80%")
+				.css("overflow","hidden")
 				.text(t1 + ": "));
 				
 	
@@ -178,8 +188,8 @@ onMessage = function(message) {
 	if (data.type == "studentArrived") {
 		var studentName = data.message.studentName;
 		var studentsCount = $(".studentName").length;
-		var txt = (studentsCount + 1).toString() + ". " + studentName;
-		var student = $(document.createElement("div"))
+		var txt = studentName;
+		var student = $(document.createElement("li"))
 			.attr("id", studentName)
 			.addClass("studentName")
 			.text(txt)
@@ -353,9 +363,28 @@ function buildExercise(message){
 		var t3 = "Tempo scaduto!";
 	}
 	$("#exercise, #answers, #startExercise, #showStats, #stats").remove();
+	
+	
+	
+	$("#buttons").append($(document.createElement("div"))
+			.attr("id", "timeIsUp")
+			.css("float","left")
+			.css("display","inline")
+			.css("margin-top","20px")
+			.on("click", askValidation));
+	
+
+				
+	$("#timeIsUp").html('<center><div style="margin:0px;font-size:12px;cursor:pointer;"><div class="start_button"><i class="fa fa-clock-o" style="color:#000;font-size:40px;"></i><br/> '+t3+'</div></div></center>');		
+				
+		
+	
 	$("#dashboard").append($(document.createElement("div"))
 			.attr("id", "exercise")
-			.css("font-weight", "bold"));
+			.css("font-weight", "bold")
+			.css("clear","both")
+	);
+			
 	$("#exercise").addClass("excercise");
 	$("#exercise").html(t1 + "<br/>");
 			
@@ -364,14 +393,7 @@ function buildExercise(message){
 			.css("margin-top", "9px"));
 	$("#answers").addClass("excercise");
 	$("#answers").html("<br/>" + t2 + "<br/>");
-			
-			
-	$("#dashboard").after($(document.createElement("button"))
-				.attr("id", "timeIsUp")
-				.text(t3)
-				.on("click", function(){
-					askValidation();
-				}));
+					
 	var words = message.wordsList;
 	var target = message.target;
 	var answersProposed = message.answersProposed;
@@ -455,7 +477,7 @@ buildDashboard = function (status){
 	function statusBar(status){
 		$("#dashboard").append($(document.createElement("div"))
 				.attr("id", "statusBar")
-				.css("margin-top","35px")
+				.css("margin-top","0")
 				.css("display","none")
 				.text(t2 + ": "));
 				
@@ -463,8 +485,9 @@ buildDashboard = function (status){
 		var total = status.missing.length + status.answered.length;
 		 $("#progress_text").remove();
 		 $('#progressbar').remove();
+		 $('#progress_container').remove();
 		 
-		$("#dashboard").append('<div style="margin-top:35px;"><div id="progressbar" class="progress progress-striped active" style="position:absolute;display:inline;width: 400px;"><div class="bar" style="width: ' + (status.answered.length / total)*100 + '%;"></div></div><span id="progress_text" style="margin-left:420px;position:absolute;display:inline;font-size:14px; margin-top: 0px;"></span></div>');
+		$("#dashboard").append('<div id="progress_container" style="margin-top:35px;"><div id="progressbar" class="progress progress-striped active" style="margin:0 auto;width: 400px;"><div class="bar" style="width: ' + (status.answered.length / total)*100 + '%;"></div></div><br/><center><div id="progress_text" style="margin:0 auto;font-size:14px;"></div></center></div>');
 		
 		var txt;
 		txt = " "+t5+": "+status.answered.length+" --> "+status.answered;
@@ -494,8 +517,10 @@ buildDashboard = function (status){
 				.css("min-width","310px")
 				.css("height","300px")
 				.css("margin-top","75px")
-				.css("width","400px")
+				.css("width","500px")
 				.css("right","30px")
+				.css("overflow","hidden")
+				.css("margin","0 auto")
 				.text(t2 + ": "));
 				
 		initCharts(categories,'divise per categorie','Risposte');

@@ -9,9 +9,7 @@ onError = function (){
 onClose = function (){};
 
 onMessage = function(message) {
-	console.log(message);
 	var data = JSON.parse(message.data);
-	console.log(data);
 	var language = getLanguage(); 
 	if (language == "EN")
 		var t1 = "Session aborted by teacher; correct answer was ";
@@ -26,7 +24,14 @@ onMessage = function(message) {
 	else if (data.type == "pingFromTeacher")
 		$.post("/ping", {"alive": true});
 	else if (data.type == "sessionExpired") {
-		var feedback = t1 + data.message.validAnswer;
+		var italianAnswer = "";
+                console.log(data.message);
+		for (var i = 0; i < data.message.dict.length; i++){
+			if (data.message.dict[i]["EN"] == data.message.validAnswer){
+				italianAnswer = data.message.dict[i]["IT"];
+			}
+		}
+                var feedback = t1 + italianAnswer;
 		$("#feedback").text(feedback)
 				.css("color", "LightGoldenRodYellow ");
 	}
@@ -84,6 +89,7 @@ function presentExercise(message) {
 			.attr("id", answersProposed[i][0]["EN"])
 			.css("color", "Moccasin")
 			.css("margin-right", "10px")
+			.css("cursor", "pointer")
 			.text(answersProposed[i][0][language] + " ");
 		
 		$("#answers").append(answer);

@@ -11,7 +11,7 @@
 }
 
 .teacher_blockquote { 
-background: #fff url(images/paper_texture.jpg); 
+
 margin: 0px; 
 padding: 0px 20px 20px 20px; 
 color:#000; 
@@ -19,6 +19,7 @@ font: bold 1.4em  "Comic Sans MS", verdana;
 height: 100%;
 width: 100%;
 position:absolute;
+
 } 
 
 
@@ -28,7 +29,6 @@ margin: 0;
 
 .excercise{
 	 text-align: center;
-	
 }
 
 .teacher_disconnect{

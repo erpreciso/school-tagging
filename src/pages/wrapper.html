@@ -15,6 +15,7 @@
 <link rel="stylesheet" type="text/css" href="/static/wrapper.css" />
 <link rel="stylesheet" type="text/css" href="/static/student.css" />
 <link rel="stylesheet" type="text/css" href="/static/teacher.css" />
+<link rel="stylesheet" type="text/css" href="/static/css/font-awesome.css" />
 
 <script type="text/javascript" src="/static/js/json2.js"></script>
 <script src="http://code.highcharts.com/highcharts.js"></script>
@@ -25,11 +26,11 @@
 {% block style %}{% endblock %}
 </head>
 <body>
-	<header>
+	<header style="min-width:400px">
 	 <div class="language current">IT</div>
-	 <div class="navbar navbar-inverse navbar-fixed-top">
+	 <div class="navbar navbar-inverse navbar-fixed-top" style="min-width:400px">
       <div class="navbar-inner">
-        <div class="container" style="position: absolute; left :20px" >  
+        <div class="container" style="position: absolute; left :20px;width:300px;" >  
           <a class="brand" style=" font-family: KGSecondChancesSketch; font-size:30px;color:#fff;" href="#">School Tagging</a>
           <div class="nav-collapse collapse">
             <ul class="nav">
@@ -43,11 +44,6 @@
         </div>
       </div>
     </div>
-	
-	
-	
-	
-
 	</header>
 	<div id="content">
 	{% block content %}{% endblock %}

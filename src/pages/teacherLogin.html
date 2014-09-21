@@ -8,6 +8,19 @@
 <link rel="stylesheet" type="text/css" href="/static/teacherLogin.css" />
 {% endblock %}
 {% block content %}
+<h3>Prima occorre registrarsi.</h3>
+<form method="post" action="/t/signup">
+	<div>{{labels["signup_title"]}}</div>
+	<div>{{labels["do_not_have_account"]}}</div>
+	<label for="un">{{labels["username"]}}</label>
+	<input type="text" name="username" id="un">
+	<label for="pw">{{labels["password"]}}</label>
+	<input type="password" name="password" id="pw">
+	<input type="submit" value="{{labels['signup_button']}}">
+</form>
+
+<hr/>
+<h3>Successivamente usare le credenziali per creare una classe.</h3>
 <form method="post" action="/t/login">
 	<div>{{labels["login_title"]}}</div>
 	<div>{{labels["insert_username_password"]}}</div>
@@ -19,15 +32,7 @@
 	<input type="text" name="lessonName" id="ln">
 	<input type="submit" value="{{labels['login_button']}}">
 </form>
-<form method="post" action="/t/signup">
-	<div>{{labels["signup_title"]}}</div>
-	<div>{{labels["do_not_have_account"]}}</div>
-	<label for="un">{{labels["username"]}}</label>
-	<input type="text" name="username" id="un">
-	<label for="pw">{{labels["password"]}}</label>
-	<input type="password" name="password" id="pw">
-	<input type="submit" value="{{labels['signup_button']}}">
-</form>
+
 {% if message %}
 <div>{{labels["message_title"]}}</div>
 <div><strong>{{message}}</strong></div>

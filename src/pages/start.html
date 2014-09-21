@@ -7,14 +7,13 @@
 <script>
 $(document).ready(function () {if (navigator.cookieEnabled){
 	$("noscript").remove();
-	$("#start").append(
-		$(document.createElement("div")).append(
-			$(document.createElement("a"))
-				.attr("href", "/s/login").text("Sono una studentessa / uno studente")));
-	$("#start").append(
-		$(document.createElement("div")).append(
-			$(document.createElement("a"))
-			.attr("href", "/t/login").text("Sono una / un insegnante")));
+	
+	
+	$("#start").html('<center><div style="margin:30px;margin-top:70px;"><div class="start_button"><a href="/s/login"><i class="fa fa-graduation-cap" style="color:#000;font-size:40px;"></i><br/>Sono una studentessa / uno studente</a></div></div></center>')
+	
+	$("#start").append('<center><div style="margin:40px;"><div class="start_button"><a href="/t/login"><i class="fa fa-book" style="color:#000;font-size:40px;"></i><br/>Sono una / un insegnante</a></div></div></center>')
+	
+
 	{% if resumeDashboardLink %}
 	$("#start").append(
 		$(document.createElement("div")).append(
