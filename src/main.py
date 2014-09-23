@@ -26,7 +26,8 @@ class MainHandler(webapp2.RequestHandler):
 		self.write(self.renderStr(template, **kw))
 
 	def addCookie(self, kind, value):
-		self.response.set_cookie(kind, value=str(value), httponly=True)
+                expiresTime = datetime.datetime.utcnow() + datetime.timedelta(days=30)
+		self.response.set_cookie(kind, value=str(value), httponly=True, expires=expiresTime)
 	
 	def getCookie(self, kind):
 		return self.request.cookies.get(kind)

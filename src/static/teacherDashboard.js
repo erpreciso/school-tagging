@@ -10,16 +10,10 @@ var categories = new Array();
 $(document).ready(function () {
 	newExercise();
 	$(".studentName").on("click", function(event){
-		var student = event.target.id;
-		$.post("/t/askStudentStats", {"student": student});
+	    attachStatRequest(event.target.id);
 	});
 	$("body").css("background","url(../static/images/paper_texture.jpg)" );
 });
-
-
-
-
-
 
 
 
@@ -89,7 +83,8 @@ newExercise = function (){
 };
 
 studentStats = function (message) {
-
+        console.log("Stat received: ");
+	console.log(message);
 	var language = getLanguage();
 	if (language == "EN"){
 		var t1 = "Correct";
@@ -107,15 +102,14 @@ studentStats = function (message) {
 	stats += ", " + t3 + ": " + message.stats.missing;
 	var s = $(document.createElement("div")).text(stats);
 	$("#" + student)
-		.append(s)
-		.off("click").on("click", function(){
-			$(this).children().remove();
-			$(this).css("background-color", "transparent");
-			$(this).off("click").on("click", function(event){
-				var student = event.target.id;
-				$.post("/t/askStudentStats", {"student": student});
-			});
+	    .append(s)
+	    .off("click").on("click", function(){
+		$(this).children().remove();
+		$(this).css("background-color", "transparent");
+		$(this).off("click").on("click", function(event){
+		    attachStatRequest(event.target.id);
 		});
+	});
 };
 
 
@@ -174,11 +168,10 @@ showStats = function (message) {
 };
 
 
-
-
-
-
-
+function attachStatRequest(id){
+    var student = id;
+    $.post("/t/askStudentStats", {"student": student});
+}
 
 
 
@@ -190,13 +183,12 @@ onMessage = function(message) {
 		var studentsCount = $(".studentName").length;
 		var txt = studentName;
 		var student = $(document.createElement("li"))
-			.attr("id", studentName)
-			.addClass("studentName")
-			.text(txt)
-			.on("click", function(event){
-				var student = event.target.id;
-				$.post("/t/askStudentStats", {"student": student});
-			});
+		    .attr("id", studentName)
+		    .addClass("studentName")
+		    .text(txt)
+		    .on("click", function(event){
+			attachStatRequest(event.target.id);
+		    });
 		$("#students").append(student);
 	}
 	else if (data.type == "studentLogout") {
@@ -343,12 +335,6 @@ function updateChartDataStudents(students){
     chart.series[0].setData(data);
    
 }
-
-
-
-
-
-
 
 function buildExercise(message){
 	var language = getLanguage();
@@ -504,6 +490,7 @@ buildDashboard = function (status){
 			$("#progressbar").removeClass("active");
 			$("#progressbar").removeClass("progress-striped");
 			
+			askValidation();
 		}
 		$("#progress_text").append(txt);
 		
