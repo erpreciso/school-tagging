@@ -7,6 +7,7 @@ import re
 import codecs
 import string
 import datetime
+import logging
 
 MAX_IDLE_ALLOWED = 100 # minutes
 DEFAULT_LANGUAGE = "IT"
@@ -75,24 +76,28 @@ class Student(User):
 	answers = ndb.PickleProperty()
 # 		{sessionID1: answer, sessionID2: answer}
 		
+        def produceOwnStats(self):
+            statsDict = {"correct": 0, "wrong": 0, "missing": 0}
+            sessions = [s["session"] for s in self.answers]
+            for sessionID in sessions:
+                session = getSession(sessionID)
+                if session:
+                    for sa in self.answers:
+                        if sa["session"] == sessionID:
+                            answer = sa["answer"]
+                            if answer == "MISSING":
+                                statsDict["missing"] += 1
+                            elif answer == session.validatedAnswer:
+                                statsDict["correct"] += 1
+                            elif answer != session.validatedAnswer:
+                                statsDict["wrong"] += 1
+            return statsDict
+
 	def produceAndSendOwnStats(self):
-		statsDict = {"correct": 0, "wrong": 0, "missing": 0}
-		sessions = [s["session"] for s in self.answers]
-		for sessionID in sessions:
-			session = getSession(sessionID)
-			if session:
-				for sa in self.answers:
-					if sa["session"] == sessionID:
-						answer = sa["answer"]
-						if answer == "MISSING":
-							statsDict["missing"] += 1
-						elif answer == session.validatedAnswer:
-							statsDict["correct"] += 1
-						elif answer != session.validatedAnswer:
-							statsDict["wrong"] += 1
-		message = {"type": "studentStats",
-				"message": {"stats": statsDict, "student": self.username}}
-		self.sendMessageToTeacher(message)
+            statsDict = self.produceOwnStats()
+            message = {"type": "studentStats",
+                    "message": {"stats": statsDict, "student": self.username}}
+            self.sendMessageToTeacher(message)
 	
 	def save(self):
 		if self.currentLessonID == None:
@@ -307,30 +312,46 @@ class Lesson(ndb.Model):
 	def produceAndSendStats(self):
 		teacher = getTeacher(self.teacher)
 		allStudents = []
+                listOfStudentsStats = []
 		stats = None
 		if self.sessions:
-			stats = []
-			for sessionID in self.sessions:
-				ses = getSession(sessionID)
-				if ses:
-					students = ses.studentAnswers.keys()
-					allStudents += self.students
-					if students:
-						corrects = [st for st in students \
-							if ses.studentAnswers[st] == ses.validatedAnswer]
-						stats += corrects
+                    stats = []
+                    for sessionID in self.sessions:
+                        ses = getSession(sessionID)
+                        if ses:
+                            students = ses.studentAnswers.keys()
+                            allStudents += self.students
+                            if students:
+                                for st in students:
+                                    alreadyTracked = [s["studentName"] for s in listOfStudentsStats]
+                                    if st not in alreadyTracked:
+                                        student = getStudent(st, self.key.id())
+                                        if student:
+                                            ownStats = student.produceOwnStats()        
+                                            ownDict = {"studentName": st, "stats": ownStats}
+                                            listOfStudentsStats.append(ownDict) 
+                                corrects = [st for st in students \
+                                        if ses.studentAnswers[st] == ses.validatedAnswer]
+                                stats += corrects
 		statsDict = {}
-		for name in stats:
+		if stats:
+                    for name in stats:
 			if name in statsDict.keys():
-				statsDict[name] += 1
+                            statsDict[name] += 1
 			else:
-				statsDict[name] = 1
-		for student in students:
-			if student not in statsDict.keys():
-				statsDict[student]= 0
-		message = {"type": "lessonStats", "message": {"stats": statsDict}}
-		message = json.dumps(message)
-		channel.send_message(teacher.token, message)
+                            statsDict[name] = 1
+                    for student in students:
+                        if student not in statsDict.keys():
+                            statsDict[student]= 0
+                    message = {
+                        "type": "lessonStats",
+                        "message": {
+                            "stats": statsDict,
+                            "fullstats": listOfStudentsStats
+                        }
+                    }
+                    message = json.dumps(message)
+                    channel.send_message(teacher.token, message)
 	
 def getOpenLessonsID():
 	q = Lesson.query(Lesson.open == True)
@@ -430,7 +451,6 @@ class Session(ndb.Model):
 # 		sentence to be analized from the student
 	target = ndb.IntegerProperty()
 # 		index of the word that the student should recognize
-# 	answersProposed = ndb.StringProperty(repeated=True)
 	answersProposed = ndb.PickleProperty(repeated=True)
 # 		options available for the student
 	exerciseWords = ndb.StringProperty(repeated=True)
@@ -497,11 +517,11 @@ class Session(ndb.Model):
 					"totalAnswers": {
 						"answered": self.studentAnswers.keys(),
 						"missing": [s for s in self.students \
-										if s not in self.studentAnswers.keys()]
-						}
-					},
-				}
-			channel.send_message(teacher.token, json.dumps(status))
+							if s not in self.studentAnswers.keys()]
+					}
+				},
+			}
+		channel.send_message(teacher.token, json.dumps(status))
 	
 	def removeStudent(self, student):
 		if student.username in self.students:

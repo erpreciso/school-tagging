@@ -149,6 +149,12 @@ showStats = function (message) {
 	var studentsArray = new Array();
 	
 	var stats = message.stats;
+        // qui il nuovo dizionario con le statistiche dettagliate
+        //
+        var fullstats = message.fullstats;
+        console.log(fullstats);
+        //
+
 	$("#dashboard").append($(document.createElement("div"))
 			.attr("id", "stats")
 			.css("display", "none")
