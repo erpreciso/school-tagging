@@ -83,8 +83,6 @@ newExercise = function (){
 };
 
 studentStats = function (message) {
-        console.log("Stat received: ");
-	console.log(message);
 	var language = getLanguage();
 	if (language == "EN"){
 		var t1 = "Correct";
@@ -101,7 +99,7 @@ studentStats = function (message) {
 	stats += ", " + t2 + ": " + message.stats.wrong;
 	stats += ", " + t3 + ": " + message.stats.missing;
 	var s = $(document.createElement("div")).text(stats);
-	$("#" + student)
+	$(document.getElementById(student))
 	    .append(s)
 	    .off("click").on("click", function(){
 		$(this).children().remove();
@@ -192,7 +190,7 @@ onMessage = function(message) {
 		$("#students").append(student);
 	}
 	else if (data.type == "studentLogout") {
-		$("#" + data.message.studentName).remove();
+		$(document.createElement("div")).remove();
 	}
 	else if (data.type == "studentDisconnected") {
 		if (language == "EN"){
@@ -204,15 +202,15 @@ onMessage = function(message) {
 			var t2 = "..oppure disconnettimi definitivamente";
 		}
 		var studentName = data.message.studentName;
-		if ($("#" + studentName).children(".pingRequest").length == 0){
-			$("#" + studentName).append($(document.createElement("button"))
+		if ($(document.createElement("div")).children(".pingRequest").length == 0){
+			$(document.createElement("div")).append($(document.createElement("button"))
 					.addClass("pingRequest")
 					.text(t1)
 					.on("click", function(event){
 						var student = event.target.parentElement.id;
 						$.post("/ping", {"student": student});
 					}));
-			$("#" + studentName).append($(document.createElement("button"))
+			$(document.createElement("div")).append($(document.createElement("button"))
 					.addClass("logoutStudent")
 					.text(t2)
 					.on("click", function(event){
@@ -223,9 +221,9 @@ onMessage = function(message) {
 	}
 	else if (data.type == "studentAlive") {
 		var studentName = data.message.studentName;
-		if ($("#" + studentName).children(".pingRequest").length > 0){
-			$("#" + studentName).children(".pingRequest").remove();
-			$("#" + studentName).children(".logoutStudent").remove();
+		if ($(document.createElement("div")).children(".pingRequest").length > 0){
+			$(document.createElement("div")).children(".pingRequest").remove();
+			$(document.createElement("div")).children(".logoutStudent").remove();
 		}
 	}
 	else if (data.type == "sessionExercise") {
