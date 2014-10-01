@@ -152,7 +152,7 @@ showStats = function (message) {
         // qui il nuovo dizionario con le statistiche dettagliate
         //
         var fullstats = message.fullstats;
-        console.log(fullstats);
+       // console.log(fullstats);
         //
 
 	$("#dashboard").append($(document.createElement("div"))
@@ -166,7 +166,7 @@ showStats = function (message) {
 	}
 	
 	initCharts(studentsArray,'divise per studenti','Risposte Corrette');
-	updateChartDataStudents(stats);
+	updateChartDataStudents(fullstats);
 	
 	
 };
@@ -260,6 +260,7 @@ for (var name in cat) {
 
 $('#container').highcharts({
         chart: {
+        	backgroundColor: 'transparent',
         	type: 'column'
         },
         title: {
@@ -269,10 +270,14 @@ $('#container').highcharts({
             text: subtitle
         },
         xAxis: {
-            categories: cat
+            categories: cat,
+            lineColor: '#000',
+             gridLineColor: '#000'
         },
         yAxis: {
         	allowDecimals: false,
+            lineColor: '#000',
+            gridLineColor: '#000',
             min: 0,
             title: {
                 text: 'risultati'
@@ -325,18 +330,49 @@ function updateChartData(answers, answersDict){
 
 function updateChartDataStudents(students){
 	var chart = $('#container').highcharts();
+	
+	/*	
+	var data = new Array();
+
+	for (var name in cat) {
+		data.push(0);
+	}
+	*/
+	
 	var data = chart.series[0].data;
 	
-	for (name in students) {
+	var emptySeries = new Array();
+	
+	for (var i = 0; i < data.length; i++ ){
+		emptySeries.push(0);
+	}
+	
+	
+	chart.addSeries({name: "Mancanti", data: emptySeries});
+	chart.addSeries({name: "Sbagliate", data: emptySeries});
+	
+
+	
+	chart.series[1].setData(emptySeries);
+    chart.series[2].setData(emptySeries);
+    
+    	var missed = chart.series[1].data;
+	var wrong = chart.series[2].data;
+	
+	for (var idx_student = 0;idx_student < students.length ; idx_student++) {
 		
 		for (var i = 0; i < data.length; i++ ){
-			if (data[i].category == name){
-				data[i].y = students[name]
+			if (data[i].category == students[idx_student].studentName){
+				data[i].y = students[idx_student].stats.correct;
+				missed[i].y = students[idx_student].stats.missing;
+				wrong[i].y = students[idx_student].stats.wrong;
 			}
 		}
 	}
 	
     chart.series[0].setData(data);
+    chart.series[1].setData(missed);
+    chart.series[2].setData(wrong);
    
 }
 
