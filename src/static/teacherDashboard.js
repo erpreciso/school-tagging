@@ -356,7 +356,7 @@ function updateChartDataStudents(students){
 	chart.series[1].setData(emptySeries);
     chart.series[2].setData(emptySeries);
     
-    	var missed = chart.series[1].data;
+    var missed = chart.series[1].data;
 	var wrong = chart.series[2].data;
 	
 	for (var idx_student = 0;idx_student < students.length ; idx_student++) {
@@ -571,6 +571,7 @@ askValidation = function () {
 		$("#timeIsUp").remove();
 		$.get("/t/timeIsUp");
 		$("#answers").children().css("color", "blue");
+		$("#answers").children().css("cursor", "pointer");
 		var instr = $(document.createElement("span"))
 			.attr("id", "askValidation")
 			.css("color", "Green")
