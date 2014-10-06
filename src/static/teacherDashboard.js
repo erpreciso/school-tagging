@@ -544,7 +544,7 @@ buildDashboard = function (status){
 				.css("min-width","310px")
 				.css("height","300px")
 				.css("margin-top","75px")
-				.css("width","500px")
+				.css("width","70%")
 				.css("right","30px")
 				.css("overflow","hidden")
 				.css("margin","0 auto")

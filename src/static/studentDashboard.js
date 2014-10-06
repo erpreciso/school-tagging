@@ -90,14 +90,21 @@ function presentExercise(message) {
 			.css("color", "Moccasin")
 			.css("margin-right", "10px")
 			.css("cursor", "pointer")
+			.addClass("answer_button")
 			.text(answersProposed[i][0][language] + " ");
 		
 		$("#answers").append(answer);
 		var par = {"answer": answersProposed[i][0]["EN"]};
 		$(answer).on("click", par ,function(event){
 			var triggered = event.target.id;
-			$("#" + triggered).css("color", "#a6e22e");
+			$("#" + triggered).css("color", "#fff");
 			$("#" + triggered).css("text-decoration", "underline");
+			$("#" + triggered).css("background-color", "green");
+			
+			
+			
+			
+			
 			$.post("/data/answer", {"answer": triggered});
 			$("#answers").children().off("click");
 			
