@@ -410,7 +410,7 @@ function buildExercise(message){
 			.attr("id", "answers")
 			.css("margin-top", "9px"));
 	$("#answers").addClass("excercise");
-	$("#answers").html("<br/>" + t2 + "<br/>");
+	$("#answers").html("<br/>" + t2 + "<br/><br/>");
 					
 	var words = message.wordsList;
 	var target = message.target;
@@ -556,15 +556,19 @@ startExercise = function () {
 askValidation = function () {
 	var language = getLanguage();
 	if (language == "EN")
-		var t1 = " <-- Click on the correct part of the speech";
+		var t1 = "Click on the right answer";
 	else if (language == "IT")
-		var t1 = " <-- Clicca sulla corretta parte del discorso";
+		var t1 = "Clicca sulla risposta giusta";
 	if ($("#askValidation").length == 0) {
 		$("#timeIsUp").remove();
 		$.get("/t/timeIsUp");
-		$("#answers").children().css("color", "blue");
 		$("#answers").children().css("cursor", "pointer");
-		var instr = $(document.createElement("span"))
+		$("#answers").children().addClass("answer_teacher_button");
+		
+		
+		
+		
+		var instr = $(document.createElement("div"))
 			.attr("id", "askValidation")
 			.css("color", "Green")
 			.text(t1);
@@ -572,7 +576,8 @@ askValidation = function () {
 		$("#answers").children().on("click", function (event){
 			var valid = event.target.id;
 			$("#askValidation").remove();
-			$(event.target).css("background-color", "GreenYellow");
+			$(event.target).css("background-color", "Green");
+			$(event.target).css("color", "#fff");
 			var studentAnswers = $("#studentAnswers").children(); 
 			for (var i = 0; i < studentAnswers.length; i++) {
 				if ($(studentAnswers[i]).children(".title")[0].innerText 
