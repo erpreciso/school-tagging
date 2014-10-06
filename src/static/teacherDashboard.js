@@ -261,7 +261,8 @@ for (var name in cat) {
 $('#container').highcharts({
         chart: {
         	backgroundColor: 'transparent',
-        	type: 'column'
+        	type: 'column',
+        	animation: false
         },
         title: {
             text: 'Risposte della Classe'
@@ -331,22 +332,12 @@ function updateChartData(answers, answersDict){
 function updateChartDataStudents(students){
 	var chart = $('#container').highcharts();
 	
-	/*	
-	var data = new Array();
-
-	for (var name in cat) {
-		data.push(0);
-	}
-	*/
-	
-	var data = chart.series[0].data;
-	
 	var emptySeries = new Array();
-	
-	for (var i = 0; i < data.length; i++ ){
+	for (var i = 0; i < students.length; i++ ){
 		emptySeries.push(0);
 	}
 	
+	var data = chart.series[0].data;
 	
 	chart.addSeries({name: "Mancanti", data: emptySeries});
 	chart.addSeries({name: "Sbagliate", data: emptySeries});
@@ -356,6 +347,7 @@ function updateChartDataStudents(students){
 	chart.series[1].setData(emptySeries);
     chart.series[2].setData(emptySeries);
     
+    var correct = chart.series[0].data;
     var missed = chart.series[1].data;
 	var wrong = chart.series[2].data;
 	
@@ -363,14 +355,14 @@ function updateChartDataStudents(students){
 		
 		for (var i = 0; i < data.length; i++ ){
 			if (data[i].category == students[idx_student].studentName){
-				data[i].y = students[idx_student].stats.correct;
+				correct[i].y = students[idx_student].stats.correct;
 				missed[i].y = students[idx_student].stats.missing;
 				wrong[i].y = students[idx_student].stats.wrong;
 			}
 		}
 	}
 	
-    chart.series[0].setData(data);
+    chart.series[0].setData(correct);
     chart.series[1].setData(missed);
     chart.series[2].setData(wrong);
    
