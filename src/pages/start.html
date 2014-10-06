@@ -9,9 +9,8 @@ $(document).ready(function () {if (navigator.cookieEnabled){
 	$("noscript").remove();
 	
 	
-	$("#start").html('<center><div style="margin:30px;margin-top:70px;"><div class="start_button"><a href="/s/login"><i class="fa fa-graduation-cap" style="color:#000;font-size:40px;"></i><br/>Sono una studentessa / uno studente</a></div></div></center>')
-	
-	$("#start").append('<center><div style="margin:40px;"><div class="start_button"><a href="/t/login"><i class="fa fa-book" style="color:#000;font-size:40px;"></i><br/>Sono una / un insegnante</a></div></div></center>')
+	$("#start").html('<center><table width=70% border=0><tr><td width=50%><center><div style="margin:40px;"><div class="start_button"><a href="/s/login"><i class="fa fa-child" style="color:#000;font-size:60px;"></i><br/>STUDENTE</a></div></div></center></td>'+
+	'<td width=50%><center><div style="margin:40px;"><div class="start_button"><a href="/t/login"><i class="fa fa-graduation-cap" style="color:#000;font-size:60px;"></i><br/>INSEGNANTE</a></div></div></center></td></tr></table></center>');
 	
 
 	{% if resumeDashboardLink %}

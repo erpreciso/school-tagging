@@ -152,7 +152,7 @@ showStats = function (message) {
         // qui il nuovo dizionario con le statistiche dettagliate
         //
         var fullstats = message.fullstats;
-        console.log(fullstats);
+       // console.log(fullstats);
         //
 
 	$("#dashboard").append($(document.createElement("div"))
@@ -166,7 +166,7 @@ showStats = function (message) {
 	}
 	
 	initCharts(studentsArray,'divise per studenti','Risposte Corrette');
-	updateChartDataStudents(stats);
+	updateChartDataStudents(fullstats);
 	
 	
 };
@@ -260,7 +260,9 @@ for (var name in cat) {
 
 $('#container').highcharts({
         chart: {
-        	type: 'column'
+        	backgroundColor: 'transparent',
+        	type: 'column',
+        	animation: false
         },
         title: {
             text: 'Risposte della Classe'
@@ -269,10 +271,14 @@ $('#container').highcharts({
             text: subtitle
         },
         xAxis: {
-            categories: cat
+            categories: cat,
+            lineColor: '#000',
+             gridLineColor: '#000'
         },
         yAxis: {
         	allowDecimals: false,
+            lineColor: '#000',
+            gridLineColor: '#000',
             min: 0,
             title: {
                 text: 'risultati'
@@ -325,18 +331,40 @@ function updateChartData(answers, answersDict){
 
 function updateChartDataStudents(students){
 	var chart = $('#container').highcharts();
+	
+	var emptySeries = new Array();
+	for (var i = 0; i < students.length; i++ ){
+		emptySeries.push(0);
+	}
+	
 	var data = chart.series[0].data;
 	
-	for (name in students) {
+	chart.addSeries({name: "Mancanti", data: emptySeries});
+	chart.addSeries({name: "Sbagliate", data: emptySeries});
+	
+
+	
+	chart.series[1].setData(emptySeries);
+    chart.series[2].setData(emptySeries);
+    
+    var correct = chart.series[0].data;
+    var missed = chart.series[1].data;
+	var wrong = chart.series[2].data;
+	
+	for (var idx_student = 0;idx_student < students.length ; idx_student++) {
 		
 		for (var i = 0; i < data.length; i++ ){
-			if (data[i].category == name){
-				data[i].y = students[name]
+			if (data[i].category == students[idx_student].studentName){
+				correct[i].y = students[idx_student].stats.correct;
+				missed[i].y = students[idx_student].stats.missing;
+				wrong[i].y = students[idx_student].stats.wrong;
 			}
 		}
 	}
 	
-    chart.series[0].setData(data);
+    chart.series[0].setData(correct);
+    chart.series[1].setData(missed);
+    chart.series[2].setData(wrong);
    
 }
 
@@ -382,7 +410,7 @@ function buildExercise(message){
 			.attr("id", "answers")
 			.css("margin-top", "9px"));
 	$("#answers").addClass("excercise");
-	$("#answers").html("<br/>" + t2 + "<br/>");
+	$("#answers").html("<br/>" + t2 + "<br/><br/>");
 					
 	var words = message.wordsList;
 	var target = message.target;
@@ -508,7 +536,7 @@ buildDashboard = function (status){
 				.css("min-width","310px")
 				.css("height","300px")
 				.css("margin-top","75px")
-				.css("width","500px")
+				.css("width","70%")
 				.css("right","30px")
 				.css("overflow","hidden")
 				.css("margin","0 auto")
@@ -528,14 +556,19 @@ startExercise = function () {
 askValidation = function () {
 	var language = getLanguage();
 	if (language == "EN")
-		var t1 = " <-- Click on the correct part of the speech";
+		var t1 = "Click on the right answer";
 	else if (language == "IT")
-		var t1 = " <-- Clicca sulla corretta parte del discorso";
+		var t1 = "Clicca sulla risposta giusta";
 	if ($("#askValidation").length == 0) {
 		$("#timeIsUp").remove();
 		$.get("/t/timeIsUp");
-		$("#answers").children().css("color", "blue");
-		var instr = $(document.createElement("span"))
+		$("#answers").children().css("cursor", "pointer");
+		$("#answers").children().addClass("answer_teacher_button");
+		
+		
+		
+		
+		var instr = $(document.createElement("div"))
 			.attr("id", "askValidation")
 			.css("color", "Green")
 			.text(t1);
@@ -543,7 +576,8 @@ askValidation = function () {
 		$("#answers").children().on("click", function (event){
 			var valid = event.target.id;
 			$("#askValidation").remove();
-			$(event.target).css("background-color", "GreenYellow");
+			$(event.target).css("background-color", "Green");
+			$(event.target).css("color", "#fff");
 			var studentAnswers = $("#studentAnswers").children(); 
 			for (var i = 0; i < studentAnswers.length; i++) {
 				if ($(studentAnswers[i]).children(".title")[0].innerText 

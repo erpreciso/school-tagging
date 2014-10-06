@@ -27,6 +27,24 @@ blockquote p {
 margin: 0; 
 }
 
+
+.answer_teacher_button{
+	border:solid 4px #585858;
+-moz-border-radius: 10px;
+-webkit-border-radius: 10px;
+border-radius: 10px;
+margin-left: 4px;
+padding-left: 4px;
+overflow: hidden;
+	
+}
+
+.answer_teacher_button:hover{
+	background-color: rgba(96,96,96,0.5)
+}
+
+
+
 .excercise{
 	 text-align: center;
 }
