@@ -144,7 +144,7 @@ def labels(template, language):
                     },
                 "name_already_in_use": {
                     "EN": "Name already in use",
-                    "IT": "Nome già utilizzato",
+                    "IT": u"Nome già utilizzato",
                     },
                 "lesson_not_started": {
                     "EN": "Lesson not started yet",
