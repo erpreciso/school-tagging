@@ -182,6 +182,7 @@ function attachStatRequest(id){
 onMessage = function(message) {
 	var language = getLanguage();
 	var data = JSON.parse(message.data);
+	console.log(message);
 	if (data.type == "studentArrived") {
 		var studentName = data.message.studentName;
 		var studentsCount = $(".studentName").length;
