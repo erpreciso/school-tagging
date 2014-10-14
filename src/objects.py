@@ -8,6 +8,7 @@ import codecs
 import string
 import datetime
 import logging
+import answersOptions
 
 MAX_IDLE_ALLOWED = 100 # minutes
 DEFAULT_LANGUAGE = "IT"
@@ -424,18 +425,7 @@ def getWords(sentence):
 	return words, target
 	
 def getAnswersProposed():
-	return [
-		{"EN": "Noun", "IT": "Nome"},
-		{"EN": "Adjective", "IT": "Aggettivo"},
-		{"EN": "Verb", "IT": "Verbo"},
-		{"EN": "Adverb", "IT": "Avverbio"},
-		{"EN": "Other", "IT": "Altro"},
-		{"EN": "Article", "IT": "Articolo"},
-		{"EN": "Pronoun", "IT": "Pronome"},
-		{"EN": "Preposition", "IT": "Preposizione"},
-		{"EN": "Conjunction", "IT": "Congiunzione"},
-		{"EN": "Interjection", "IT": "Interiezione"}
-		]
+	return answersOptions.answersProposed
 
 def clean():
 	ndb.delete_multi(Lesson.query().fetch(keys_only=True))
