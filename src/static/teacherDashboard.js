@@ -152,9 +152,6 @@ showStats = function (message) {
         // qui il nuovo dizionario con le statistiche dettagliate
         //
         var fullstats = message.fullstats;
-       // console.log(fullstats);
-        //
-
 	$("#dashboard").append($(document.createElement("div"))
 			.attr("id", "stats")
 			.css("display", "none")
@@ -182,7 +179,6 @@ function attachStatRequest(id){
 onMessage = function(message) {
 	var language = getLanguage();
 	var data = JSON.parse(message.data);
-	console.log(message);
 	if (data.type == "studentArrived") {
 		var studentName = data.message.studentName;
 		var studentsCount = $(".studentName").length;
@@ -240,6 +236,7 @@ onMessage = function(message) {
 		buildDashboard(data);
 	}
 	else if (data.type == "lessonStats") {
+		console.log(data.message);	
 		showStats(data.message);
 	}
 	else if (data.type == "studentStats") {
