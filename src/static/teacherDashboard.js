@@ -1,12 +1,4 @@
-// globals
-
-
-
 var categories = new Array();
-
-
-
-
 $(document).ready(function () {
 	newExercise();
 	$(".studentName").on("click", function(event){
@@ -14,56 +6,42 @@ $(document).ready(function () {
 	});
 	$("body").css("background","url(../static/images/paper_texture.jpg)" );
 });
-
-
-
 onError = function (){
 	askMeRefresh();
 	$.get("/channelExpired");
 };
 onClose = function (){};
-
 newExercise = function (){
 	var language = getLanguage(); 
 	if (language == "EN") {
-		var t1 = "Start Exercise";
+		var t1 = "Start Simple Exercise";
 		var t2 = "Show Lesson Statistics";
+		var t3 = "Start Complex Exercise";
 	}
 	else if (language == "IT") {
-		var t1 = "Inizia un nuovo esercizio";
+		var t1 = "Inizia un nuovo esercizio semplice";
 		var t2 = "Mostra le statistiche della lezione";
+		var t3 = "Inizia un nuovo esercizio complesso";
 	}
-	
-	/*
-	var btn = document.createElement('button');
-	btn.setAttribute('id', 'startExercise');
-	btn.innerHTML = t1;
-	
-	
-	var btn2 = document.createElement('button');
-	btn2.setAttribute('id', 'startExercise');
-	btn2.innerHTML = t1;
-	
-	$("#dashboard").append(btn);
-	$("#dashboard").append(btn2);
-	*/
-	
-	
-	if ($("#newExercise").length > 0){
-		 	 $("#newExercise").remove();
+	if ($("#newSimpleExercise").length > 0){
+		 	 $("#newSimpleExercise").remove();
+		 	 $("#newComplexExercise").remove();
 		 	 $("#showStats").remove();
 		 	 $('#buttons').empty();
 		 	 
 	}
-	
-	
-	
 	$("#buttons").append($(document.createElement("div"))
-			.attr("id", "newExercise")
+			.attr("id", "newSimpleExercise")
 			.css("float","left")
 			.css("display","inline")
 			.css("margin-top","20px")
-			.on("click", startExercise));
+			.on("click", startSimpleExercise));
+	$("#buttons").append($(document.createElement("div"))
+			.attr("id", "newComplexExercise")
+			.css("float","left")
+			.css("display","inline")
+			.css("margin-top","20px")
+			.on("click", startComplexExercise));
 						
 			
 	$("#buttons").append($(document.createElement("div"))
@@ -73,8 +51,9 @@ newExercise = function (){
 			.css("margin-top","20px")
 			.on("click", function(){$.get("/t/askStats");}));
 			
-	$("#newExercise").html('<center><div style="margin:0px;font-size:12px;cursor:pointer;"><div class="start_button"><i class="fa fa fa-pencil-square-o" style="color:#000;font-size:40px;"></i><br/> '+t1+'</div></div></center>');		
-			
+	$("#newSimpleExercise").html('<center><div style="margin:0px;font-size:12px;cursor:pointer;"><div class="start_button"><i class="fa fa fa-pencil-square-o" style="color:#000;font-size:40px;"></i><br/> '+t1+'</div></div></center>');
+	$("#newComplexExercise").html('<center><div style="margin:0px;font-size:12px;cursor:pointer;"><div class="start_button"><i class="fa fa fa-pencil-square-o" style="color:#000;font-size:40px;"></i><br/> '+t3+'</div></div></center>');
+
 	$("#showStats").html('<center><div style="margin:0px;font-size:12px;cursor:pointer;"><div class="start_button"><i class="fa fa-bar-chart" style="color:#000;font-size:40px;"></i><br/> '+t2+'</div></div></center>');		
 			
 			
@@ -109,10 +88,6 @@ studentStats = function (message) {
 		});
 	});
 };
-
-
-
-
 
 showStats = function (message) {
 	var language = getLanguage();
@@ -168,13 +143,10 @@ showStats = function (message) {
 	
 };
 
-
 function attachStatRequest(id){
     var student = id;
     $.post("/t/askStudentStats", {"student": student});
 }
-
-
 
 onMessage = function(message) {
 	var language = getLanguage();
@@ -244,8 +216,6 @@ onMessage = function(message) {
 	}
 };
 
-
-
 function initCharts(cat,subtitle,label){
 
 
@@ -295,7 +265,6 @@ $('#container').highcharts({
         }]
     });
 }
-
 
 function updateChartData(answers, answersDict){
 	var chart = $('#container').highcharts();
@@ -459,10 +428,6 @@ buildDashboard = function (status){
 		$("#studentAnswers, #statusBar").remove();
 	};
 	
-	
-	
-	
-	
 	function answersGraph(answers, dictAnswers){
 		$("#dashboard").append($(document.createElement("div"))
 				.attr("id", "studentAnswers")
@@ -485,10 +450,6 @@ buildDashboard = function (status){
 		};
 		updateChartData(answers, dictAnswers);
 	}
-	
-	
-	
-	
 	
 	function statusBar(status){
 		$("#dashboard").append($(document.createElement("div"))
@@ -547,8 +508,11 @@ buildDashboard = function (status){
 
 onOpened = function(){};
 
-startExercise = function () {
-	$.get("/data/exercise_request");
+startSimpleExercise = function () {
+	$.get("/data/simple_exercise_request");
+};
+startComplexExercise = function () {
+	$.get("/data/complex_exercise_request");
 };
 
 askValidation = function () {

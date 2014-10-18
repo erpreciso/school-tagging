@@ -1,4 +1,4 @@
-answersProposed = [
+{"simple": [
 	{"EN": "Noun", "IT": "Nome"},
 	{"EN": "Adjective", "IT": "Aggettivo"},
 	{"EN": "Verb", "IT": "Verbo"},
@@ -9,5 +9,7 @@ answersProposed = [
 	{"EN": "Preposition", "IT": "Preposizione"},
 	{"EN": "Conjunction", "IT": "Congiunzione"},
 	{"EN": "Interjection", "IT": "Interiezione"}
-]
-
+    ],
+"complex": [
+	{"EN": "C", "IT": "COMPLEX"}
+]}

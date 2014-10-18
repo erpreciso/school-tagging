@@ -8,7 +8,6 @@ import codecs
 import string
 import datetime
 import logging
-import answersOptions
 
 MAX_IDLE_ALLOWED = 100 # minutes
 DEFAULT_LANGUAGE = "IT"
@@ -423,8 +422,8 @@ def getWords(sentence):
 		target = int(random.random() * len(words))
 	return words, target
 	
-def getAnswersProposed():
-	return answersOptions.answersProposed
+def getAnswersProposed(exerciseType):
+        return json.loads(open("lists/answers.json","r").read())[exerciseType]
 
 def clean():
 	ndb.delete_multi(Lesson.query().fetch(keys_only=True))
@@ -439,6 +438,7 @@ class Session(ndb.Model):
 	teacher = ndb.StringProperty()
 	open = ndb.BooleanProperty()
 	lesson = ndb.IntegerProperty()
+	type = ndb.StringProperty()
 	students = ndb.StringProperty(repeated=True)
 	datetime = ndb.DateTimeProperty(auto_now_add=True)
 	exerciseText = ndb.StringProperty()
@@ -481,7 +481,7 @@ class Session(ndb.Model):
 					"message": {
 						"validAnswer": self.validatedAnswer,
 						"myAnswer": myanswer,
-						"dict": getAnswersProposed()
+						"dict": getAnswersProposed(self.type)
 						}
 					}
 			else:
@@ -489,7 +489,7 @@ class Session(ndb.Model):
 						"type": "sessionExpired",
 						"message": {
                                                     "validAnswer": self.validatedAnswer,
-                                                    "dict": getAnswersProposed()
+                                                    "dict": getAnswersProposed(self.type)
 						}
                         }
 			message = json.dumps(message)
@@ -506,7 +506,7 @@ class Session(ndb.Model):
 			status = {
 				"type": "sessionStatus",
 				"message": {
-					"dictAnswers": getAnswersProposed(),
+					"dictAnswers": getAnswersProposed(self.type),
 					"possibleAnswers": self.answersStudents,
 					"totalAnswers": {
 						"answered": self.studentAnswers.keys(),
@@ -534,14 +534,15 @@ class Session(ndb.Model):
 		self.open = False
 		self.save()
 		
-	def start(self, lessonID):
+	def start(self, lessonID, exerciseType):
 		self.lesson = lessonID
 		lesson = getLesson(lessonID)
 		self.teacher = lesson.teacher
 		self.students = lesson.students
 		self.exerciseText = getSentence()
 		self.exerciseWords, self.target = getWords(self.exerciseText)
-		self.answersProposed = getAnswersProposed()
+		self.type = exerciseType
+		self.answersProposed = getAnswersProposed(self.type)
 		self.studentAnswers = {}
 		self.answersStudents = {}
 		self.open = True

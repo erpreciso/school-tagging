@@ -212,10 +212,14 @@ class DataHandler(MainHandler):
 	requester = self.getFromCookie()
 	requesterRole = self.getRoleFromCookie()
 	if requesterRole == "teacher":
-		if kind == "exercise_request":
+		if kind == "simple_exercise_request":
 			lessonID = requester.currentLessonID
 			session = objs.Session()
-			session.start(lessonID)
+			session.start(lessonID, "simple")
+		elif kind == "complex_exercise_request":
+			lessonID = requester.currentLessonID
+			session = objs.Session()
+			session.start(lessonID, "complex")
 
     def post(self, kind):
 	requester = self.getFromCookie()
