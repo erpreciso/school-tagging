@@ -431,8 +431,6 @@ def clean():
 	ndb.delete_multi(Student.query().fetch(keys_only=True))
 	ndb.delete_multi(Teacher.query().fetch(keys_only=True))
 	memcache.flush_all()
-	pass
-
 
 class Session(ndb.Model):
 	teacher = ndb.StringProperty()

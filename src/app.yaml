@@ -3,6 +3,8 @@ version: 8a
 runtime: python27
 api_version: 1
 threadsafe: yes
+env_variables:
+    DEV_WORKFLOW_STATUS: "productio" #production or development
 
 handlers:
 - url: /admin/.*

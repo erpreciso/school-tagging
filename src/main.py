@@ -7,6 +7,7 @@ import webapp2
 import jinja2
 import os
 import datetime
+import logging
 
 class MainHandler(webapp2.RequestHandler):
 	template_dir = os.path.join(os.path.dirname(__file__), 'pages')
@@ -20,6 +21,7 @@ class MainHandler(webapp2.RequestHandler):
 		return self.request.get(param)
 		
 	def renderStr(self, template, **params):
+                params["env"] = os.environ["DEV_WORKFLOW_STATUS"]
 		return self.jinja_env.get_template(template).render(params)
 		
 	def renderPage(self, template, **kw):
