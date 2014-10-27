@@ -1,6 +1,19 @@
 $(document).ready(function () {
-	initializeDashboard();
+    initializeDashboard();
 });
+
+window.onblur = imnotfocused;
+window.onfocus = imfocused;
+
+function imnotfocused(){
+    console.log("losing focus");
+    $.post("/focus",{"focus": "off"});
+}
+
+function imfocused(){
+    console.log("gaining focus");
+    $.post("/focus",{"focus": "on"});
+}
 
 onError = function (){
 	askMeRefresh();

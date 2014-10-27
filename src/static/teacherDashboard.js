@@ -153,19 +153,23 @@ onMessage = function(message) {
 	var data = JSON.parse(message.data);
 	if (data.type == "studentArrived") {
 		var studentName = data.message.studentName;
+		var studentFullName = data.message.studentFullName;
 		var studentsCount = $(".studentName").length;
-		var txt = studentName;
+		var txt = studentFullName;
 		var student = $(document.createElement("li"))
 		    .attr("id", studentName)
 		    .addClass("studentName")
-		    .text(txt)
+		    .text(studentFullName)
 		    .on("click", function(event){
 			attachStatRequest(event.target.id);
 		    });
 		$("#students").append(student);
 	}
 	else if (data.type == "studentLogout") {
-		$(document.createElement("div")).remove();
+		$("#" + data.message.studentName).remove();
+	}
+	else if (data.type == "studentFocusStatus") {
+	    console.log(data.message.studentName + " is going " + data.message.focus + " focus");
 	}
 	else if (data.type == "studentDisconnected") {
 		if (language == "EN"){
@@ -177,15 +181,15 @@ onMessage = function(message) {
 			var t2 = "..oppure disconnettimi definitivamente";
 		}
 		var studentName = data.message.studentName;
-		if ($(document.createElement("div")).children(".pingRequest").length == 0){
-			$(document.createElement("div")).append($(document.createElement("button"))
+		if ($("#" + data.message.studentName).children(".pingRequest").length == 0){
+			$("#" + data.message.studentName).append($(document.createElement("button"))
 					.addClass("pingRequest")
 					.text(t1)
 					.on("click", function(event){
 						var student = event.target.parentElement.id;
 						$.post("/ping", {"student": student});
 					}));
-			$(document.createElement("div")).append($(document.createElement("button"))
+			$("#" + data.message.studentName).append($(document.createElement("button"))
 					.addClass("logoutStudent")
 					.text(t2)
 					.on("click", function(event){
@@ -196,9 +200,9 @@ onMessage = function(message) {
 	}
 	else if (data.type == "studentAlive") {
 		var studentName = data.message.studentName;
-		if ($(document.createElement("div")).children(".pingRequest").length > 0){
-			$(document.createElement("div")).children(".pingRequest").remove();
-			$(document.createElement("div")).children(".logoutStudent").remove();
+		if ($("#" + data.message.studentName).children(".pingRequest").length > 0){
+			$("#" + data.message.studentName).children(".pingRequest").remove();
+			$("#" + data.message.studentName).children(".logoutStudent").remove();
 		}
 	}
 	else if (data.type == "sessionExercise") {
@@ -208,7 +212,6 @@ onMessage = function(message) {
 		buildDashboard(data);
 	}
 	else if (data.type == "lessonStats") {
-		console.log(data.message);	
 		showStats(data.message);
 	}
 	else if (data.type == "studentStats") {

@@ -46,6 +46,7 @@ def cleanIdleObjects():
 				session.end()
 	
 class User(ndb.Model):
+	fullname = ndb.StringProperty()
 	username = ndb.StringProperty()
 	currentLessonID = ndb.IntegerProperty()
 	currentLessonName = ndb.StringProperty()
@@ -161,7 +162,10 @@ class Student(User):
 	
 	def alertTeacherImArrived(self):
 		message = {"type": "studentArrived",
-			"message": {"studentName": self.username}}
+			"message": {
+				"studentName": self.username,
+				"studentFullName": self.fullname
+				}}
 		self.sendMessageToTeacher(message)
 		
 	def alertTeacherImLogout(self):
@@ -179,6 +183,11 @@ class Student(User):
 	def alertTeacherImOffline(self):
 		message = {"type": "studentDisconnected",
 			"message": {"studentName": self.username}}
+		self.sendMessageToTeacher(message)
+
+	def alertTeacherAboutMyFocus(self, status):
+		message = {"type": "studentFocusStatus",
+			"message": {"studentName": self.username, "focus": status}}
 		self.sendMessageToTeacher(message)
 
 class Teacher(User):
@@ -206,9 +215,10 @@ def teacherUsernameExists(username):
 	else:
 		return False
 
-def createTeacher(username, password):
+def createTeacher(username, password, fullname):
 	teacher = Teacher()
 	teacher.username = username
+	teacher.fullname = fullname
 	teacher.password = password
 	teacher.language = DEFAULT_LANGUAGE
 	teacher.save()

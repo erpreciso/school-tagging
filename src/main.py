@@ -99,7 +99,8 @@ class TeacherHandler(MainHandler):
     
 
     def login(self):
-	username = self.read("username")
+	fullname = self.read("username")
+	username = fullname.replace(" ", "_")
 	password = self.read("password")
 	if objs.teacherUsernameExists(username):
 	    teacher = objs.getTeacher(username)
@@ -138,10 +139,11 @@ class TeacherHandler(MainHandler):
 	return self.redirect("/t/login")
     
     def signup(self):
-	username = self.read("username")
+	fullname = self.read("username")
+	username = fullname.replace(" ", "_")
 	if not objs.teacherUsernameExists(username):
 	    password = self.read("password")
-	    objs.createTeacher(username, password)
+	    objs.createTeacher(username, password, fullname)
 	    message = "re-enter_login"
 	else:
 	    message = "username_already_used"
@@ -192,10 +194,14 @@ class TeacherHandler(MainHandler):
 	lesson = objs.getLesson(teacher.currentLessonID)
 	if lesson:
 	    templ = "teacherDashboard.html"
+	    studentLabels = []
+            for studentName in lesson.students:
+		student = objs.getStudent(studentName, teacher.currentLessonID)
+		studentLabels.append({"username":studentName,"fullname":student.fullname})
 	    return self.renderPage(templ ,
-		teacherName=teacher.username,
+		teacherName=teacher.fullname,
 		lessonName=teacher.currentLessonName,
-		students=lesson.students,
+		students=studentLabels,
 		token=teacher.token,
 		language=language,
 		labels=labdict.labels(templ, language),
@@ -265,7 +271,8 @@ class StudentHandler(MainHandler):
 
     def login(self):
 	    student = objs.Student()
-	    student.username = self.read("username")
+	    student.fullname = self.read("username")
+	    student.username = student.fullname.replace(" ", "_")
 	    student.language = objs.DEFAULT_LANGUAGE
 	    lessonName = self.read("lessonName")
 	    if lessonName in objs.getOpenLessonsNames():
@@ -291,7 +298,7 @@ class StudentHandler(MainHandler):
 	    templ = "studentDashboard.html"
 	    language = student.language or objs.DEFAULT_LANGUAGE
 	    self.renderPage(templ,
-				    studentName=student.username,
+				    studentFullName=student.fullname,
 				    lessonName=student.currentLessonName,
 				    token=student.token,
 				    language=language,
@@ -343,6 +350,15 @@ class PingHandler(MainHandler):
 		    student = requester
 		    return student.alertTeacherImAlive()
 		    
+class LosingFocusHandler(MainHandler):
+    def post(self):
+	requester = self.getFromCookie()
+	status = self.request.get("focus")
+	requesterRole = self.getRoleFromCookie()
+	assert requesterRole == "student"
+	student = requester
+	student.alertTeacherAboutMyFocus(status)
+	
 class ForceLogoutStudentHandler(MainHandler):
     def post(self):
 	    requester = self.getFromCookie()
@@ -397,6 +413,7 @@ app = webapp2.WSGIApplication([
     ("/start", StartPage),
     ("/admin/delete", DeleteHandler),
     ("/ping", PingHandler),
+    ("/focus", LosingFocusHandler),
     ("/forceLogoutStudent", ForceLogoutStudentHandler),
     ("/help", HelpHandler),
     ("/admin/clean", CleanIdle),
