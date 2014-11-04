@@ -5,7 +5,8 @@
 {% endblock %}
 
 {% block content %}
-<div>{{labels["enter_username_and_lesson"]}}</div>
+<div style="margin-left:20px;margin-top:50px">
+<h5>{{labels["enter_username_and_lesson"]}}</h5>
 <form method="post" action="/s/login">
 	<label for="un">{{labels["name_and_surname"]}}</label>
 	<input type="text" name="username" id="un">
@@ -17,5 +18,5 @@
 	{% endif %}
 	<input type="submit" value="{{labels['login_button']}}">
 </form>
-
+</div>
 {% endblock %}

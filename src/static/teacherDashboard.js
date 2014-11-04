@@ -1,12 +1,4 @@
-// globals
-
-
-
 var categories = new Array();
-
-
-
-
 $(document).ready(function () {
 	newExercise();
 	$(".studentName").on("click", function(event){
@@ -14,56 +6,42 @@ $(document).ready(function () {
 	});
 	$("body").css("background","url(../static/images/paper_texture.jpg)" );
 });
-
-
-
 onError = function (){
 	askMeRefresh();
 	$.get("/channelExpired");
 };
 onClose = function (){};
-
 newExercise = function (){
 	var language = getLanguage(); 
 	if (language == "EN") {
-		var t1 = "Start Exercise";
+		var t1 = "Start Simple Exercise";
 		var t2 = "Show Lesson Statistics";
+		var t3 = "Start Complex Exercise";
 	}
 	else if (language == "IT") {
-		var t1 = "Inizia un nuovo esercizio";
+		var t1 = "Inizia un nuovo esercizio semplice";
 		var t2 = "Mostra le statistiche della lezione";
+		var t3 = "Inizia un nuovo esercizio complesso";
 	}
-	
-	/*
-	var btn = document.createElement('button');
-	btn.setAttribute('id', 'startExercise');
-	btn.innerHTML = t1;
-	
-	
-	var btn2 = document.createElement('button');
-	btn2.setAttribute('id', 'startExercise');
-	btn2.innerHTML = t1;
-	
-	$("#dashboard").append(btn);
-	$("#dashboard").append(btn2);
-	*/
-	
-	
-	if ($("#newExercise").length > 0){
-		 	 $("#newExercise").remove();
+	if ($("#newSimpleExercise").length > 0){
+		 	 $("#newSimpleExercise").remove();
+		 	 $("#newComplexExercise").remove();
 		 	 $("#showStats").remove();
 		 	 $('#buttons').empty();
 		 	 
 	}
-	
-	
-	
 	$("#buttons").append($(document.createElement("div"))
-			.attr("id", "newExercise")
+			.attr("id", "newSimpleExercise")
 			.css("float","left")
 			.css("display","inline")
 			.css("margin-top","20px")
-			.on("click", startExercise));
+			.on("click", startSimpleExercise));
+	$("#buttons").append($(document.createElement("div"))
+			.attr("id", "newComplexExercise")
+			.css("float","left")
+			.css("display","inline")
+			.css("margin-top","20px")
+			.on("click", startComplexExercise));
 						
 			
 	$("#buttons").append($(document.createElement("div"))
@@ -73,8 +51,9 @@ newExercise = function (){
 			.css("margin-top","20px")
 			.on("click", function(){$.get("/t/askStats");}));
 			
-	$("#newExercise").html('<center><div style="margin:0px;font-size:12px;cursor:pointer;"><div class="start_button"><i class="fa fa fa-pencil-square-o" style="color:#000;font-size:40px;"></i><br/> '+t1+'</div></div></center>');		
-			
+	$("#newSimpleExercise").html('<center><div style="margin:0px;font-size:12px;cursor:pointer;"><div class="start_button"><i class="fa fa fa-pencil-square-o" style="color:#000;font-size:40px;"></i><br/> '+t1+'</div></div></center>');
+	$("#newComplexExercise").html('<center><div style="margin:0px;font-size:12px;cursor:pointer;"><div class="start_button"><i class="fa fa fa-pencil-square-o" style="color:#000;font-size:40px;"></i><br/> '+t3+'</div></div></center>');
+
 	$("#showStats").html('<center><div style="margin:0px;font-size:12px;cursor:pointer;"><div class="start_button"><i class="fa fa-bar-chart" style="color:#000;font-size:40px;"></i><br/> '+t2+'</div></div></center>');		
 			
 			
@@ -109,10 +88,6 @@ studentStats = function (message) {
 		});
 	});
 };
-
-
-
-
 
 showStats = function (message) {
 	var language = getLanguage();
@@ -152,9 +127,6 @@ showStats = function (message) {
         // qui il nuovo dizionario con le statistiche dettagliate
         //
         var fullstats = message.fullstats;
-       // console.log(fullstats);
-        //
-
 	$("#dashboard").append($(document.createElement("div"))
 			.attr("id", "stats")
 			.css("display", "none")
@@ -171,34 +143,45 @@ showStats = function (message) {
 	
 };
 
-
 function attachStatRequest(id){
     var student = id;
     $.post("/t/askStudentStats", {"student": student});
 }
-
-
 
 onMessage = function(message) {
 	var language = getLanguage();
 	var data = JSON.parse(message.data);
 	if (data.type == "studentArrived") {
 		var studentName = data.message.studentName;
+		var studentFullName = data.message.studentFullName;
 		var studentsCount = $(".studentName").length;
-		var txt = studentName;
+		var txt = studentFullName;
 		var student = $(document.createElement("li"))
 		    .attr("id", studentName)
 		    .addClass("studentName")
-		    .text(txt)
+		    .text(studentFullName)
 		    .on("click", function(event){
 			attachStatRequest(event.target.id);
 		    });
 		$("#students").append(student);
 	}
 	else if (data.type == "studentLogout") {
-		$(document.createElement("div")).remove();
+		$("#" + data.message.studentName).remove();
 	}
-	else if (data.type == "studentDisconnected") {
+	else if (data.type == "studentFocusStatus") {
+		if (data.message.focus == "on"){
+			$('#'+data.message.studentName).css('color','#000');
+			$('#'+data.message.studentName).html(data.message.studentName);
+		}else if (data.message.focus == "off") {
+			$('#'+data.message.studentName).css('color','red');
+			$('#'+data.message.studentName).html(data.message.studentName + "(assente)");
+		}
+		
+	    
+		//console.log(data.message.studentName + " is going " + data.message.focus + " focus");
+	
+	}
+else if (data.type == "studentDisconnected") {
 		if (language == "EN"){
 			var t1 = "It seems I'm offline: ping me...";
 			var t2 = ".. or kick me out of the lesson";
@@ -208,15 +191,15 @@ onMessage = function(message) {
 			var t2 = "..oppure disconnettimi definitivamente";
 		}
 		var studentName = data.message.studentName;
-		if ($(document.createElement("div")).children(".pingRequest").length == 0){
-			$(document.createElement("div")).append($(document.createElement("button"))
+		if ($("#" + data.message.studentName).children(".pingRequest").length == 0){
+			$("#" + data.message.studentName).append($(document.createElement("button"))
 					.addClass("pingRequest")
 					.text(t1)
 					.on("click", function(event){
 						var student = event.target.parentElement.id;
 						$.post("/ping", {"student": student});
 					}));
-			$(document.createElement("div")).append($(document.createElement("button"))
+			$("#" + data.message.studentName).append($(document.createElement("button"))
 					.addClass("logoutStudent")
 					.text(t2)
 					.on("click", function(event){
@@ -227,9 +210,9 @@ onMessage = function(message) {
 	}
 	else if (data.type == "studentAlive") {
 		var studentName = data.message.studentName;
-		if ($(document.createElement("div")).children(".pingRequest").length > 0){
-			$(document.createElement("div")).children(".pingRequest").remove();
-			$(document.createElement("div")).children(".logoutStudent").remove();
+		if ($("#" + data.message.studentName).children(".pingRequest").length > 0){
+			$("#" + data.message.studentName).children(".pingRequest").remove();
+			$("#" + data.message.studentName).children(".logoutStudent").remove();
 		}
 	}
 	else if (data.type == "sessionExercise") {
@@ -245,8 +228,6 @@ onMessage = function(message) {
 		studentStats(data.message);
 	}
 };
-
-
 
 function initCharts(cat,subtitle,label){
 
@@ -290,6 +271,11 @@ $('#container').highcharts({
                 borderWidth: 0
             }
         },
+        colors:[
+        '#49A178',
+        '#948C8A',
+        '#FF4444'
+        ],
         series: [{
             name: label,
             data: data
@@ -297,7 +283,6 @@ $('#container').highcharts({
         }]
     });
 }
-
 
 function updateChartData(answers, answersDict){
 	var chart = $('#container').highcharts();
@@ -366,6 +351,8 @@ function updateChartDataStudents(students){
     chart.series[1].setData(missed);
     chart.series[2].setData(wrong);
    
+    
+
 }
 
 function buildExercise(message){
@@ -461,10 +448,6 @@ buildDashboard = function (status){
 		$("#studentAnswers, #statusBar").remove();
 	};
 	
-	
-	
-	
-	
 	function answersGraph(answers, dictAnswers){
 		$("#dashboard").append($(document.createElement("div"))
 				.attr("id", "studentAnswers")
@@ -487,10 +470,6 @@ buildDashboard = function (status){
 		};
 		updateChartData(answers, dictAnswers);
 	}
-	
-	
-	
-	
 	
 	function statusBar(status){
 		$("#dashboard").append($(document.createElement("div"))
@@ -549,8 +528,11 @@ buildDashboard = function (status){
 
 onOpened = function(){};
 
-startExercise = function () {
-	$.get("/data/exercise_request");
+startSimpleExercise = function () {
+	$.get("/data/simple_exercise_request");
+};
+startComplexExercise = function () {
+	$.get("/data/complex_exercise_request");
 };
 
 askValidation = function () {

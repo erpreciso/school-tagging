@@ -10,12 +10,19 @@
   src: local('Learning Curve'), local('LearningCurve'), url('fonts/learningcurve-webfont.woff') format('woff');
 }
 
+@font-face {
+  font-family: 'Amatic SC';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Amatic SC Bold'), local('AmaticSC-Bold'), url(https://fonts.gstatic.com/s/amaticsc/v6/IDnkRTPGcrSVo50UyYNK75S3E-kSBmtLoNJPDtbj2Pk.ttf) format('truetype');
+}
+
 .student_block {
 	margin-top: 20px;
 	padding-left: 15px;
 	background-image: url('images/chalkboard.jpg');
-	font-family: CrayonCrumble, "Trebuchet MS", "Sans-Serif";
-	font-size: 30px;
+	font-family: "Comic Sans MS", "Trebuchet MS", "Sans-Serif";
+	font-size: 24px;
 	height: 100%;
 	color: #fff;
 	line-height: 35px;

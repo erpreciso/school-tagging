@@ -8,7 +8,9 @@
 <link rel="stylesheet" type="text/css" href="/static/teacherLogin.css" />
 {% endblock %}
 {% block content %}
+<div style="margin-left:20px;">
 <h3>Prima occorre registrarsi.</h3>
+
 <form method="post" action="/t/signup">
 	<div>{{labels["signup_title"]}}</div>
 	<div>{{labels["do_not_have_account"]}}</div>
@@ -37,5 +39,5 @@
 <div>{{labels["message_title"]}}</div>
 <div><strong>{{message}}</strong></div>
 {% endif %}
-
+</div>
 {% endblock %}
