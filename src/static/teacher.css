@@ -51,6 +51,26 @@ overflow: hidden;
 	 line-height: 40px;
 }
 
+.styled-select {
+	font: bold 20px  "Comic Sans MS", verdana; 
+	color : #000;
+   background: transparent;
+   overflow: hidden;
+   width: auto;
+}
+
+.styled-select select {
+   background: transparent;
+   border: none;
+   font: bold 20px  "Comic Sans MS", verdana; 
+	color : #000;
+   height: 29px;
+   padding: 5px; /* If you add too much padding here, the options won't show in IE */
+   width: 268px;
+}
+
+
+
 .teacher_disconnect{
 	position:absolute; 
 	top: 8px;

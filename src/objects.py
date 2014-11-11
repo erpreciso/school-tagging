@@ -542,15 +542,21 @@ class Session(ndb.Model):
 		self.open = False
 		self.save()
 		
-	def start(self, lessonID, exerciseType):
+	def start(self, lessonID, exerciseType,category=""):
 		self.lesson = lessonID
 		lesson = getLesson(lessonID)
 		self.teacher = lesson.teacher
 		self.students = lesson.students
 		self.exerciseText = getSentence()
-		self.exerciseWords, self.target = getWords(self.exerciseText)
 		self.type = exerciseType
-		self.answersProposed = getAnswersProposed(self.type)
+		self.category = category
+		if exerciseType == "complex" :
+			self.exerciseWords, self.target = getWords(self.exerciseText)
+			self.target = -1
+			self.answersProposed = []
+		else:
+			self.exerciseWords, self.target = getWords(self.exerciseText)
+			self.answersProposed = getAnswersProposed(self.type)
 		self.studentAnswers = {}
 		self.answersStudents = {}
 		self.open = True
@@ -565,7 +571,8 @@ class Session(ndb.Model):
 				"id": sid,
 				"wordsList": self.exerciseWords,
 				"answersProposed": self.answersProposed,
-				"target": self.target
+				"target": self.target,
+				"category": self.category
 				},
 			}
 		

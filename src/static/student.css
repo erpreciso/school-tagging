@@ -56,6 +56,42 @@ line-height: 60px
 	background-color: rgba(96,96,96,0.7)
 }
 
+.word{
+	margin-right: 8px;
+}
+.send_button{
+	border-style: solid;
+	border-width: medium;
+	-webkit-border-radius: 6px;
+	-moz-border-radius: 6px;
+	border-radius: 6px;
+	font-size: 20px;
+	width: 200px;
+	
+}
+.char{
+	-webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    cursor: pointer;
+}
+
+.selected{
+	background-color: rgba(255, 255, 0, 0.3);
+		background: rgba(255, 255, 0, 0.3);
+
+}
+.instruction{
+	font-style: italic;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	font-size: 18px;
+	color: #fcf0b5
+}
+
 
 .student_disconnect{
 	position:absolute; 

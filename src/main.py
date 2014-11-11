@@ -8,6 +8,7 @@ import jinja2
 import os
 import datetime
 import logging
+import json
 
 class MainHandler(webapp2.RequestHandler):
 	template_dir = os.path.join(os.path.dirname(__file__), 'pages')
@@ -227,7 +228,7 @@ class DataHandler(MainHandler):
 		elif kind == "complex_exercise_request":
 			lessonID = requester.currentLessonID
 			session = objs.Session()
-			session.start(lessonID, "complex")
+			session.start(lessonID, "complex",self.request.get('category'))
 
     def post(self, kind):
 	requester = self.getFromCookie()
@@ -242,7 +243,10 @@ class DataHandler(MainHandler):
 	if requesterRole == "student":
 		student = requester
 		if kind == "answer":
-			answer = self.read("answer").strip()
+			#answer = self.read("answer").strip()
+			answer = self.request.get("answer")
+			answerJSON = json.loads(answer)
+			print answerJSON['answer']
 			student.addAnswer(answer)
 			session = objs.getSession(student.currentSession)
 			session.addStudentAnswer(student.username, answer)

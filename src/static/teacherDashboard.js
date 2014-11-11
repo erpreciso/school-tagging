@@ -19,9 +19,9 @@ newExercise = function (){
 		var t3 = "Start Complex Exercise";
 	}
 	else if (language == "IT") {
-		var t1 = "Inizia un nuovo esercizio semplice";
+		var t1 = "Esercizio scelta categorie";
 		var t2 = "Mostra le statistiche della lezione";
-		var t3 = "Inizia un nuovo esercizio complesso";
+		var t3 = "Esercizio di selzione su:";
 	}
 	if ($("#newSimpleExercise").length > 0){
 		 	 $("#newSimpleExercise").remove();
@@ -41,7 +41,7 @@ newExercise = function (){
 			.css("float","left")
 			.css("display","inline")
 			.css("margin-top","20px")
-			.on("click", startComplexExercise));
+			.on("mousedown", startComplexExercise));
 						
 			
 	$("#buttons").append($(document.createElement("div"))
@@ -52,15 +52,26 @@ newExercise = function (){
 			.on("click", function(){$.get("/t/askStats");}));
 			
 	$("#newSimpleExercise").html('<center><div style="margin:0px;font-size:12px;cursor:pointer;"><div class="start_button"><i class="fa fa fa-pencil-square-o" style="color:#000;font-size:40px;"></i><br/> '+t1+'</div></div></center>');
-	$("#newComplexExercise").html('<center><div style="margin:0px;font-size:12px;cursor:pointer;"><div class="start_button"><i class="fa fa fa-pencil-square-o" style="color:#000;font-size:40px;"></i><br/> '+t3+'</div></div></center>');
+	
+	
+	
+	var selectHTMLString = '<select id="categorySelection" class="styled-select"><option>Verbi</option><option>Nomi</option><option>Aggettivi</option><option>Pronomi</option></select>';
+	
+	
+	$("#newComplexExercise").html('<center><div style="margin:0px;font-size:12px;cursor:pointer;"><div class="start_button"><i class="fa fa fa-pencil-square-o" style="color:#000;font-size:40px;"></i><br/> '+t3+'</div></div>'+selectHTMLString+'</center>');
 
 	$("#showStats").html('<center><div style="margin:0px;font-size:12px;cursor:pointer;"><div class="start_button"><i class="fa fa-bar-chart" style="color:#000;font-size:40px;"></i><br/> '+t2+'</div></div></center>');		
 			
-			
-			
+		
+	$('#categorySelection').mousedown(function(event){
+		event.stopImmediatePropagation();	
+	});
 
 };
-
+	
+	
+	
+	
 studentStats = function (message) {
 	var language = getLanguage();
 	if (language == "EN"){
@@ -532,7 +543,8 @@ startSimpleExercise = function () {
 	$.get("/data/simple_exercise_request");
 };
 startComplexExercise = function () {
-	$.get("/data/complex_exercise_request");
+	var cat = $("#categorySelection").val();
+	$.get("/data/complex_exercise_request?category="+cat+"&prova=ds");
 };
 
 askValidation = function () {
