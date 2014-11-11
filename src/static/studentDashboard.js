@@ -186,7 +186,8 @@ function presentExercise(message) {
 					
 	if (target == -1 ){
 		var selectionButtons = $(document.createElement("div")).attr("id","selectionButtons").css('margin-top','15px').css('margin-bottom','15px');
-		var addButton = $(document.createElement("span")).attr("id","addButton").html('<i class="fa fa-plus-square-o"></i> ').css('font-size','40px').on("mousedown", function(event){event.stopImmediatePropagation(); addSelectionTotheList(addSelection());});	
+		var addButton = $(document.createElement("span")).attr("id","addButton").html('<i class="fa fa-plus-square-o"></i> ').css('font-size','40px').on("mousedown", function(event){event.stopImmediatePropagation(); addSelectionTotheList(addSelection());});
+	
 		$(selectionButtons).append(addButton);
 	
 		var selectionList = $(document.createElement("ul")).attr("id","selectionList");
@@ -379,6 +380,7 @@ function sendExercise(){
 	$("#feedback").text(t1);
 	answer.selections =selections;
 	answerJSON.answer  = answer;
+	console.log(JSON.stringify(answerJSON));
 	$.ajax({
 		url: "/data/answer",
 		type: "POST",
