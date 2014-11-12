@@ -57,6 +57,7 @@ overflow: hidden;
    background: transparent;
    overflow: hidden;
    width: auto;
+
 }
 
 .styled-select select {
@@ -67,13 +68,48 @@ overflow: hidden;
    height: 29px;
    padding: 5px; /* If you add too much padding here, the options won't show in IE */
    width: 268px;
+
 }
 
-
+@-moz-document url-prefix(){
+  .styled-select select { width: 110%; }
+}
 
 .teacher_disconnect{
 	position:absolute; 
 	top: 8px;
 	z-index:10000;
 	right :20px;
+}
+
+
+
+.word_teacher{
+	margin-right: 8px;
+}
+
+
+.instruction_teacher{
+	font-style: italic;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	font-size: 18px;
+	color: #2969ff
+}
+
+
+.char_teacher{
+	-webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    cursor: pointer;
+}
+
+.selected_teacher{
+	background-color: rgba(215, 44, 44, 0.5);
+	background: rgba(215, 44, 44, 0.5);
+
 }

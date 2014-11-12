@@ -251,17 +251,17 @@ class DataHandler(MainHandler):
 			except:
 				answerJSON = {}
 			
-			if len(answerJSON) == 1 : 
-				student.addAnswer(answer)
-				session = objs.getSession(student.currentSession)
-				#bisogna modificare questa funzione in modo che gestisca anche i json
-				session.addStudentAnswer(student.username, answerJSON)
-				session.sendStatusToTeacher()
-			else:
-				student.addAnswer(answer)
-				session = objs.getSession(student.currentSession)
-				session.addStudentAnswer(student.username, answer)
-				session.sendStatusToTeacher()
+			#if len(answerJSON) == 1 : 
+			#	student.addAnswer(answer)
+			#	session = objs.getSession(student.currentSession)
+			#	#bisogna modificare questa funzione in modo che gestisca anche i json
+			#	session.addStudentAnswer(student.username, answer)
+			#	session.sendStatusToTeacher()
+			#else:
+			student.addAnswer(answer)
+			session = objs.getSession(student.currentSession)
+			session.addStudentAnswer(student.username, answer)
+			session.sendStatusToTeacher()
 
 			
 			

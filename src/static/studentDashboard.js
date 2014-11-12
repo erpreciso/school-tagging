@@ -5,11 +5,11 @@ $(document).ready(function () {
 var answerJSON = {};
 var selections = new Array();
 
-
-$(document).mouseup(function(){
+$(document).bind('touchend mouseup',function(){
    		 clicking = false;
    		 min_Selected = 0;
    		 max_Selected = 0;
+   		
 })
 
 
@@ -39,7 +39,7 @@ onClose = function (){};
 
 onMessage = function(message) {
 	var data = JSON.parse(message.data);
-	var language = getLanguage(); 
+	var language = getLanguage();
 	if (language == "EN")
 		var t1 = "Session aborted by teacher; correct answer was ";
 	else if (language == "IT")
@@ -102,38 +102,38 @@ function fillTheHole(x,y){
 function presentExercise(message) {
 	answerJSON = {};
 	selections = new Array();
-	var language = getLanguage(); 
+	var language = getLanguage();
 	$("#exercise, #answers").empty();
 	if ($("#feedback").length > 0){
 		$("#feedback").remove();
 	}
-	
+
 	$("#answers").css("padding-top", "20px")
 	var words = message.wordsList;
 	var target = message.target;
-	
-	
+
+
 	if (target == -1 ){
 		var label = $(document.createElement("div")).text("Seleziona tutti i "+message.category).addClass("instruction");
 			$("#exercise").append(label);
 		allow_selection=true;
 	}
-	
-	
+
+
 	//console.log("raw from py");
 	//console.log(message.answersProposed);
 	var answersProposed = mixArray(message.answersProposed);
 	//console.log("mixed");
 	//console.log(answersProposed);
 	var charid=1;
-	
+
 	for (var i = 0; i < words.length; i++) {
 		var word = $(document.createElement("span"))
 						.attr("id", words[i])
 						.addClass("word");
-		
+
 		var parola = words[i]+"";
-		
+
 		for (var x = 0;x<parola.length;x++){
 			var character = $(document.createElement("span"))
 						.attr("id", "char_id_"+charid)
@@ -145,62 +145,86 @@ function presentExercise(message) {
 			$(word).append(character);
 			charid++;
 		}
-		
-		
+
+
 		$("#exercise").append(word);
 		if (i == target) {
 			$(word).css("color", "yellow");
 		}
-		
-						
-		
+
+
+
 	}
-	
-	
+
+	$('.char').bind('touchstart mousedown',function(event){
+		event.preventDefault();
+		event.stopImmediatePropagation();
+    	clicking = true;
+	});
+
+
+
+	/*
 	$('.char').mousedown(function(event){
 		event.stopImmediatePropagation();
     	clicking = true;
-    	
-    	
 	});
-	
-	
-	$('.char').mousemove(function(){
-    if(clicking == false || allow_selection ==false) return;
-    	
-    	$( this ).addClass("selected");
-    	
-    	if ( min_Selected == 0 || parseInt($( this ).attr("char_number")) <= min_Selected){
-    		min_Selected = parseInt($( this ).attr("char_number"));
+*/
+
+	$('.char').bind('touchmove mousemove',function(event){
+		event.preventDefault();
+		if (event.type.toLowerCase() == "touchmove")
+			clicking=true;
+		if(clicking == false || allow_selection ==false) return;
+
+
+
+
+		var element = this;
+		if (event.type.toLowerCase() == "touchmove"){
+			
+			var x = event.originalEvent.touches[0].clientX;
+			var y = event.originalEvent.touches[0].clientY;
+			//alert(x+" - "+y);
+			element = document.elementFromPoint(x,y);
+			if($(element).hasClass("char") ==false) return;
+			//alert(element);
+			
+		}
+
+    	$( element ).addClass("selected");
+
+    	if ( min_Selected == 0 || parseInt($( element ).attr("char_number")) <= min_Selected){
+    		min_Selected = parseInt($( element ).attr("char_number"));
     	}
-    	
-    	if ( max_Selected == 0 || parseInt($( this ).attr("char_number")) >= max_Selected){
-    		max_Selected = parseInt($( this ).attr("char_number"));
+
+    	if ( max_Selected == 0 || parseInt($( element ).attr("char_number")) >= max_Selected){
+    		max_Selected = parseInt($( element ).attr("char_number"));
     	}
     	fillTheHole(min_Selected,max_Selected);
-    	
-    	
+		
+
     });
 
-	
-					
+
+
 	if (target == -1 ){
 		var selectionButtons = $(document.createElement("div")).attr("id","selectionButtons").css('margin-top','15px').css('margin-bottom','15px');
 		var addButton = $(document.createElement("span")).attr("id","addButton").html('<i class="fa fa-plus-square-o"></i> ').css('font-size','40px').on("mousedown", function(event){event.stopImmediatePropagation(); addSelectionTotheList(addSelection());});
-	
+
 		$(selectionButtons).append(addButton);
-	
+
 		var selectionList = $(document.createElement("ul")).attr("id","selectionList");
-	
-	
-	
-		$("#exercise").append(selectionButtons);	
-		$("#exercise").append(selectionList);	
-		$("#exercise").append('<div id="sendButton"><center><div style="margin:0px;font-size:12px;cursor:pointer;" onclick="sendExercise();"><div class="send_button">Finito!<br/>Invia all\'insegnante <i class="fa fa fa fa-paper-plane" style="color:#fff;font-size:30px;"></i></div></div></center></div>');		
+
+
+
+		$("#exercise").append(selectionButtons);
+		$("#exercise").append(selectionList);
+		$("#exercise").append('<div id="sendButton"><center><div style="margin:0px;font-size:12px;" ><div class="send_button" onclick="sendExercise();">Finito!<br/>Invia all\'insegnante <i class="fa fa fa fa-paper-plane" style="color:#fff;font-size:30px;"></i></div></div></center></div>');
 	}
-	
-		
-		
+
+
+
 	for (var i = 0; i < answersProposed.length; i++ ){
 		//console.log(answersProposed[i][0]["EN"]);
 		var answer = $(document.createElement("span"))
@@ -210,7 +234,7 @@ function presentExercise(message) {
 			.css("cursor", "pointer")
 			.addClass("answer_button")
 			.text(answersProposed[i][0][language] + " ");
-		
+
 		$("#answers").append(answer);
 		var par = {"answer": answersProposed[i][0]["EN"]};
 		$(answer).on("click", par ,function(event){
@@ -219,108 +243,108 @@ function presentExercise(message) {
 			$("#" + triggered).css("text-decoration", "underline");
 			$("#" + triggered).css("background-color", "orange");
 			$("#" + triggered).addClass("answered");
-		
+
 			$.post("/data/answer", {"answer": triggered});
 			$("#answers").children().off("click");
-			
-			
+
+
 			if (language == "EN")
 				var t1 = "Waiting for teacher to assess...";
 			else if (language == "IT")
 				var t1 = "Attendi la validazione dell'insegnante";
-			
+
 			$("#feedback").text(t1);
-			
-			
+
+
 		});
 	}
 	var feedback = $(document.createElement("div"))
 				.attr("id", "feedback")
 				.css("margin-top", "15px");
-		
+
 	$("#answers").after(feedback);
-	
+
 
 	resetSelectionBinding();
-	
 
 
-	
+
+
 }
 
 function addSelection(){
-	
+
 	if (allow_selection){
-	
+
 		var testo = "";
-		
+
 		var wordID = -1;
 		var charID = -1;
-		
+
 		var fragment = {};
 		var selection = new Array();
-		
+
 		var seletedCharInWord = 0;
 		var selectionHead = 0;
 		$(".selected").each(function() {
 				var currentWordId = parseInt($(this).attr('word'));
 				var currentCharIndex = parseInt($(this).attr('char_index_in_word'));
-				
+
 				if (wordID == -1){
 					selectionHead = currentCharIndex;
 				}
-				
+
 				seletedCharInWord++;
-				
+
 				if (currentWordId != wordID){
-					
-					
+
+
 					fragment.start = selectionHead;
 					fragment.end  = selectionHead+(seletedCharInWord);
-					
+
 					if (wordID != -1){
 						fragment.word_index = wordID;
 						fragment.extent = testo.trim();
 						selection.push(fragment);
 						fragment = {};
-	
+
 					}
 					wordID = currentWordId;
 					seletedCharInWord = 0;
 					selectionHead = currentCharIndex;
 					testo ="";
 				}
-				
+
 				testo +=($(this).text())+"";
 				$(this).removeClass('selected');
 		});
-		 
-		
+
+
 		fragment = {};
 		fragment.start = selectionHead;
 		fragment.end = selectionHead + (seletedCharInWord+1);
 		fragment.extent = testo.trim();
 		fragment.word_index = wordID ;
 		selection.push(fragment);
-	
-		
+
+
 		return selection;
 	}
 	//console.log(JSON.stringify(answerJSON));
-	
+
 }
 
 function addSelectionTotheList(selection){
 	if (allow_selection){
 		var testo= "";
-	
+
 		for (var idx in selection) {
 			var frag = selection[parseInt(idx)];
 			testo += frag.extent +" ";
-		
+
 		}
 		var listItem = $(document.createElement("li")).html('<span style="cursor:pointer;" onclick="selectionClicked($(this).parent())">'+testo.trim()+'</span> <i class="fa fa-minus-square-o" style="cursor:pointer;" onclick="removeSelectionFromtheList($(this).parent())"></i>').addClass("selectionListItem");
-		
+
 		$('#selectionList').append(listItem);
 		$(listItem).data("selection",selection);
 	}
@@ -338,14 +362,14 @@ function selectionClicked(obj){
 	var data  = $(obj).data("selection");
 	for (var idx in data) {
 		var frag = data[parseInt(idx)];
-		
-		
+
+
 		for (var x = frag.start ; x < frag.end ;x++){
 			$(".char[char_index_in_word='"+x+"'][word='"+frag.word_index+"']").addClass("selected");
-		}	
+		}
 	}
-	
-	
+
+
 }
 
 
@@ -364,9 +388,9 @@ function sendExercise(){
 	var answer ={};
 
 	var selections = new Array();
-	
-	
-	var language = getLanguage(); 
+
+
+	var language = getLanguage();
 	$(".selectionListItem").each(function() {
 		selections.push($(this).data("selection"));
 	});
@@ -376,7 +400,7 @@ function sendExercise(){
 				var t1 = "Waiting for teacher to assess...";
 			else if (language == "IT")
 				var t1 = "Attendi la validazione dell'insegnante";
-			
+
 	$("#feedback").text(t1);
 	answer.selections =selections;
 	answerJSON.answer  = answer;
@@ -388,20 +412,20 @@ function sendExercise(){
 		datatype : "html",
 		contentType: "application/x-www-form-urlencoded; charset=UTF-8"	,
     	traditional: true
-		
+
 	});
 	//$.post("/data/answer", { "answer" : JSON.stringify(answer)} );
-	
+
 }
 
 
 function feedbackFromTeacher(message) {
 	var feedback;
 	var background;
-	var language = getLanguage(); 
+	var language = getLanguage();
 	if (language == "EN") {
 		var t1 = "Good job!";
-		var t2 = "Answer not correct; it was "; 
+		var t2 = "Answer not correct; it was ";
 	}
 	else if (language == "IT") {
 		var t1 = "Risposta esatta!";
@@ -421,7 +445,7 @@ function feedbackFromTeacher(message) {
 		feedback = t2 + italianAnswer;
 		background = "Red";
 	}
-	
+
 	$(".answered").css("background-color", background);
 	$("#feedback").text(feedback).css("color", background);
 }
@@ -429,7 +453,7 @@ function feedbackFromTeacher(message) {
 onOpened = function(){};
 
 function initializeDashboard(){
-	var language = getLanguage(); 
+	var language = getLanguage();
 	if (language == "EN")
 		var t1 = "Waiting for exercise to start...";
 	else if (language == "IT"){
