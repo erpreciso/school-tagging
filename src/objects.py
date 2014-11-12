@@ -46,6 +46,7 @@ def cleanIdleObjects():
 				session.end()
 	
 class User(ndb.Model):
+	fullname = ndb.StringProperty()
 	username = ndb.StringProperty()
 	currentLessonID = ndb.IntegerProperty()
 	currentLessonName = ndb.StringProperty()
@@ -70,8 +71,7 @@ class User(ndb.Model):
 	def askMeToRefresh(self):
 		message = json.dumps({"type": "askMeRefresh"})
 		channel.send_message(self.token, message)
-		
-		
+
 class Student(User):
 	answers = ndb.PickleProperty()
 # 		{sessionID1: answer, sessionID2: answer}
@@ -121,16 +121,16 @@ class Student(User):
 		return lesson.key.id()
 	
 	def exitLesson(self):
-		if self.currentLessonID:
-			lesson = getLesson(self.currentLessonID)
-			if lesson:
-				lesson.removeStudent(self)
-				message = {"type": "lessonTerminated"}
-				message = json.dumps(message)
-				channel.send_message(self.token, message)
-				self.currentLessonID = None
-				self.currentLessonName = None
-				self.save()
+	    if self.currentLessonID:
+		lesson = getLesson(self.currentLessonID)
+		if lesson:
+		    lesson.removeStudent(self)
+		    message = {"type": "lessonTerminated"}
+		    message = json.dumps(message)
+		    channel.send_message(self.token, message)
+		    self.currentLessonID = None
+		    self.currentLessonName = None
+		    self.save()
 	
 	def exitSession(self):
 		if self.currentSession:
@@ -162,7 +162,10 @@ class Student(User):
 	
 	def alertTeacherImArrived(self):
 		message = {"type": "studentArrived",
-			"message": {"studentName": self.username}}
+			"message": {
+				"studentName": self.username,
+				"studentFullName": self.fullname
+				}}
 		self.sendMessageToTeacher(message)
 		
 	def alertTeacherImLogout(self):
@@ -180,6 +183,11 @@ class Student(User):
 	def alertTeacherImOffline(self):
 		message = {"type": "studentDisconnected",
 			"message": {"studentName": self.username}}
+		self.sendMessageToTeacher(message)
+
+	def alertTeacherAboutMyFocus(self, status):
+		message = {"type": "studentFocusStatus",
+			"message": {"studentName": self.username, "focus": status}}
 		self.sendMessageToTeacher(message)
 
 class Teacher(User):
@@ -207,9 +215,10 @@ def teacherUsernameExists(username):
 	else:
 		return False
 
-def createTeacher(username, password):
+def createTeacher(username, password, fullname):
 	teacher = Teacher()
 	teacher.username = username
+	teacher.fullname = fullname
 	teacher.password = password
 	teacher.language = DEFAULT_LANGUAGE
 	teacher.save()
@@ -310,48 +319,48 @@ class Lesson(ndb.Model):
 			self.save()
 	
 	def produceAndSendStats(self):
-		teacher = getTeacher(self.teacher)
-		allStudents = []
-                listOfStudentsStats = []
-		stats = None
-		if self.sessions:
-                    stats = []
-                    for sessionID in self.sessions:
-                        ses = getSession(sessionID)
-                        if ses:
-                            students = ses.studentAnswers.keys()
-                            allStudents += self.students
-                            if students:
-                                for st in students:
-                                    alreadyTracked = [s["studentName"] for s in listOfStudentsStats]
-                                    if st not in alreadyTracked:
-                                        student = getStudent(st, self.key.id())
-                                        if student:
-                                            ownStats = student.produceOwnStats()        
-                                            ownDict = {"studentName": st, "stats": ownStats}
-                                            listOfStudentsStats.append(ownDict) 
-                                corrects = [st for st in students \
-                                        if ses.studentAnswers[st] == ses.validatedAnswer]
-                                stats += corrects
-		statsDict = {}
-		if stats:
-                    for name in stats:
-			if name in statsDict.keys():
-                            statsDict[name] += 1
-			else:
-                            statsDict[name] = 1
-                    for student in students:
-                        if student not in statsDict.keys():
-                            statsDict[student]= 0
-                    message = {
-                        "type": "lessonStats",
-                        "message": {
-                            "stats": statsDict,
-                            "fullstats": listOfStudentsStats
-                        }
-                    }
-                    message = json.dumps(message)
-                    channel.send_message(teacher.token, message)
+	    teacher = getTeacher(self.teacher)
+	    allStudents = []
+	    listOfStudentsStats = []
+	    stats = None
+	    if self.sessions:
+		stats = []
+		for sessionID in self.sessions:
+		    ses = getSession(sessionID)
+		    if ses:
+			students = ses.studentAnswers.keys()
+			allStudents += self.students
+			if students:
+			    for st in students:
+				alreadyTracked = [s["studentName"] for s in listOfStudentsStats]
+				if st not in alreadyTracked:
+				    student = getStudent(st, self.key.id())
+				    if student:
+					ownStats = student.produceOwnStats()        
+					ownDict = {"studentName": st, "stats": ownStats}
+					listOfStudentsStats.append(ownDict) 
+			    corrects = [st for st in students \
+				    if ses.studentAnswers[st] == ses.validatedAnswer]
+			    stats += corrects
+	    statsDict = {}
+	    if stats:
+		for name in stats:
+		    if name in statsDict.keys():
+			statsDict[name] += 1
+		    else:
+			statsDict[name] = 1
+	    for student in students:
+		if student not in statsDict.keys():
+		    statsDict[student]= 0
+	    message = {
+		"type": "lessonStats",
+		"message": {
+		    "stats": statsDict,
+		    "fullstats": listOfStudentsStats
+		}
+	    }
+	    message = json.dumps(message)
+	    channel.send_message(teacher.token, message)
 	
 def getOpenLessonsID():
 	q = Lesson.query(Lesson.open == True)
@@ -423,19 +432,8 @@ def getWords(sentence):
 		target = int(random.random() * len(words))
 	return words, target
 	
-def getAnswersProposed():
-	return [
-		{"EN": "Noun", "IT": "Nome"},
-		{"EN": "Adjective", "IT": "Aggettivo"},
-		{"EN": "Verb", "IT": "Verbo"},
-		{"EN": "Adverb", "IT": "Avverbio"},
-		{"EN": "Other", "IT": "Altro"},
-		{"EN": "Article", "IT": "Articolo"},
-		{"EN": "Pronoun", "IT": "Pronome"},
-		{"EN": "Preposition", "IT": "Preposizione"},
-		{"EN": "Conjunction", "IT": "Congiunzione"},
-		{"EN": "Interjection", "IT": "Interiezione"}
-		]
+def getAnswersProposed(exerciseType):
+        return json.loads(open("lists/answers.json","r").read())[exerciseType]
 
 def clean():
 	ndb.delete_multi(Lesson.query().fetch(keys_only=True))
@@ -443,13 +441,12 @@ def clean():
 	ndb.delete_multi(Student.query().fetch(keys_only=True))
 	ndb.delete_multi(Teacher.query().fetch(keys_only=True))
 	memcache.flush_all()
-	pass
-
 
 class Session(ndb.Model):
 	teacher = ndb.StringProperty()
 	open = ndb.BooleanProperty()
 	lesson = ndb.IntegerProperty()
+	type = ndb.StringProperty()
 	students = ndb.StringProperty(repeated=True)
 	datetime = ndb.DateTimeProperty(auto_now_add=True)
 	exerciseText = ndb.StringProperty()
@@ -492,7 +489,7 @@ class Session(ndb.Model):
 					"message": {
 						"validAnswer": self.validatedAnswer,
 						"myAnswer": myanswer,
-						"dict": getAnswersProposed()
+						"dict": getAnswersProposed(self.type)
 						}
 					}
 			else:
@@ -500,7 +497,7 @@ class Session(ndb.Model):
 						"type": "sessionExpired",
 						"message": {
                                                     "validAnswer": self.validatedAnswer,
-                                                    "dict": getAnswersProposed()
+                                                    "dict": getAnswersProposed(self.type)
 						}
                         }
 			message = json.dumps(message)
@@ -517,7 +514,7 @@ class Session(ndb.Model):
 			status = {
 				"type": "sessionStatus",
 				"message": {
-					"dictAnswers": getAnswersProposed(),
+					"dictAnswers": getAnswersProposed(self.type),
 					"possibleAnswers": self.answersStudents,
 					"totalAnswers": {
 						"answered": self.studentAnswers.keys(),
@@ -545,14 +542,15 @@ class Session(ndb.Model):
 		self.open = False
 		self.save()
 		
-	def start(self, lessonID):
+	def start(self, lessonID, exerciseType):
 		self.lesson = lessonID
 		lesson = getLesson(lessonID)
 		self.teacher = lesson.teacher
 		self.students = lesson.students
 		self.exerciseText = getSentence()
 		self.exerciseWords, self.target = getWords(self.exerciseText)
-		self.answersProposed = getAnswersProposed()
+		self.type = exerciseType
+		self.answersProposed = getAnswersProposed(self.type)
 		self.studentAnswers = {}
 		self.answersStudents = {}
 		self.open = True
