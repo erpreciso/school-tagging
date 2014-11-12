@@ -466,19 +466,12 @@ class Session(ndb.Model):
 	
 	def addStudentAnswer(self, studentName, answer):
 		if self.open:
-		
-			#modificare in modo che gestisca i json nella variabile answer
-		
-			#if  type(answer) is dict:
-			#	print "json"
-			#else:
 			self.studentAnswers[studentName] = answer
 			if answer in self.answersStudents.keys():
 				self.answersStudents[answer].append(studentName)
 			else:
 				self.answersStudents[answer] = [studentName]
 			self.save()
-	
 		
 	def addValidAnswer(self, validAnswer):
 		self.validatedAnswer = validAnswer

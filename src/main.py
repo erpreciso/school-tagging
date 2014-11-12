@@ -8,7 +8,6 @@ import jinja2
 import os
 import datetime
 import logging
-import json
 
 class MainHandler(webapp2.RequestHandler):
 	template_dir = os.path.join(os.path.dirname(__file__), 'pages')
@@ -243,28 +242,12 @@ class DataHandler(MainHandler):
 	if requesterRole == "student":
 		student = requester
 		if kind == "answer":
-			
-			#intercetto il json in arrivo dall'intefaccia studente
 			answer = self.request.get("answer")
-			try:
-				answerJSON = json.loads(answer)
-			except:
-				answerJSON = {}
-			
-			#if len(answerJSON) == 1 : 
-			#	student.addAnswer(answer)
-			#	session = objs.getSession(student.currentSession)
-			#	#bisogna modificare questa funzione in modo che gestisca anche i json
-			#	session.addStudentAnswer(student.username, answer)
-			#	session.sendStatusToTeacher()
-			#else:
 			student.addAnswer(answer)
 			session = objs.getSession(student.currentSession)
 			session.addStudentAnswer(student.username, answer)
 			session.sendStatusToTeacher()
 
-			
-			
 class StudentHandler(MainHandler):
     def get(self, action):
 	    if action == "dashboard":
@@ -438,4 +421,3 @@ app = webapp2.WSGIApplication([
     ("/language", LanguageHandler),
     (PAGE_RE, JollyHandler),
 			])
-

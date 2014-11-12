@@ -737,7 +737,7 @@ askValidation = function () {
 			
 		//parte esercizio di selezione
 		//if (message.target == -1){
-			var selectionButtons = $(document.createElement("div")).attr("id","selectionButtons").css('margin-top','15px').css('margin-bottom','15px');
+			var selectionButtons = $(document.createElement("div")).attr("id","selectionButtons").css('margin-top','15px').css('margin-bottom','15px').css('width','100%');
 			var addButton = $(document.createElement("span")).attr("id","addButton").html('<i class="fa fa-plus-square-o"></i> ').css('font-size','40px').on("mousedown", function(event){event.stopImmediatePropagation(); addSelectionTotheList(addSelection());});
 
 			$(selectionButtons).append(addButton);
