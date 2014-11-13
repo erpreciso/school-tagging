@@ -311,6 +311,14 @@ function addSelection(){
 
 		var seletedCharInWord = 0;
 		var selectionHead = 0;
+		
+		var numItems = $('.selected').length
+		if (numItems == 0){
+			return selection;
+		}
+		
+		
+		
 		$(".selected").each(function() {
 				var currentWordId = parseInt($(this).attr('word'));
 				var currentCharIndex = parseInt($(this).attr('char_index_in_word'));
@@ -360,18 +368,20 @@ function addSelection(){
 }
 
 function addSelectionTotheList(selection){
+	
 	if (allow_selection){
-		var testo= "";
+		if (selection.length > 0){
+			var testo= "";
+			for (var idx in selection) {
+				var frag = selection[parseInt(idx)];
+				testo += frag.extent +" ";
 
-		for (var idx in selection) {
-			var frag = selection[parseInt(idx)];
-			testo += frag.extent +" ";
+				}
+				var listItem = $(document.createElement("li")).html('<span style="cursor:pointer;" onclick="selectionClicked($(this).parent())">'+testo.trim()+'</span> <i class="fa fa-minus-square-o" style="cursor:pointer;" onclick="removeSelectionFromtheList($(this).parent())"></i>').addClass("selectionListItem");
 
+				$('#selectionList').append(listItem);
+				$(listItem).data("selection",selection);
 		}
-		var listItem = $(document.createElement("li")).html('<span style="cursor:pointer;" onclick="selectionClicked($(this).parent())">'+testo.trim()+'</span> <i class="fa fa-minus-square-o" style="cursor:pointer;" onclick="removeSelectionFromtheList($(this).parent())"></i>').addClass("selectionListItem");
-
-		$('#selectionList').append(listItem);
-		$(listItem).data("selection",selection);
 	}
 }
 
@@ -409,6 +419,15 @@ function resetSelectionBinding(){
 
 
 function sendExercise(){
+	
+	
+	var numItems = $('.selectionListItem').length
+		if (numItems == 0){
+			alert("Seleziona almeno una porzione di testo");
+			return ;
+		}
+	
+	
 	var answerJSON = {};
 	var answer ={};
 
