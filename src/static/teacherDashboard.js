@@ -92,6 +92,11 @@ newExercise = function (){
 			.css("margin-top","20px")
 			.on("click", function(){$.get("/t/askStats");}));
 			
+			
+			
+	$("#showStats").html('<center><div style="margin:0px;font-size:12px;cursor:pointer;"><div class="start_button"><i class="fa fa-bar-chart" style="color:#000;font-size:40px;"></i><br/> '+t2+'</div></div></center>');		
+		
+		
 	$("#newSimpleExercise").html('<center><div style="margin:0px;font-size:12px;cursor:pointer;"><div class="start_button"><i class="fa fa fa-pencil-square-o" style="color:#000;font-size:40px;"></i><br/> '+t1+'</div></div></center>');
 	
 	
@@ -101,7 +106,7 @@ newExercise = function (){
 	
 	$("#newComplexExercise").html('<center><div style="margin:0px;font-size:12px;cursor:pointer;"><div class="start_button"><i class="fa fa fa-pencil-square-o" style="color:#000;font-size:40px;"></i><br/> '+t3+'</div></div>'+selectHTMLString+'</center>');
 	
-	$("#showStats").html('<center><div style="margin:0px;font-size:12px;cursor:pointer;"><div class="start_button"><i class="fa fa-bar-chart" style="color:#000;font-size:40px;"></i><br/> '+t2+'</div></div></center>');		
+
 			
 		
 	$('#categorySelection').mousedown(function(event){
@@ -336,6 +341,13 @@ $('#container').highcharts({
     });
 }
 
+
+function Comparator(a,b){
+	if (a[0].word_index < b[0].word_index) return -1;
+	if (a[0].word_index > b[0].word_index) return 1;
+	return 0;
+}
+
 function updateChartData(answers, answersDict){
 	var categoriesFromAnswer = new Array();
 	var selectionEx = false;
@@ -348,6 +360,8 @@ function updateChartData(answers, answersDict){
 		for (var answer in answers) {
 			var answerJSON = JSON.parse(answer);
 			var answerText = ""
+			var selections  = answerJSON.answer.selections;
+			//selections.sort(Comparator);
 			for (var selection in answerJSON.answer.selections) {
 				var textOfSelction = "";
 				for (var fragment in answerJSON.answer.selections[selection]) {
@@ -355,9 +369,10 @@ function updateChartData(answers, answersDict){
 				}
 				answerText += textOfSelction.trim() + "/";
 			}
-			
 			answerText = answerText.substring(0,answerText.length-1);
-			categoriesFromAnswer.push(answerText);
+			//if (!$.inArray(answerText, categoriesFromAnswer)){
+				categoriesFromAnswer.push(answerText);
+			//}
 		}
 		
 		initCharts(categoriesFromAnswer,'divise per categorie','Risposte');
@@ -375,6 +390,8 @@ function updateChartData(answers, answersDict){
 		if (selectionEx){	
 			var answerJSON = JSON.parse(answer);
 			var answerText = ""
+			var selections  = answerJSON.answer.selections;
+			//selections.sort(Comparator);
 				for (var selection in answerJSON.answer.selections) {
 					var textOfSelction = "";
 					for (var fragment in answerJSON.answer.selections[selection]) {
@@ -736,7 +753,8 @@ askValidation = function () {
 			
 			
 		//parte esercizio di selezione
-		//if (message.target == -1){
+		if (categories.length == 0 ){
+	
 			var selectionButtons = $(document.createElement("div")).attr("id","selectionButtons").css('margin-top','15px').css('margin-bottom','15px').css('width','100%');
 			var addButton = $(document.createElement("span")).attr("id","addButton").html('<i class="fa fa-plus-square-o"></i> ').css('font-size','40px').on("mousedown", function(event){event.stopImmediatePropagation(); addSelectionTotheList(addSelection());});
 
@@ -751,7 +769,7 @@ askValidation = function () {
 			$("#exercise").append('<div id="sendButton"><center><div style="margin:0px;font-size:12px;" ><div class="send_button" onclick="sendExercise();">Controlla Esercizio<i class="fa fa fa fa-paper-plane" style="color:#000;font-size:30px;"></i></div></div></center></div>');
 			
 			
-		//}
+		}
 		
 			
 		$("#answers").append(instr);
@@ -767,6 +785,7 @@ askValidation = function () {
 					$(studentAnswers[i]).css("color", "Green");					
 				}
 			}
+			console.log(valid);
 			$.post("/data/teacherValidation", {"valid": valid});
 			$("#answers").children().off("click");
 			newExercise();
@@ -874,6 +893,61 @@ function selectionClicked(obj){
 	}
 
 
+}
+
+function sendExercise(){
+	
+	var answerJSON = {};
+	var answer ={};
+
+	var selections = new Array();
+
+
+	var language = getLanguage();
+	
+	if (language == "EN") {
+		var t2 = "Show Lesson Statistics";
+	}
+	else if (language == "IT") {
+		var t2 = "Mostra le statistiche della lezione";
+	}
+	
+	
+	
+	$(".selectionListItem").each(function() {
+		selections.push($(this).data("selection_teacher"));
+	});
+	allow_selection=false;
+	$("#sendButton").remove();
+	
+	
+	answer.selections =selections;
+	answerJSON.answer  = answer;
+	console.log(JSON.stringify(answerJSON))
+	$.ajax({
+		url: "/data/teacherValidation",
+		type: "POST",
+		data: { valid : JSON.stringify(answerJSON)},
+		datatype : "html",
+		contentType: "application/x-www-form-urlencoded; charset=UTF-8"	,
+    	traditional: true
+
+	});
+	
+	
+	$("#buttons").append($(document.createElement("div"))
+			.attr("id", "showStats")
+			.css("float","left")
+			.css("display","inline")
+			.css("margin-top","20px")
+			.on("click", function(){$.get("/t/askStats");}));
+			
+			
+			
+	$("#showStats").html('<center><div style="margin:0px;font-size:12px;cursor:pointer;"><div class="start_button"><i class="fa fa-bar-chart" style="color:#000;font-size:40px;"></i><br/> '+t2+'</div></div></center>');
+	
+	
+	
 }
 
 

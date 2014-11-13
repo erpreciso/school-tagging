@@ -8,6 +8,7 @@ import jinja2
 import os
 import datetime
 import logging
+import json
 
 class MainHandler(webapp2.RequestHandler):
 	template_dir = os.path.join(os.path.dirname(__file__), 'pages')
@@ -215,7 +216,42 @@ class TeacherHandler(MainHandler):
 	if session:
 	    session.end()
 
+
+
+class decoder(json.JSONDecoder):
+	# http://stackoverflow.com/questions/10885238/python-change-list-type-for-json-decoding
+    def __init__(self, list_type=list, **kwargs):
+        json.JSONDecoder.__init__(self, **kwargs)
+        # Use the custom JSONArray
+        self.parse_array = self.JSONArray
+        # Use the python implemenation of the scanner
+        self.scan_once = json.scanner.py_make_scanner(self)
+        self.list_type = list_type
+
+    def JSONArray(self, s_and_end, scan_once, **kwargs):
+        values, end = json.decoder.JSONArray(s_and_end, scan_once, **kwargs)
+        return self.list_type(values), end
+
+
+class JsonSetEncoder(json.JSONEncoder):
+    def default(self, obj):  # pylint: disable=method-hidden
+        if isinstance(obj, frozenset):
+            result = list(obj)
+            if result and isinstance(result[0], tuple) and len(result[0]) == 2:
+                return dict(result)
+            return result
+        return json.JSONEncoder.default(self, obj)
+
+
+
+
+
+def itemset(d):
+	return frozenset(d.items())
+
+
 class DataHandler(MainHandler):
+			
     def get(self, kind):
 	requester = self.getFromCookie()
 	requesterRole = self.getRoleFromCookie()
@@ -235,7 +271,13 @@ class DataHandler(MainHandler):
 	if requesterRole == "teacher":
 		teacher = requester
 		if kind == "teacherValidation":
-			valid = self.read("valid").strip()
+			valid = self.request.get("valid")
+			try:
+				sortedValid = json.loads(valid, cls=decoder, list_type=frozenset, object_hook=itemset)
+				valid = json.dumps(sortedValid, cls=JsonSetEncoder)
+			except:
+				valid = valid
+				
 			session = objs.getSession(teacher.currentSession)
 			session.addValidAnswer(valid)
 			session.sendFeedbackToStudents()
@@ -243,6 +285,12 @@ class DataHandler(MainHandler):
 		student = requester
 		if kind == "answer":
 			answer = self.request.get("answer")
+			try:
+				sortedAnswer = json.loads(answer, cls=decoder, list_type=frozenset, object_hook=itemset)
+				answer = json.dumps(sortedAnswer, cls=JsonSetEncoder)
+			except:
+				answer = answer
+			
 			student.addAnswer(answer)
 			session = objs.getSession(student.currentSession)
 			session.addStudentAnswer(student.username, answer)

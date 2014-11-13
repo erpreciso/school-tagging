@@ -12,6 +12,7 @@ $(document).bind('touchend mouseup',function(){
    		
 })
 
+var selectionExercise = false;
 
 var clicking = false;
 var allow_selection = false;
@@ -53,6 +54,24 @@ onMessage = function(message) {
 	else if (data.type == "pingFromTeacher")
 		$.post("/ping", {"alive": true});
 	else if (data.type == "sessionExpired") {
+		
+		var validAnswerTextFromJSON ="";
+		
+		if (selectionExercise){
+			var answerJSON = JSON.parse(data.message.validAnswer);
+			var selections  = answerJSON.answer.selections;
+			for (var selection in answerJSON.answer.selections) {
+				var textOfSelction = "";
+				for (var fragment in answerJSON.answer.selections[selection]) {
+					textOfSelction += answerJSON.answer.selections[selection][fragment].extent +" ";
+				}
+				validAnswerTextFromJSON += textOfSelction.trim() + "/";
+			}
+			validAnswerTextFromJSON = validAnswerTextFromJSON.substring(0,validAnswerTextFromJSON.length-1);
+		}
+		
+		
+		
 		var italianAnswer = "";
                 //console.log(data.message);
 		for (var i = 0; i < data.message.dict.length; i++){
@@ -60,7 +79,7 @@ onMessage = function(message) {
 				italianAnswer = data.message.dict[i]["IT"];
 			}
 		}
-                var feedback = t1 + italianAnswer;
+                var feedback = t1 + italianAnswer + validAnswerTextFromJSON;
 		$("#feedback").text(feedback)
 				.css("color", "LightGoldenRodYellow ");
 	}
@@ -117,6 +136,9 @@ function presentExercise(message) {
 		var label = $(document.createElement("div")).text("Seleziona tutti i "+message.category).addClass("instruction");
 			$("#exercise").append(label);
 		allow_selection=true;
+		selectionExercise = true;
+	}else{
+			selectionExercise = false;
 	}
 
 
@@ -209,6 +231,7 @@ function presentExercise(message) {
 
 
 	if (target == -1 ){
+		selectionExercise = true;
 		var selectionButtons = $(document.createElement("div")).attr("id","selectionButtons").css('margin-top','15px').css('margin-bottom','15px');
 		var addButton = $(document.createElement("span")).attr("id","addButton").html('<i class="fa fa-plus-square-o"></i> ').css('font-size','40px').on("mousedown", function(event){event.stopImmediatePropagation(); addSelectionTotheList(addSelection());});
 
@@ -221,6 +244,8 @@ function presentExercise(message) {
 		$("#exercise").append(selectionButtons);
 		$("#exercise").append(selectionList);
 		$("#exercise").append('<div id="sendButton"><center><div style="margin:0px;font-size:12px;" ><div class="send_button" onclick="sendExercise();">Finito!<br/>Invia all\'insegnante <i class="fa fa fa fa-paper-plane" style="color:#fff;font-size:30px;"></i></div></div></center></div>');
+	}else{
+		selectionExercise = false;
 	}
 
 
@@ -418,6 +443,17 @@ function sendExercise(){
 
 }
 
+function arraysEqual(arr1, arr2) {
+    if(arr1.length !== arr2.length)
+        return false;
+    for(var i = arr1.length; i--;) {
+        if(arr1[i] !== arr2[i])
+            return false;
+    }
+
+    return true;
+}
+
 
 function feedbackFromTeacher(message) {
 	var feedback;
@@ -431,7 +467,80 @@ function feedbackFromTeacher(message) {
 		var t1 = "Risposta esatta!";
 		var t2 = "Risposta non corretta; quella giusta era ";
 	}
-	if (message.validAnswer == message.myAnswer){
+	
+	var validAnswerTextFromJSON = "";
+	var jsonEquivalence = false;
+	
+	if (selectionExercise){	
+		
+		if (message.validAnswer.length != message.myAnswer.length){
+			jsonEquivalence = false;
+			var answerJSON = JSON.parse(message.validAnswer);
+			var selections  = answerJSON.answer.selections;
+			for (var selection in answerJSON.answer.selections) {
+				var textOfSelction = "";
+				for (var fragment in answerJSON.answer.selections[selection]) {
+					textOfSelction += answerJSON.answer.selections[selection][fragment].extent +" ";
+				}
+				validAnswerTextFromJSON += textOfSelction.trim() + "/";
+			}
+			validAnswerTextFromJSON = validAnswerTextFromJSON.substring(0,validAnswerTextFromJSON.length-1);
+		}else{
+			
+			var validArray = new Array();
+			var answerArray = new Array();
+			
+			var validJSON = JSON.parse(message.validAnswer);
+			
+			for (var selection in validJSON.answer.selections) {
+				
+				var selectionLenght = 0;
+				for (var fragment in validJSON.answer.selections[selection]) {
+					validArray.push(validJSON.answer.selections[selection][fragment].extent);
+					validArray.push(validJSON.answer.selections[selection][fragment].start);
+					validArray.push(validJSON.answer.selections[selection][fragment].end);
+					validArray.push(validJSON.answer.selections[selection][fragment].word_index);
+					selectionLenght += validJSON.answer.selections[selection][fragment].extent.length;
+				}
+				validArray.push(selectionLenght);
+			}
+			
+			var answerJSON = JSON.parse(message.myAnswer);
+			
+			for (var selection in answerJSON.answer.selections) {
+				var selectionLenght = 0;
+				for (var fragment in answerJSON.answer.selections[selection]) {
+					answerArray.push(answerJSON.answer.selections[selection][fragment].extent);
+					answerArray.push(answerJSON.answer.selections[selection][fragment].start);
+					answerArray.push(answerJSON.answer.selections[selection][fragment].end);
+					answerArray.push(answerJSON.answer.selections[selection][fragment].word_index);
+					selectionLenght += answerJSON.answer.selections[selection][fragment].extent.length;
+				}
+				validArray.push(selectionLenght);
+			}
+			validArray.sort();
+			answerArray.sort();
+			
+			
+			jsonEquivalence = arraysEqual(validArray, answerArray);
+			
+			
+			
+			
+			
+			
+		}
+		
+		
+		
+	}
+	
+	
+	
+	
+	
+	
+	if (message.validAnswer == message.myAnswer || jsonEquivalence){
 		feedback = t1;
 		background = "Green";
 	}
@@ -442,7 +551,7 @@ function feedbackFromTeacher(message) {
 				italianAnswer = message.dict[i]["IT"];
 			}
 		}
-		feedback = t2 + italianAnswer;
+		feedback = t2 + italianAnswer + validAnswerTextFromJSON;
 		background = "Red";
 	}
 
