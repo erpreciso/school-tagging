@@ -524,7 +524,7 @@ class Session(ndb.Model):
 				},
 			}
 		channel.send_message(teacher.token, json.dumps(status))
-	
+		
 	def removeStudent(self, student):
 		if student.username in self.students:
 			self.students.remove(student.username)
