@@ -269,7 +269,6 @@ class DataHandler(MainHandler):
 		teacher = requester
 		if kind == "teacherValidation":
 			valid = self.request.get("valid")
-			logging.info(valid)
 			try:
 				sortedValid = json.loads(valid, cls=decoder, list_type=frozenset, object_hook=itemset)
 				valid = json.dumps(sortedValid, cls=JsonSetEncoder)
@@ -286,7 +285,6 @@ class DataHandler(MainHandler):
 		student = requester
 		if kind == "answer":
 			answer = self.request.get("answer")
-			logging.info(answer)
 			try:
 				sortedAnswer = json.loads(answer, cls=decoder, list_type=frozenset, object_hook=itemset)
 				answer = json.dumps(sortedAnswer, cls=JsonSetEncoder)

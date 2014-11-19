@@ -150,6 +150,8 @@ class Student(User):
 		session = getSession(self.currentSession)
 		if session.open:
 			self.answers.append({"session": self.currentSession, "answer": answer})
+                        # add log to verify all answers are saved in datastore
+                        logging.info("Student <" + self.fullname + "> answered " + str({"session": self.currentSession, "answer": answer}))
 			self.save()
 		
 	def sendMessageToTeacher(self, message):
