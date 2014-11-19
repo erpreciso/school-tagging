@@ -130,9 +130,7 @@ newExercise = function (){
 	$("#newSimpleExercise").html('<center><div style="margin:0px;font-size:12px;cursor:pointer;"><div class="start_button"><i class="fa fa fa-pencil-square-o" style="color:#000;font-size:40px;"></i><br/> '+t1+'</div></div></center>');
 	
 	
-	
-	var selectHTMLString = '<select id="categorySelection" class="styled-select"><option>Verbi</option><option>Nomi</option><option>Aggettivi</option><option>Pronomi</option></select>';
-	
+	var selectHTMLString = '<select id="categorySelection" class="styled-select"><option>Nomi</option><option>Articoli</option><option>Aggettivi</option><option>Pronomi</option><option>Verbi</option><option>Avverbi</option><option>Preposizioni</option><option>Congiunzioni</option><option>Interiezioni</option></select>';
 	
 	$("#newComplexExercise").html('<center><div style="margin:0px;font-size:12px;cursor:pointer;"><div class="start_button"><i class="fa fa fa-pencil-square-o" style="color:#000;font-size:40px;"></i><br/> '+t3+'</div></div>'+selectHTMLString+'</center>');
 	
