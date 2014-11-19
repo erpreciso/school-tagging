@@ -279,6 +279,9 @@ class DataHandler(MainHandler):
 			session = objs.getSession(teacher.currentSession)
 			session.addValidAnswer(valid)
 			session.sendFeedbackToStudents()
+		if kind == "getSessionStatus":
+			session = objs.getSession(teacher.currentSession)
+			session.sendStatusToTeacher()
 	if requesterRole == "student":
 		student = requester
 		if kind == "answer":

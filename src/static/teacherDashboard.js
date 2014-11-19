@@ -32,6 +32,33 @@ function resetSelectionBinding_teacher(){
 //---------------------------------------------
 
 
+//worker thread for the graph
+var w;
+
+function startWorker() {
+    if(typeof(Worker) !== "undefined") {
+        if(typeof(w) == "undefined") {
+            w = new Worker("/static/worker.js");
+        }
+        w.onmessage = function(event) {
+	        if (event.data == "GetNewStats"){
+		         $.post("/data/getSessionStatus"); 
+	        }
+        };
+    } else {
+        alert("Web Worker Not supported!");
+    }
+}
+function stopWorker() { 
+    w.terminate();
+    w = undefined;
+}
+
+//--------------------------------------------
+
+
+
+
 $(document).ready(function () {
 	newExercise();
 	$(".studentName").on("click", function(event){
@@ -43,6 +70,11 @@ onError = function (){
 	askMeRefresh();
 	$.get("/channelExpired");
 };
+
+
+
+
+
 onClose = function (){};
 newExercise = function (){
 	var language = getLanguage(); 
@@ -92,9 +124,7 @@ newExercise = function (){
 	$("#newSimpleExercise").html('<center><div style="margin:0px;font-size:12px;cursor:pointer;"><div class="start_button"><i class="fa fa fa-pencil-square-o" style="color:#000;font-size:40px;"></i><br/> '+t1+'</div></div></center>');
 	
 	
-	
-	var selectHTMLString = '<select id="categorySelection" class="styled-select"><option>Verbi</option><option>Nomi</option><option>Aggettivi</option><option>Pronomi</option></select>';
-	
+	var selectHTMLString = '<select id="categorySelection" class="styled-select"><option>Nomi</option><option>Articoli</option><option>Aggettivi</option><option>Pronomi</option><option>Verbi</option><option>Avverbi</option><option>Preposizioni</option><option>Congiunzioni</option><option>Interiezioni</option></select>';
 	
 	$("#newComplexExercise").html('<center><div style="margin:0px;font-size:12px;cursor:pointer;"><div class="start_button"><i class="fa fa fa-pencil-square-o" style="color:#000;font-size:40px;"></i><br/> '+t3+'</div></div>'+selectHTMLString+'</center>');
 	
@@ -704,7 +734,8 @@ buildDashboard = function (status){
 				.text(t2 + ": "));
 				
 		initCharts(categories,'divise per categorie','Risposte');
-
+		
+		startWorker();
 	};
 };
 
@@ -721,6 +752,7 @@ startComplexExercise = function () {
 
 
 askValidation = function () {
+	stopWorker();
 	var language = getLanguage();
 	if (language == "EN")
 		var t1 = "Click on the right answer";
@@ -745,7 +777,7 @@ askValidation = function () {
 			
 		//parte esercizio di selezione
 		if (categories.length == 0 ){
-	
+			if ($('#selectionButtons').length <=0){
 			var selectionButtons = $(document.createElement("div")).attr("id","selectionButtons").css('margin-top','15px').css('margin-bottom','15px').css('width','100%');
 			var addButton = $(document.createElement("span")).attr("id","addButton").html('<i class="fa fa-plus-square-o"></i> ').css('font-size','40px').on("mousedown", function(event){event.stopImmediatePropagation(); addSelectionTotheList(addSelection());});
 
@@ -758,7 +790,7 @@ askValidation = function () {
 			$("#exercise").append(selectionButtons);
 			$("#exercise").append(selectionList);
 			$("#exercise").append('<div id="sendButton"><center><div style="margin:0px;font-size:12px;" ><div class="send_button" onclick="sendExercise();">Controlla Esercizio<i class="fa fa fa fa-paper-plane" style="color:#000;font-size:30px;"></i></div></div></center></div>');
-			
+			}
 			
 		}
 		
