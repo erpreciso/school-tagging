@@ -421,12 +421,12 @@ function resetSelectionBinding(){
 function sendExercise(){
 	
 	
-	var numItems = $('.selectionListItem').length
+	/*var numItems = $('.selectionListItem').length
 		if (numItems == 0){
 			alert("Seleziona almeno una porzione di testo");
 			return ;
 		}
-	
+	*/
 	
 	var answerJSON = {};
 	var answer ={};

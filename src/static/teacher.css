@@ -54,16 +54,19 @@ overflow: hidden;
 .styled-select {
 	font: bold 20px  "Comic Sans MS", verdana; 
 	color : #000;
+	height: 35px;
+	padding: 0px;
    background: transparent;
    overflow: hidden;
    width: auto;
+   
 
 }
 
 .styled-select select {
    background: transparent;
    border: none;
-   font: bold 20px  "Comic Sans MS", verdana; 
+   font: bold 15px  "Comic Sans MS", verdana; 
 	color : #000;
    height: 29px;
    padding: 5px; /* If you add too much padding here, the options won't show in IE */
