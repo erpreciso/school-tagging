@@ -509,21 +509,22 @@ class Session(ndb.Model):
 		return self.key.id()
 		
 	def sendStatusToTeacher(self):
-		if self.open:
-			teacher = getTeacher(self.teacher)
-			status = {
-				"type": "sessionStatus",
-				"message": {
-					"dictAnswers": getAnswersProposed(self.type),
-					"possibleAnswers": self.answersStudents,
-					"totalAnswers": {
-						"answered": self.studentAnswers.keys(),
-						"missing": [s for s in self.students \
-							if s not in self.studentAnswers.keys()]
-					}
-				},
-			}
-		channel.send_message(teacher.token, json.dumps(status))
+	    if self.open:
+		teacher = getTeacher(self.teacher)
+                if teacher:
+		    status = {
+			"type": "sessionStatus",
+			"message": {
+			    "dictAnswers": getAnswersProposed(self.type),
+			    "possibleAnswers": self.answersStudents,
+			    "totalAnswers": {
+				"answered": self.studentAnswers.keys(),
+				"missing": [s for s in self.students \
+					if s not in self.studentAnswers.keys()]
+				}
+			    },
+		    }
+		    channel.send_message(teacher.token, json.dumps(status))
 		
 	def removeStudent(self, student):
 		if student.username in self.students:
@@ -589,14 +590,14 @@ def exportJson():
 	j = None
 	q = Lesson.query()
 	if q.count(limit=None) > 0:
-		j = q.fetch(limit=None)
+		j = [q.fetch(limit=None)]
 	q = Teacher.query()
 	if q.count(limit=None) > 0:
-		j += q.fetch(limit=None)
+		j += [q.fetch(limit=None)]
 	q = Student.query()
 	if q.count(limit=None) > 0:
-		j += q.fetch(limit=None)
+		j += [q.fetch(limit=None)]
 	q = Session.query()
 	if q.count(limit=None) > 0:
-		j += q.fetch(limit=None)
+		j += [q.fetch(limit=None)]
 	return j
