@@ -238,14 +238,14 @@ def getTeacher(username):
 
 def getStudent(username, currentLessonID):
 	student = memcache.get("Student:" + username + \
-					"|CurrentLesson:" + str(currentLessonID))
+			"|CurrentLesson:" + str(currentLessonID))
 	if not student:
 		q = Student.query(Student.username == username,
-							Student.currentLessonID == currentLessonID)
+			Student.currentLessonID == currentLessonID)
 		student = q.get()
 		if student:
 			memcache.set("Student:" + username + \
-					"|CurrentLesson:" + str(currentLessonID), student)
+				"|CurrentLesson:" + str(currentLessonID), student)
 	if student:
 		return student
 	else:
@@ -255,7 +255,7 @@ def getFromID(sid):
 	user = memcache.get("ID:" + sid)
 	if not user:
 		user = ndb.Key("Teacher", int(sid)).get() \
-							or ndb.Key("Student", int(sid)).get()
+			or ndb.Key("Student", int(sid)).get()
 		#~ user = ndb.get_by_id(int(id))
 		if user:
 			memcache.set("ID:" + str(sid), user)
@@ -266,7 +266,7 @@ def getFromID(sid):
 	
 def studentAlreadyConnected(username, lessonName):
 	q = Student.query(Student.username == username,
-						Student.currentLessonName == lessonName)
+		Student.currentLessonName == lessonName)
 	if q.get():
 		return True
 	else:
