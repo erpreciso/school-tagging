@@ -231,6 +231,7 @@ function attachStatRequest(id){
 
 onMessage = function(message) {
 	var language = getLanguage();
+	console.log(message.data);
 	var data = JSON.parse(message.data);
 	if (data.type == "studentArrived") {
 		var studentName = data.message.studentName;
