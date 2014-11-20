@@ -49,6 +49,7 @@ function startWorker() {
         alert("Web Worker Not supported!");
     }
 }
+
 function stopWorker() { 
     w.terminate();
     w = undefined;
@@ -169,6 +170,7 @@ studentStats = function (message) {
 };
 
 showStats = function (message) {
+	
 	var language = getLanguage();
 	if (language == "EN"){
 		var t1 = "LESSON STATISTICS";
@@ -205,7 +207,7 @@ showStats = function (message) {
 	var stats = message.stats;
         // qui il nuovo dizionario con le statistiche dettagliate
         //
-        var fullstats = message.fullstats;
+    var fullstats = message.fullstats;
 	$("#dashboard").append($(document.createElement("div"))
 			.attr("id", "stats")
 			.css("display", "none")
@@ -633,6 +635,7 @@ function buildExercise(message){
 }
 
 buildDashboard = function (status){
+	console.log(JSON.stringify(status));
 	var language = getLanguage();
 	if (language == "EN"){
 		var t1 = "STUDENT ANSWERS";
@@ -752,7 +755,7 @@ startComplexExercise = function () {
 
 
 askValidation = function () {
-	stopWorker();
+	//
 	var language = getLanguage();
 	if (language == "EN")
 		var t1 = "Click on the right answer";
@@ -774,7 +777,7 @@ askValidation = function () {
 			.text(t1);
 			
 			
-			
+			//stopWorker();
 		//parte esercizio di selezione
 		if (categories.length == 0 ){
 			if ($('#selectionButtons').length <=0){
