@@ -243,9 +243,6 @@ class JsonSetEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-
-
-
 def itemset(d):
 	return frozenset(d.items())
 

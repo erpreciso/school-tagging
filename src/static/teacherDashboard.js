@@ -1,5 +1,4 @@
 var categories = new Array();
-
 // global variables for the selection management
 var clicking = false;
 var allow_selection = false;
@@ -67,15 +66,10 @@ $(document).ready(function () {
 	});
 	$("body").css("background","url(../static/images/paper_texture.jpg)" );
 });
-
-
 onError = function (){
 	askMeRefresh();
 	$.get("/channelExpired");
 };
-
-
-
 
 
 
@@ -92,7 +86,7 @@ newExercise = function (){
 	else if (language == "IT") {
 		var t1 = "Esercizio scelta categorie";
 		var t2 = "Mostra le statistiche della lezione";
-		var t3 = "Esercizio di selzione su:";
+		var t3 = "Esercizio di selezione su:";
 	}
 	if ($("#newSimpleExercise").length > 0){
 		 	 $("#newSimpleExercise").remove();
@@ -262,6 +256,9 @@ onMessage = function(message) {
 			$('#'+data.message.studentName).html(data.message.studentName + "(assente)");
 		}	
 	}
+	else if (data.type == "studentFocusStatus") {
+	    console.log(data.message.studentName + " is going " + data.message.focus + " focus");
+	}
 	else if (data.type == "studentDisconnected") {
 		if (language == "EN"){
 			var t1 = "It seems I'm offline: ping me...";
@@ -309,10 +306,6 @@ onMessage = function(message) {
 		studentStats(data.message);
 	}
 };
-
-
-
-
 
 function initCharts(cat,subtitle,label){
 

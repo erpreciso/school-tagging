@@ -150,6 +150,8 @@ class Student(User):
 		session = getSession(self.currentSession)
 		if session.open:
 			self.answers.append({"session": self.currentSession, "answer": answer})
+                        # add log to verify all answers are saved in datastore
+                        logging.info("Student <" + self.fullname + "> answered " + str({"session": self.currentSession, "answer": answer}))
 			self.save()
 		
 	def sendMessageToTeacher(self, message):
@@ -238,14 +240,14 @@ def getTeacher(username):
 
 def getStudent(username, currentLessonID):
 	student = memcache.get("Student:" + username + \
-					"|CurrentLesson:" + str(currentLessonID))
+			"|CurrentLesson:" + str(currentLessonID))
 	if not student:
 		q = Student.query(Student.username == username,
-							Student.currentLessonID == currentLessonID)
+			Student.currentLessonID == currentLessonID)
 		student = q.get()
 		if student:
 			memcache.set("Student:" + username + \
-					"|CurrentLesson:" + str(currentLessonID), student)
+				"|CurrentLesson:" + str(currentLessonID), student)
 	if student:
 		return student
 	else:
@@ -255,7 +257,7 @@ def getFromID(sid):
 	user = memcache.get("ID:" + sid)
 	if not user:
 		user = ndb.Key("Teacher", int(sid)).get() \
-							or ndb.Key("Student", int(sid)).get()
+			or ndb.Key("Student", int(sid)).get()
 		#~ user = ndb.get_by_id(int(id))
 		if user:
 			memcache.set("ID:" + str(sid), user)
@@ -266,7 +268,7 @@ def getFromID(sid):
 	
 def studentAlreadyConnected(username, lessonName):
 	q = Student.query(Student.username == username,
-						Student.currentLessonName == lessonName)
+		Student.currentLessonName == lessonName)
 	if q.get():
 		return True
 	else:
@@ -509,21 +511,22 @@ class Session(ndb.Model):
 		return self.key.id()
 		
 	def sendStatusToTeacher(self):
-		if self.open:
-			teacher = getTeacher(self.teacher)
-			status = {
-				"type": "sessionStatus",
-				"message": {
-					"dictAnswers": getAnswersProposed(self.type),
-					"possibleAnswers": self.answersStudents,
-					"totalAnswers": {
-						"answered": self.studentAnswers.keys(),
-						"missing": [s for s in self.students \
-							if s not in self.studentAnswers.keys()]
-					}
-				},
-			}
-		channel.send_message(teacher.token, json.dumps(status))
+	    if self.open:
+		teacher = getTeacher(self.teacher)
+                if teacher:
+		    status = {
+			"type": "sessionStatus",
+			"message": {
+			    "dictAnswers": getAnswersProposed(self.type),
+			    "possibleAnswers": self.answersStudents,
+			    "totalAnswers": {
+				"answered": self.studentAnswers.keys(),
+				"missing": [s for s in self.students \
+					if s not in self.studentAnswers.keys()]
+				}
+			    },
+		    }
+		    channel.send_message(teacher.token, json.dumps(status))
 		
 	def removeStudent(self, student):
 		if student.username in self.students:
@@ -589,14 +592,14 @@ def exportJson():
 	j = None
 	q = Lesson.query()
 	if q.count(limit=None) > 0:
-		j = q.fetch(limit=None)
+		j = [q.fetch(limit=None)]
 	q = Teacher.query()
 	if q.count(limit=None) > 0:
-		j += q.fetch(limit=None)
+		j += [q.fetch(limit=None)]
 	q = Student.query()
 	if q.count(limit=None) > 0:
-		j += q.fetch(limit=None)
+		j += [q.fetch(limit=None)]
 	q = Session.query()
 	if q.count(limit=None) > 0:
-		j += q.fetch(limit=None)
+		j += [q.fetch(limit=None)]
 	return j
