@@ -151,7 +151,7 @@ class Student(User):
 		if session.open:
 			self.answers.append({"session": self.currentSession, "answer": answer})
                         # add log to verify all answers are saved in datastore
-                        logging.info("Student <" + self.fullname + "> answered " + str({"session": self.currentSession, "answer": answer}))
+                        # logging.info("Student <" + self.fullname + "> answered " + str({"session": self.currentSession, "answer": answer}))
 			self.save()
 		
 	def sendMessageToTeacher(self, message):
@@ -467,16 +467,17 @@ class Session(ndb.Model):
 # 		{answer1:[student1, student2], answer2:[], answer3:[student3]}
 	
 	def addStudentAnswer(self, studentName, answer):
-		if self.open:
-			self.studentAnswers[studentName] = answer
-			if answer in self.answersStudents.keys():
-				self.answersStudents[answer].append(studentName)
-			else:
-				self.answersStudents[answer] = [studentName]
-			self.save()
-			print "Add Student Answer:"
-			print self.studentAnswers.keys()
-		
+	    if self.open:
+		self.studentAnswers[studentName] = answer
+		if answer in self.answersStudents.keys():
+		    self.answersStudents[answer].append(studentName)
+		else:
+		    self.answersStudents[answer] = [studentName]
+		print "Add Student Answer:"
+		print self.studentAnswers.keys()
+		return self.save()
+            return None
+                
 	def addValidAnswer(self, validAnswer):
 		self.validatedAnswer = validAnswer
 		self.save()
