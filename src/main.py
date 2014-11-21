@@ -293,8 +293,11 @@ class DataHandler(MainHandler):
 			
 			student.addAnswer(answer)
 			session = objs.getSession(student.currentSession)
-			session.addStudentAnswer(student.username, answer)
-			session.sendStatusToTeacher()
+			if session.addStudentAnswer(student.username, answer):
+                                logging.info("Answer from <" + student.username + "> saved correctly")
+				session.sendStatusToTeacher()
+                        else:
+                                logging.error("Warning! Answer not saved")
 
 class StudentHandler(MainHandler):
     def get(self, action):
