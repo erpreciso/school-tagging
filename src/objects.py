@@ -474,6 +474,8 @@ class Session(ndb.Model):
 			else:
 				self.answersStudents[answer] = [studentName]
 			self.save()
+			print "Add Student Answer:"
+			print self.studentAnswers.keys()
 		
 	def addValidAnswer(self, validAnswer):
 		self.validatedAnswer = validAnswer
@@ -512,7 +514,11 @@ class Session(ndb.Model):
 		
 	def sendStatusToTeacher(self):
 	    if self.open:
-		teacher = getTeacher(self.teacher)
+	   	teacher = getTeacher(self.teacher)
+	   	
+	   	print "Status to teacher: "
+	   	print self.studentAnswers.keys()
+		
                 if teacher:
 		    status = {
 			"type": "sessionStatus",
