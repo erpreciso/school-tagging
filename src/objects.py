@@ -12,6 +12,32 @@ import logging
 MAX_IDLE_ALLOWED = 100 # minutes
 DEFAULT_LANGUAGE = "IT"
 
+class decoder(json.JSONDecoder):
+	# http://stackoverflow.com/questions/10885238/python-change-list-type-for-json-decoding
+    def __init__(self, list_type=list, **kwargs):
+        json.JSONDecoder.__init__(self, **kwargs)
+        # Use the custom JSONArray
+        self.parse_array = self.JSONArray
+        # Use the python implemenation of the scanner
+        self.scan_once = json.scanner.py_make_scanner(self)
+        self.list_type = list_type
+
+    def JSONArray(self, s_and_end, scan_once, **kwargs):
+        values, end = json.decoder.JSONArray(s_and_end, scan_once, **kwargs)
+        return self.list_type(values), end
+
+class JsonSetEncoder(json.JSONEncoder):
+    def default(self, obj):  # pylint: disable=method-hidden
+        if isinstance(obj, frozenset):
+            result = list(obj)
+            if result and isinstance(result[0], tuple) and len(result[0]) == 2:
+                return dict(result)
+            return result
+        return json.JSONEncoder.default(self, obj)
+
+def itemset(d):
+    return frozenset(d.items())
+
 def cleanIdleObjects():
 	q = Teacher.query(Teacher.currentLessonID != None)
 	if q.count(limit=None) > 0:
@@ -147,20 +173,25 @@ class Student(User):
 		self.save()
 			
 	def addAnswer(self, answer):
-		session = getSession(self.currentSession)
-		if session.open:
-			self.answers.append({"session": self.currentSession, "answer": answer})
-                        # add log to verify all answers are saved in datastore
-                        # logging.info("Student <" + self.fullname + "> answered " + str({"session": self.currentSession, "answer": answer}))
-			self.save()
+	    try:
+		sortedAnswer = json.loads(answer, cls=decoder, list_type=frozenset, object_hook=itemset)
+		answer = json.dumps(sortedAnswer, cls=JsonSetEncoder)
+	    except:
+		answer = answer
+	    session = getSession(self.currentSession)
+	    if session.open:
+		self.answers.append(
+                    {"session": self.currentSession, "answer": answer}
+                )
+		self.save()
 		
 	def sendMessageToTeacher(self, message):
 		lesson = getLesson(self.currentLessonID)
 		if lesson and lesson.teacher:
-			teacher = getTeacher(lesson.teacher)
-			if teacher and teacher.token:
-				message = json.dumps(message)
-				return channel.send_message(teacher.token, message)
+		    teacher = getTeacher(lesson.teacher)
+		    if teacher and teacher.token:
+			message = json.dumps(message)
+			return channel.send_message(teacher.token, message)
 	
 	def alertTeacherImArrived(self):
 		message = {"type": "studentArrived",
@@ -444,6 +475,7 @@ def clean():
 	ndb.delete_multi(Teacher.query().fetch(keys_only=True))
 	memcache.flush_all()
 
+
 class Session(ndb.Model):
 	teacher = ndb.StringProperty()
 	open = ndb.BooleanProperty()
@@ -467,6 +499,7 @@ class Session(ndb.Model):
 # 		{answer1:[student1, student2], answer2:[], answer3:[student3]}
 	
 	def addStudentAnswer(self, studentName, answer):
+            # TODO modify here
 	    if self.open:
 		self.studentAnswers[studentName] = answer
 		if answer in self.answersStudents.keys():
@@ -478,34 +511,40 @@ class Session(ndb.Model):
             return None
                 
 	def addValidAnswer(self, validAnswer):
-		self.validatedAnswer = validAnswer
+		try:
+			sortedValid = json.loads(validAnswer, cls=decoder, list_type=frozenset, object_hook=itemset)
+			valid = json.dumps(sortedValid, cls=JsonSetEncoder)
+		except:
+			valid = validAnswer
+		self.validatedAnswer = valid
 		self.save()
 		
 	def sendFeedbackToStudents(self):
-		for studentName in self.students:
-			student = getStudent(studentName, self.lesson)
-			myanswer = [a["answer"] for a in student.answers \
-					if a["session"] == self.key.id()]
-			if myanswer and myanswer[0] != "MISSING":
-				myanswer = myanswer[0]
-				message = {
-					"type": "validAnswer",
-					"message": {
-						"validAnswer": self.validatedAnswer,
-						"myAnswer": myanswer,
-						"dict": getAnswersProposed(self.type)
-						}
-					}
-			else:
-				message = {
-						"type": "sessionExpired",
-						"message": {
-                                                    "validAnswer": self.validatedAnswer,
-                                                    "dict": getAnswersProposed(self.type)
-						}
-                        }
-			message = json.dumps(message)
-			channel.send_message(student.token, message)
+	    for studentName in self.students:
+		student = getStudent(studentName, self.lesson)
+		# TODO modify here
+		myanswer = [a["answer"] for a in student.answers \
+			    if a["session"] == self.key.id()]
+		if myanswer and myanswer[0] != "MISSING":
+		    myanswer = myanswer[0]
+		    message = {
+			"type": "validAnswer",
+			"message": {
+			    "validAnswer": self.validatedAnswer,
+			    "myAnswer": myanswer,
+			    "dict": getAnswersProposed(self.type)
+			    }
+			}
+		else:
+		    message = {
+			"type": "sessionExpired",
+			"message": {
+			    "validAnswer": self.validatedAnswer,
+			    "dict": getAnswersProposed(self.type)
+			}
+		}
+		message = json.dumps(message)
+		channel.send_message(student.token, message)
 		
 	def save(self):
 		self.put()
@@ -517,6 +556,7 @@ class Session(ndb.Model):
 	   	teacher = getTeacher(self.teacher)
 	   	print "Status to teacher: " + str(self.studentAnswers.keys())
                 if teacher:
+		    # TODO modify here
 		    status = {
 			"type": "sessionStatus",
 			"message": {
@@ -537,16 +577,17 @@ class Session(ndb.Model):
 			self.save()
 	
 	def end(self):
-		for studentName in self.students:
-			student = getStudent(studentName, self.lesson)
-			if student:
-				sessions = [s["session"] for s in student.answers]
-				if self.key.id() not in sessions:
-					a = {"session": self.key.id(), "answer": "MISSING"}
-					student.answers.append(a)
-					student.save()
-		self.open = False
-		self.save()
+	    for studentName in self.students:
+		student = getStudent(studentName, self.lesson)
+		if student:
+		    # TODO modify here
+		    sessions = [s["session"] for s in student.answers]
+		    if self.key.id() not in sessions:
+			a = {"session": self.key.id(), "answer": "MISSING"}
+			student.answers.append(a)
+			student.save()
+	    self.open = False
+	    self.save()
 		
 	def start(self, lessonID, exerciseType,category=""):
 		self.lesson = lessonID
@@ -557,12 +598,13 @@ class Session(ndb.Model):
 		self.type = exerciseType
 		self.category = category
 		if exerciseType == "complex" :
-			self.exerciseWords, self.target = getWords(self.exerciseText)
-			self.target = -1
-			self.answersProposed = []
+		    self.exerciseWords, self.target = getWords(self.exerciseText)
+		    self.target = -1
+		    self.answersProposed = []
 		else:
-			self.exerciseWords, self.target = getWords(self.exerciseText)
-			self.answersProposed = getAnswersProposed(self.type)
+		    self.exerciseWords, self.target = getWords(self.exerciseText)
+		    self.answersProposed = getAnswersProposed(self.type)
+		# TODO modify here
 		self.studentAnswers = {}
 		self.answersStudents = {}
 		self.open = True
@@ -572,23 +614,23 @@ class Session(ndb.Model):
 		teacher.currentSession = self.key.id()
 		teacher.save()
 		message = {
-			"type": "sessionExercise",
-			"message": {
-				"id": sid,
-				"wordsList": self.exerciseWords,
-				"answersProposed": self.answersProposed,
-				"target": self.target,
-				"category": self.category
-				},
-			}
+		    "type": "sessionExercise",
+		    "message": {
+			"id": sid,
+			"wordsList": self.exerciseWords,
+			"answersProposed": self.answersProposed,
+			"target": self.target,
+			"category": self.category
+			},
+		    }
 		
 		message = json.dumps(message)
 		channel.send_message(teacher.token, message)
 		for studentName in self.students:
-			student = getStudent(studentName, self.lesson)
-			student.currentSession = sid
-			student.save()
-			channel.send_message(student.token, message)
+		    student = getStudent(studentName, self.lesson)
+		    student.currentSession = sid
+		    student.save()
+		    channel.send_message(student.token, message)
 		self.sendStatusToTeacher()
 
 def exportJson():
