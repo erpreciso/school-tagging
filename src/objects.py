@@ -522,7 +522,7 @@ class Session(ndb.Model):
 #            {answer1:[student1, student2], answer2:[], answer3:[student3]}
      
      def addStudentAnswer(self, studentName, answer):
-          # TODO REPLACE WITH ADDNDBANSWER
+          # TODO recasted, ready for cleaning (replace with ndb one)
           if self.open:
                 self.studentAnswers[studentName] = answer
                 if answer in self.answersStudents.keys():
@@ -553,7 +553,7 @@ class Session(ndb.Model):
              return teacher.save()
 
      def addValidAnswer(self, validAnswer):
-          # TODO REPLACE WITH UNIQUE ADDNDBANSWER
+          # TODO recasted, ready for cleaning (replace with ndb one)
           try:
                 sortedValid = json.loads(validAnswer, cls=decoder, list_type=frozenset, object_hook=itemset)
                 valid = json.dumps(sortedValid, cls=JsonSetEncoder)
@@ -565,7 +565,7 @@ class Session(ndb.Model):
      def sendFeedbackToStudents(self):
           for studentName in self.students:
                 student = getStudent(studentName, self.lesson)
-                # TODO modify here
+                # TODO function modified, ready for recast
                 myanswer = [a["answer"] for a in student.answers \
                           if a["session"] == self.key.id()]
                 if myanswer and myanswer[0] != "MISSING":
@@ -592,12 +592,11 @@ class Session(ndb.Model):
                 sessionAnswers = [a for a in student.newanswers if a.session == self.key.id()]
                 if sessionAnswers and sessionAnswers[0] != "MISSING":
                     answer = sessionAnswers[0]
-                    myanswer = myanswer[0]
                     message = {
                     "type": "validAnswer",
                     "message": {
                          "validAnswer": self.validatedAnswer,
-                         "myAnswer": myanswer,
+                         "myAnswer": unicode(answer.content),
                          "dict": getAnswersProposed(self.type)
                          }
                     }
@@ -609,7 +608,7 @@ class Session(ndb.Model):
                          "dict": getAnswersProposed(self.type)
                     }
                 }
-                logging.info("New feedback: %s", json.dumps(message))
+#                logging.info("New feedback: %s", json.dumps(message))
           
      def save(self):
           self.put()
@@ -619,9 +618,8 @@ class Session(ndb.Model):
      def sendStatusToTeacher(self):
           if self.open:
                 teacher = getTeacher(self.teacher)
-                print "Status to teacher: " + str(self.studentAnswers.keys())
                 if teacher:
-                  # TODO modify here
+                  # TODO ALMOST THERE remove the old status and leave only the new one. Ready for recast
                   status = {
                       "type": "sessionStatus",
                       "message": {
@@ -639,16 +637,39 @@ class Session(ndb.Model):
                       "type": "sessionStatus",
                       "message": {
                           "dictAnswers": getAnswersProposed(self.type),
-                          "possibleAnswers": self.answersStudents,
+                          "possibleAnswers": self.generateAnswersDict("answerStudent"),
                           "totalAnswers": {
-                            "answered": self.studentAnswers.keys(),
+                            "answered": self.generateAnswersDict("studentAnswer").keys(),
                             "missing": [s for s in self.students \
-                                if s not in self.studentAnswers.keys()]
+                                if s not in self.generateAnswersDict("studentAnswer").keys()]
                           }
                           },
                       }
                 channel.send_message(teacher.token, json.dumps(status))
-          
+
+     def generateAnswersDict(self, dicttype):
+        # depending of the parameter, return a dict
+		# "answerStudent": return {answer1:[student1, student2], answer2:[], answer3:[student3]}
+		# "studentAnswer": return {student1: answer1, student2: answer2}
+         answers = {}
+         for studentName in self.students:
+             student = getStudent(studentName, self.lesson)
+             if student:
+                 for objAnswer in student.newanswers:
+                     if self.key.id() == objAnswer.session:
+                         answer = objAnswer.content
+                         if dicttype == "answerStudent":
+                             if answer in answers.keys():
+                                 answers[answer] += [studentName]
+                             else:
+                                 answers[answer] = [studentName]
+                         elif dicttype == "studentAnswer":
+                             if studentName in answers.keys():
+                                 answers[studentName] += [answer]
+                             else:
+                                 answers[studentName] = [answer]
+         return answers
+
      def removeStudent(self, student):
           if student.username in self.students:
                 self.students.remove(student.username)
@@ -710,9 +731,10 @@ class Session(ndb.Model):
           channel.send_message(teacher.token, message)
           for studentName in self.students:
                 student = getStudent(studentName, self.lesson)
-                student.currentSession = sid
-                student.save()
-                channel.send_message(student.token, message)
+                if student:
+                    student.currentSession = sid
+                    student.save()
+                    channel.send_message(student.token, message)
           self.sendStatusToTeacher()
 
 def exportJson():

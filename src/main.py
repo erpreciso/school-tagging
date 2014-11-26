@@ -198,7 +198,8 @@ class TeacherHandler(MainHandler):
 			studentLabels = []
 			for studentName in lesson.students:
 				student = objs.getStudent(studentName, teacher.currentLessonID)
-				studentLabels.append({"username":studentName,"fullname":student.fullname})
+                                if student:
+				    studentLabels.append({"username":studentName,"fullname":student.fullname})
 			return self.renderPage(templ ,
 				teacherName=teacher.fullname,
 				lessonName=teacher.currentLessonName,
@@ -259,6 +260,7 @@ class DataHandler(MainHandler):
 # new logic
                 if session.addNdbAnswer("student", student.username, answer):
                     logging.info("Answer from <" + student.username + "> saved in datastore")
+                    session.sendStatusToTeacher()
 #                session.sendStatusToTeacher()
                 else:
                     logging.error("Warning! Answer not saved")
@@ -372,7 +374,8 @@ class LosingFocusHandler(MainHandler):
 		requesterRole = self.getRoleFromCookie()
 		assert requesterRole == "student"
 		student = requester
-		student.alertTeacherAboutMyFocus(status)
+		if student:
+                    student.alertTeacherAboutMyFocus(status)
     
 class ForceLogoutStudentHandler(MainHandler):
     def post(self):
