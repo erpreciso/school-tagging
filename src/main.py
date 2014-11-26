@@ -239,8 +239,6 @@ class DataHandler(MainHandler):
             if kind == "teacherValidation":
                 valid = self.request.get("valid")
                 session = objs.getSession(teacher.currentSession)
-                session.addValidAnswer(valid)
-# new logic
                 session.addNdbAnswer("teacher", teacher.username, valid)
                 session.sendFeedbackToStudents()
             if kind == "getSessionStatus":
@@ -250,18 +248,10 @@ class DataHandler(MainHandler):
             student = requester
             if kind == "answer":
                 answer = self.request.get("answer")
-                student.addAnswer(answer)
                 session = objs.getSession(student.currentSession)
-                if session.addStudentAnswer(student.username, answer):
-                    logging.info("Answer from <" + student.username + "> saved correctly")
-                    session.sendStatusToTeacher()
-                else:
-                    logging.error("Warning! Answer not saved")
-# new logic
                 if session.addNdbAnswer("student", student.username, answer):
                     logging.info("Answer from <" + student.username + "> saved in datastore")
                     session.sendStatusToTeacher()
-#                session.sendStatusToTeacher()
                 else:
                     logging.error("Warning! Answer not saved")
 
