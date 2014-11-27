@@ -23,12 +23,10 @@ window.onblur = imnotfocused;
 window.onfocus = imfocused;
 
 function imnotfocused(){
-    //console.log("losing focus");
     $.post("/focus",{"focus": "off"});
 }
 
 function imfocused(){
-    //console.log("gaining focus");
     $.post("/focus",{"focus": "on"});
 }
 
@@ -39,14 +37,16 @@ onError = function (){
 onClose = function (){};
 
 onMessage = function(message) {
+//        console.log(message)
 	var data = JSON.parse(message.data);
 	var language = getLanguage();
 	if (language == "EN")
 		var t1 = "Session aborted by teacher; correct answer was ";
 	else if (language == "IT")
 		var t1 = "Esercizio interrotto dall'insegnante; la risposta esatta era ";
-	if (data.type == "sessionExercise")
-		presentExercise(data.message);
+	if (data.type == "sessionExercise"){
+		localStorage.setItem("SessionID", data.message.id);
+        presentExercise(data.message);}
 	else if (data.type == "validAnswer")
 		feedbackFromTeacher(data.message);
 	else if (data.type == "lessonTerminated")
@@ -73,7 +73,7 @@ onMessage = function(message) {
 		
 		
 		var italianAnswer = "";
-                //console.log(data.message);
+//                console.log(data.message);
 		for (var i = 0; i < data.message.dict.length; i++){
 			if (data.message.dict[i]["EN"] == data.message.validAnswer){
 				italianAnswer = data.message.dict[i]["IT"];
@@ -269,7 +269,10 @@ function presentExercise(message) {
 			$("#" + triggered).css("background-color", "orange");
 			$("#" + triggered).addClass("answered");
 
-			$.post("/data/answer", {"answer": triggered});
+			$.post("/data/answer", {
+                  "answer": triggered,
+                  "sessionID": localStorage.getItem("SessionID")
+                  });
 			$("#answers").children().off("click");
 
 
@@ -452,7 +455,8 @@ function sendExercise(){
 	$.ajax({
 		url: "/data/answer",
 		type: "POST",
-		data: { answer : JSON.stringify(answerJSON)},
+		data: { answer : JSON.stringify(answerJSON),
+                  "sessionID": localStorage.getItem("SessionID")},
 		datatype : "html",
 		contentType: "application/x-www-form-urlencoded; charset=UTF-8"	,
     	traditional: true

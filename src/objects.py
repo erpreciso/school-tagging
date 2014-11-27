@@ -366,7 +366,7 @@ class Lesson(ndb.Model):
                                       ownDict = {"studentName": st, "stats": ownStats}
                                       listOfStudentsStats.append(ownDict) 
                           corrects = [st for st in students \
-                              if ses.studentAnswers[st] == ses.validatedAnswer]
+                              if studentAnswers[st] == ses.validatedAnswer]
                           stats += corrects
           statsDict = {}
           if stats:
@@ -502,6 +502,9 @@ class Session(ndb.Model):
              return None
          if role == "student" and self.open:
              student = getStudent(userName, self.lesson)
+             if userName not in self.students:
+                 self.students.append(userName)
+                 self.save()
              try:
                  sortedAnswer = json.loads(answer, cls=decoder, list_type=frozenset, object_hook=itemset)
                  answer = json.dumps(sortedAnswer, cls=JsonSetEncoder)
@@ -630,14 +633,13 @@ class Session(ndb.Model):
           message = {
                 "type": "sessionExercise",
                 "message": {
-                "id": sid,
-                "wordsList": self.exerciseWords,
-                "answersProposed": self.answersProposed,
-                "target": self.target,
-                "category": self.category
-                },
+                    "id": sid,
+                    "wordsList": self.exerciseWords,
+                    "answersProposed": self.answersProposed,
+                    "target": self.target,
+                    "category": self.category
+                    },
                 }
-          
           message = json.dumps(message)
           channel.send_message(teacher.token, message)
           for studentName in self.students:

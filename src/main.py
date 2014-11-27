@@ -248,12 +248,16 @@ class DataHandler(MainHandler):
             student = requester
             if kind == "answer":
                 answer = self.request.get("answer")
-                session = objs.getSession(student.currentSession)
-                if session.addNdbAnswer("student", student.username, answer):
-                    logging.info("Answer from <" + student.username + "> saved in datastore")
-                    session.sendStatusToTeacher()
+                sessionIdSent = self.request.get("sessionID")
+                if str(sessionIdSent) == str(student.currentSession):
+                    session = objs.getSession(student.currentSession)
+                    if session.addNdbAnswer("student", student.username, answer):
+                        logging.info("Answer from <" + student.username + "> saved in datastore")
+                        session.sendStatusToTeacher()
+                    else:
+                        logging.error("Warning! Answer not saved")
                 else:
-                    logging.error("Warning! Answer not saved")
+                    logging.error("Student " + student.fullname + "Sent answer of a different session")    
 
 class StudentHandler(MainHandler):
     def get(self, action):
