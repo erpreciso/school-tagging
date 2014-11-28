@@ -651,17 +651,79 @@ class Session(ndb.Model):
           self.sendStatusToTeacher()
 
 def exportJson():
-     j = None
+     dictj = {"lessons":{}, "sessions":{}, "students":{}, "teachers":{}}
      q = Lesson.query()
-     if q.count(limit=None) > 0:
-          j = [q.fetch(limit=None)]
-     q = Teacher.query()
-     if q.count(limit=None) > 0:
-          j += [q.fetch(limit=None)]
-     q = Student.query()
-     if q.count(limit=None) > 0:
-          j += [q.fetch(limit=None)]
+     if q:
+         for lesson in q:
+             id = str(lesson.key.id())
+             dictj["lessons"][id] = {"name": lesson.lessonName}
+             dictj["lessons"][id]["students"] = lesson.students
+             dictj["lessons"][id]["teacher"] = lesson.teacher
+             dictj["lessons"][id]["datetime"] = lesson.datetime.isoformat()
+             dictj["lessons"][id]["open"] = lesson.open
+             dictj["lessons"][id]["sessions"] = {}
+             for sessionId in lesson.sessions:
+                 session = getSession(sessionId)
+                 s = {"open": session.open}
+                 sid = str(session.key.id())
+                 s["students"] = session.students
+                 s["teacher"] = session.teacher
+                 s["type"] = session.type
+                 s["datetime"] = session.datetime.isoformat()
+                 s["exerciseText"] = session.exerciseText
+                 s["target"] = session.target
+                 s["answersProposed"] = session.answersProposed
+                 s["validatedAnswer"] = session.validatedAnswer
+                 s["exerciseWords"] = session.exerciseWords
+                 dictj["lessons"][id]["sessions"][sid] = s
      q = Session.query()
-     if q.count(limit=None) > 0:
-          j += [q.fetch(limit=None)]
-     return j
+     if q:
+         for session in q:
+             id = str(session.key.id())
+             dictj["sessions"][id] = {"open": session.open}
+             dictj["sessions"][id]["students"] = session.students
+             dictj["sessions"][id]["type"] = session.type
+             dictj["sessions"][id]["datetime"] = session.datetime.isoformat()
+             dictj["sessions"][id]["target"] = session.target
+             dictj["sessions"][id]["exerciseText"] = session.exerciseText
+             dictj["sessions"][id]["answersProposed"] = session.answersProposed
+             dictj["sessions"][id]["validatedAnswer"] = session.validatedAnswer
+             dictj["sessions"][id]["exerciseWords"] = session.exerciseWords
+     q = Teacher.query()
+     if q:
+         for teacher in q:
+             id = str(teacher.key.id())
+             dictj["teachers"][id] = {"username": teacher.username}
+             dictj["teachers"][id]["fullname"] = teacher.fullname
+             dictj["teachers"][id]["currentLessonID"] = teacher.currentLessonID
+             dictj["teachers"][id]["currentLessonName"] = teacher.currentLessonName
+             dictj["teachers"][id]["lessons"] = teacher.lessons
+             dictj["teachers"][id]["token"] = teacher.token
+             dictj["teachers"][id]["currentSession"] = teacher.currentSession
+             dictj["teachers"][id]["lastAction"] = teacher.lastAction.isoformat()
+             dictj["teachers"][id]["language"] = teacher.language
+             dictj["teachers"][id]["password"] = teacher.password
+             dictj["teachers"][id]["answers"] = {}
+             for answer in teacher.answers:
+                 s = {"content": answer.content}
+                 s["correct"] = answer.correct
+                 dictj["teachers"][id]["answers"][answer.session] = s
+     q = Student.query()
+     if q:
+         for student in q:
+             id = str(student.key.id())
+             dictj["students"][id] = {"username": student.username}
+             dictj["students"][id]["fullname"] = student.fullname
+             dictj["students"][id]["currentLessonID"] = student.currentLessonID
+             dictj["students"][id]["currentLessonName"] = student.currentLessonName
+             dictj["students"][id]["lessons"] = student.lessons
+             dictj["students"][id]["token"] = student.token
+             dictj["students"][id]["currentSession"] = student.currentSession
+             dictj["students"][id]["lastAction"] = student.lastAction.isoformat()
+             dictj["students"][id]["language"] = student.language
+             dictj["students"][id]["answers"] = {}
+             for answer in student.answers:
+                 s = {"content": answer.content}
+                 s["correct"] = answer.correct
+                 dictj["students"][id]["answers"][answer.session] = s
+     return json.dumps(dictj)
