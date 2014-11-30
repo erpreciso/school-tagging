@@ -296,10 +296,10 @@ onMessage = function(message) {
 			$("#" + data.message.studentName).children(".logoutStudent").remove();
 		}
 	}
-	else if (data.type == "sessionExercise") {
+	else if (data.type == "exerciseExercise") {
 		buildExercise(data.message);
 	}
-	else if (data.type == "sessionStatus") {
+	else if (data.type == "exerciseStatus") {
 		buildDashboard(data);
 	}
 	else if (data.type == "lessonStats") {

@@ -76,11 +76,11 @@ class TeacherHandler(MainHandler):
         elif action == "logout":
             self.logout()
         elif action == "timeIsUp":
-            self.endSession()
+            self.endExercise()
         elif action == "askStats":
             self.sendStats()
         else:
-			self.renderLoginPage()
+	    self.renderLoginPage()
 
     def renderLoginPage(self, message=None):
         t = "teacherLogin.html"
@@ -128,10 +128,10 @@ class TeacherHandler(MainHandler):
         teacher = self.getFromCookie()
         if teacher:
             self.clearCookies()
-            if teacher.currentSession:
-                session = objs.getSession(teacher.currentSession)
-                if session:
-                    session.end()
+            if teacher.currentExercise:
+                exercise = objs.getExercise(teacher.currentExercise)
+                if exercise:
+                    exercise.end()
             if teacher.currentLessonID:
                 lesson = objs.getLesson(teacher.currentLessonID)
                 if lesson:
@@ -186,21 +186,21 @@ class TeacherHandler(MainHandler):
             return self.redirect("/t/login")
 
     def initializeDashboard(self):
-		teacher = self.getFromCookie()
-		if not teacher:
-			return self.redirect("/t/login")
-		if not teacher.currentLessonID:
-			return self.redirect("/t/login")
-		language = teacher.language or objs.DEFAULT_LANGUAGE
-		lesson = objs.getLesson(teacher.currentLessonID)
-		if lesson:
-			templ = "teacherDashboard.html"
-			studentLabels = []
-			for studentName in lesson.students:
-				student = objs.getStudent(studentName, teacher.currentLessonID)
-                                if student:
-				    studentLabels.append({"username":studentName,"fullname":student.fullname})
-			return self.renderPage(templ ,
+        teacher = self.getFromCookie()
+        if not teacher:
+	    return self.redirect("/t/login")
+	if not teacher.currentLessonID:
+	    return self.redirect("/t/login")
+	language = teacher.language or objs.DEFAULT_LANGUAGE
+	lesson = objs.getLesson(teacher.currentLessonID)
+	if lesson:
+	    templ = "teacherDashboard.html"
+	    studentLabels = []
+	    for studentName in lesson.students:
+	        student = objs.getStudent(studentName, teacher.currentLessonID)
+                if student:
+		    studentLabels.append({"username":studentName,"fullname":student.fullname})
+		    return self.renderPage(templ ,
 				teacherName=teacher.fullname,
 				lessonName=teacher.currentLessonName,
 				students=studentLabels,
@@ -209,13 +209,13 @@ class TeacherHandler(MainHandler):
 				labels=labdict.labels(templ, language),
 				)
 		else:
-			return self.redirect("/t/login")
+		    return self.redirect("/t/login")
 
-    def endSession(self):
+    def endExercise(self):
         teacher = self.getFromCookie()
-        session = objs.getSession(teacher.currentSession)
-        if session:
-            session.end()
+        exercise = objs.getExercise(teacher.currentExercise)
+        if exercise:
+            exercise.end()
 
 class DataHandler(MainHandler):
     def get(self, kind):
@@ -224,12 +224,12 @@ class DataHandler(MainHandler):
         if requesterRole == "teacher":
             if kind == "simple_exercise_request":
                 lessonID = requester.currentLessonID
-                session = objs.Session()
-                session.start(lessonID, "simple")
+                exercise = objs.Exercise()
+                exercise.start(lessonID, "simple")
             elif kind == "complex_exercise_request":
                 lessonID = requester.currentLessonID
-                session = objs.Session()
-                session.start(lessonID, "complex",self.request.get('category'))
+                exercise = objs.Exercise()
+                exercise.start(lessonID, "complex",self.request.get('category'))
 
     def post(self, kind):
         requester = self.getFromCookie()
@@ -238,26 +238,26 @@ class DataHandler(MainHandler):
             teacher = requester
             if kind == "teacherValidation":
                 valid = self.request.get("valid")
-                session = objs.getSession(teacher.currentSession)
-                session.addNdbAnswer("teacher", teacher.username, valid)
-                session.sendFeedbackToStudents()
+                exercise = objs.getExercise(teacher.currentExercise)
+                exercise.addNdbAnswer("teacher", teacher.username, valid)
+                exercise.sendFeedbackToStudents()
             if kind == "getSessionStatus":
-                session = objs.getSession(teacher.currentSession)
-                session.sendStatusToTeacher()
+                exercise = objs.getExercise(teacher.currentExercise)
+                exercise.sendStatusToTeacher()
         if requesterRole == "student":
             student = requester
             if kind == "answer":
                 answer = self.request.get("answer")
-                sessionIdSent = self.request.get("sessionID")
-                if str(sessionIdSent) == str(student.currentSession):
-                    session = objs.getSession(student.currentSession)
-                    if session.addNdbAnswer("student", student.username, answer):
+                exerciseIdSent = self.request.get("exerciseID")
+                if str(exerciseIdSent) == str(student.currentExercise):
+                    exercise = objs.getExercise(student.currentExercise)
+                    if exercise.addNdbAnswer("student", student.username, answer):
                         logging.info("Answer from <" + student.username + "> saved in datastore")
-                        session.sendStatusToTeacher()
+                        exercise.sendStatusToTeacher()
                     else:
                         logging.error("Warning! Answer not saved")
                 else:
-                    logging.error("Student " + student.fullname + "Sent answer of a different session")    
+                    logging.error("Student " + student.fullname + "Sent answer of a different exercise")    
 
 class StudentHandler(MainHandler):
     def get(self, action):
@@ -331,14 +331,14 @@ class DeleteHandler(MainHandler):
 
 class ConnectionHandler(MainHandler):
     def post(self, action):
-		""" channel service interrupted from yaml"""
-		a = self.request.get('from')
-		user = objs.getFromID(a)
-		if user:
-			if user.__class__.__name__ == "Student":
-				student = user
-				if action == "disconnected":
-					return student.alertTeacherImOffline()
+        """ channel service interrupted from yaml"""
+        a = self.request.get('from')
+        user = objs.getFromID(a)
+        if user:
+            if user.__class__.__name__ == "Student":
+                student = user
+                if action == "disconnected":
+                    return student.alertTeacherImOffline()
 
 class ChannelHandler(MainHandler):
     def get(self):

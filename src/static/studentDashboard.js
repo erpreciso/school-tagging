@@ -44,8 +44,8 @@ onMessage = function(message) {
 		var t1 = "Session aborted by teacher; correct answer was ";
 	else if (language == "IT")
 		var t1 = "Esercizio interrotto dall'insegnante; la risposta esatta era ";
-	if (data.type == "sessionExercise"){
-		localStorage.setItem("SessionID", data.message.id);
+	if (data.type == "exerciseExercise"){
+		localStorage.setItem("exerciseID", data.message.id);
         presentExercise(data.message);}
 	else if (data.type == "validAnswer")
 		feedbackFromTeacher(data.message);
@@ -53,7 +53,7 @@ onMessage = function(message) {
 		lessonTerminated();
 	else if (data.type == "pingFromTeacher")
 		$.post("/ping", {"alive": true});
-	else if (data.type == "sessionExpired") {
+	else if (data.type == "exerciseExpired") {
 		
 		var validAnswerTextFromJSON ="";
 		
@@ -271,7 +271,7 @@ function presentExercise(message) {
 
 			$.post("/data/answer", {
                   "answer": triggered,
-                  "sessionID": localStorage.getItem("SessionID")
+                  "exerciseID": localStorage.getItem("exerciseID")
                   });
 			$("#answers").children().off("click");
 
@@ -456,7 +456,7 @@ function sendExercise(){
 		url: "/data/answer",
 		type: "POST",
 		data: { answer : JSON.stringify(answerJSON),
-                  "sessionID": localStorage.getItem("SessionID")},
+                  "exerciseID": localStorage.getItem("exerciseID")},
 		datatype : "html",
 		contentType: "application/x-www-form-urlencoded; charset=UTF-8"	,
     	traditional: true

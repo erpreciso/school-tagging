@@ -63,16 +63,16 @@ def cleanIdleObjects():
                 teacher = getTeacher(lesson.teacher)
                 if teacher and teacher.currentLessonID == None:
                      lesson.end()
-     q = Session.query(Session.open == True)
+     q = Exercise.query(Exercise.open == True)
      if q.count(limit=None) > 0:
-          sessions = q.fetch(limit=None)
-          for session in sessions:
-                teacher = getTeacher(session.teacher)
+          exercises = q.fetch(limit=None)
+          for exercise in exercises:
+                teacher = getTeacher(exercise.teacher)
                 if teacher and teacher.currentLessonID == None:
-                     session.end()
+                     exercise.end()
 
 class Answer(ndb.Model):
-     session = ndb.IntegerProperty()
+     exercise = ndb.IntegerProperty()
      content = ndb.StringProperty()
      correct = ndb.BooleanProperty()
      
@@ -83,7 +83,7 @@ class User(ndb.Model):
      currentLessonName = ndb.StringProperty()
      lessons = ndb.IntegerProperty(repeated=True)
      token = ndb.StringProperty()
-     currentSession = ndb.IntegerProperty()
+     currentExercise = ndb.IntegerProperty()
      lastAction = ndb.DateTimeProperty(auto_now=True)
      language = ndb.StringProperty()
      answers = ndb.StructuredProperty(Answer, repeated=True)
@@ -107,26 +107,26 @@ class User(ndb.Model):
 class Student(User):
      def produceOwnStats(self):
           statsDict = {"correct": 0, "wrong": 0, "missing": 0}
-          sessions = [s.session for s in self.answers]
-          for sessionID in sessions:
-              session = getSession(sessionID)
-              if session:
+          exercises = [s.exercise for s in self.answers]
+          for exerciseID in exercises:
+              exercise = getExercise(exerciseID)
+              if exercise:
                   for sa in self.answers:
-                      if sa.session == sessionID:
+                      if sa.exercise == exerciseID:
                           answer = sa.content
                           if answer == "MISSING":
                               statsDict["missing"] += 1
-                          elif answer == session.validatedAnswer:
+                          elif answer == exercise.validatedAnswer:
                               statsDict["correct"] += 1
-                          elif answer != session.validatedAnswer:
+                          elif answer != exercise.validatedAnswer:
                               statsDict["wrong"] += 1
           return statsDict
 
      def produceAndSendOwnStats(self):
-                statsDict = self.produceOwnStats()
-                message = {"type": "studentStats",
-                          "message": {"stats": statsDict, "student": self.username}}
-                self.sendMessageToTeacher(message)
+         statsDict = self.produceOwnStats()
+         message = {"type": "studentStats",
+               "message": {"stats": statsDict, "student": self.username}}
+         self.sendMessageToTeacher(message)
      
      def save(self):
           if self.currentLessonID == None:
@@ -162,17 +162,17 @@ class Student(User):
                   self.currentLessonName = None
                   self.save()
      
-     def exitSession(self):
-          if self.currentSession:
-                session = getSession(self.currentSession)
-                session.removeStudent(self)
-                self.currentSession = None
+     def exitExercise(self):
+          if self.currentExercise:
+                exercise = getExercise(self.currentExercise)
+                exercise.removeStudent(self)
+                self.currentExercise = None
                 self.save()
      
      def logout(self):
           self.alertTeacherImLogout()
           self.exitLesson()
-          self.exitSession()
+          self.exitExercise()
           self.token = None
           self.save()
                 
@@ -223,7 +223,7 @@ class Teacher(User):
      def logout(self):
           self.currentLessonID = None
           self.currentLessonName = None
-          self.currentSession = None
+          self.currentExercise = None
           self.token = None
           self.save()
           
@@ -281,7 +281,6 @@ def getFromID(sid):
      if not user:
           user = ndb.Key("Teacher", int(sid)).get() \
                 or ndb.Key("Student", int(sid)).get()
-          #~ user = ndb.get_by_id(int(id))
           if user:
                 memcache.set("ID:" + str(sid), user)
      if user:
@@ -301,7 +300,7 @@ class Lesson(ndb.Model):
      lessonName = ndb.StringProperty()
      teacher = ndb.StringProperty()
      open = ndb.BooleanProperty()
-     sessions = ndb.IntegerProperty(repeated=True)
+     exercises = ndb.IntegerProperty(repeated=True)
      students = ndb.StringProperty(repeated=True)
      datetime = ndb.DateTimeProperty(auto_now_add=True)
 
@@ -310,7 +309,7 @@ class Lesson(ndb.Model):
           self.teacher = teacher.username
           self.open = True
           self.students = []
-          self.sessions = []
+          self.exercises = []
           lessonID = self.save()
           teacher.assignLesson(lessonID, lessonName)
 
@@ -334,8 +333,8 @@ class Lesson(ndb.Model):
           self.students.append(student.username)
           self.save()
      
-     def addSession(self, sessionID):
-          self.sessions.append(sessionID)
+     def addExercise(self, exerciseID):
+          self.exercises.append(exerciseID)
           self.save()
      
      def removeStudent(self, student):
@@ -348,10 +347,10 @@ class Lesson(ndb.Model):
           allStudents = []
           listOfStudentsStats = []
           stats = None
-          if self.sessions:
+          if self.exercises:
               stats = []
-              for sessionID in self.sessions:
-                  ses = getSession(sessionID)
+              for exerciseID in self.exercises:
+                  ses = getExercise(exerciseID)
                   if ses:
                       studentAnswers = ses.generateAnswersDict("studentAnswer")
                       students = studentAnswers.keys()
@@ -423,14 +422,14 @@ def getLessonFromName(lessonName):
      else:
           return False
 
-def getSession(sessionID):
-     session = memcache.get("Session:" + str(sessionID))
-     if not session:
-          session = ndb.Key("Session", sessionID).get()
-          if session:
-                memcache.set("Session:" + str(sessionID), session)
-     if session:
-          return session
+def getExercise(exerciseID):
+     exercise = memcache.get("Exercise:" + str(exerciseID))
+     if not exercise:
+          exercise = ndb.Key("Exercise", exerciseID).get()
+          if exercise:
+                memcache.set("Exercise:" + str(exerciseID), exercise)
+     if exercise:
+          return exercise
      else:
           return False
      
@@ -474,12 +473,12 @@ def getAnswersProposed(exerciseType):
 
 def clean():
      ndb.delete_multi(Lesson.query().fetch(keys_only=True))
-     ndb.delete_multi(Session.query().fetch(keys_only=True))
+     ndb.delete_multi(Exercise.query().fetch(keys_only=True))
      ndb.delete_multi(Student.query().fetch(keys_only=True))
      ndb.delete_multi(Teacher.query().fetch(keys_only=True))
      memcache.flush_all()
 
-class Session(ndb.Model):
+class Exercise(ndb.Model):
      teacher = ndb.StringProperty()
      open = ndb.BooleanProperty()
      lesson = ndb.IntegerProperty()
@@ -511,7 +510,7 @@ class Session(ndb.Model):
              except:
                  answer = answer
              student.answers.append( \
-                       Answer(session=self.key.id(),content=answer))
+                       Answer(exercise=self.key.id(),content=answer))
              return student.save()
          elif role == "teacher":
              try:
@@ -525,9 +524,9 @@ class Session(ndb.Model):
      def sendFeedbackToStudents(self):
           for studentName in self.students:
                 student = getStudent(studentName, self.lesson)
-                sessionAnswers = [a.content for a in student.answers if a.session == self.key.id()]
-                if sessionAnswers and sessionAnswers[0] != "MISSING":
-                    answer = sessionAnswers[0]
+                exerciseAnswers = [a.content for a in student.answers if a.exercise == self.key.id()]
+                if exerciseAnswers and exerciseAnswers[0] != "MISSING":
+                    answer = exerciseAnswers[0]
                     message = {
                     "type": "validAnswer",
                     "message": {
@@ -538,7 +537,7 @@ class Session(ndb.Model):
                     }
                 else:
                     message = {
-                    "type": "sessionExpired",
+                    "type": "exerciseExpired",
                     "message": {
                          "validAnswer": self.validatedAnswer,
                          "dict": getAnswersProposed(self.type)
@@ -549,7 +548,7 @@ class Session(ndb.Model):
           
      def save(self):
           self.put()
-          memcache.set("Session:" + str(self.key.id()), self)
+          memcache.set("Exercise:" + str(self.key.id()), self)
           return self.key.id()
           
      def sendStatusToTeacher(self):
@@ -557,7 +556,7 @@ class Session(ndb.Model):
                 teacher = getTeacher(self.teacher)
                 if teacher:
                     status = {
-                      "type": "sessionStatus",
+                      "type": "exerciseStatus",
                       "message": {
                           "dictAnswers": getAnswersProposed(self.type),
                           "possibleAnswers": self.generateAnswersDict("answerStudent"),
@@ -579,7 +578,7 @@ class Session(ndb.Model):
              student = getStudent(studentName, self.lesson)
              if student:
                  for objAnswer in student.answers:
-                     if self.key.id() == objAnswer.session:
+                     if self.key.id() == objAnswer.exercise:
                          answer = objAnswer.content
                          if dicttype == "answerStudent":
                              if answer in dictanswers.keys():
@@ -602,9 +601,9 @@ class Session(ndb.Model):
           for studentName in self.students:
                 student = getStudent(studentName, self.lesson)
                 if student:
-                     if self.key.id() not in [a.session for a in student.answers]:
+                     if self.key.id() not in [a.exercise for a in student.answers]:
                          student.answers.append( \
-                               Answer(session=self.key.id(),content="MISSING"))
+                               Answer(exercise=self.key.id(),content="MISSING"))
                          student.save() 
                 self.open = False
                 self.save()
@@ -626,12 +625,12 @@ class Session(ndb.Model):
                 self.answersProposed = getAnswersProposed(self.type)
           self.open = True
           sid = self.save()
-          lesson.addSession(sid)
+          lesson.addExercise(sid)
           teacher = getTeacher(self.teacher)
-          teacher.currentSession = self.key.id()
+          teacher.currentExercise = self.key.id()
           teacher.save()
           message = {
-                "type": "sessionExercise",
+                "type": "exerciseExercise",
                 "message": {
                     "id": sid,
                     "wordsList": self.exerciseWords,
@@ -645,13 +644,13 @@ class Session(ndb.Model):
           for studentName in self.students:
                 student = getStudent(studentName, self.lesson)
                 if student:
-                    student.currentSession = sid
+                    student.currentExercise = sid
                     student.save()
                     channel.send_message(student.token, message)
           self.sendStatusToTeacher()
 
 def exportJson():
-     dictj = {"lessons":{}, "sessions":{}, "students":{}, "teachers":{}}
+     dictj = {"lessons":{}, "exercises":{}, "students":{}, "teachers":{}}
      q = Lesson.query()
      if q:
          for lesson in q:
@@ -661,34 +660,34 @@ def exportJson():
              dictj["lessons"][id]["teacher"] = lesson.teacher
              dictj["lessons"][id]["datetime"] = lesson.datetime.isoformat()
              dictj["lessons"][id]["open"] = lesson.open
-             dictj["lessons"][id]["sessions"] = {}
-             for sessionId in lesson.sessions:
-                 session = getSession(sessionId)
-                 s = {"open": session.open}
-                 sid = str(session.key.id())
-                 s["students"] = session.students
-                 s["teacher"] = session.teacher
-                 s["type"] = session.type
-                 s["datetime"] = session.datetime.isoformat()
-                 s["exerciseText"] = session.exerciseText
-                 s["target"] = session.target
-                 s["answersProposed"] = session.answersProposed
-                 s["validatedAnswer"] = session.validatedAnswer
-                 s["exerciseWords"] = session.exerciseWords
-                 dictj["lessons"][id]["sessions"][sid] = s
-     q = Session.query()
+             dictj["lessons"][id]["exercises"] = {}
+             for exerciseId in lesson.exercises:
+                 exercise = getExercise(exerciseId)
+                 s = {"open": exercise.open}
+                 sid = str(exercise.key.id())
+                 s["students"] = exercise.students
+                 s["teacher"] = exercise.teacher
+                 s["type"] = exercise.type
+                 s["datetime"] = exercise.datetime.isoformat()
+                 s["exerciseText"] = exercise.exerciseText
+                 s["target"] = exercise.target
+                 s["answersProposed"] = exercise.answersProposed
+                 s["validatedAnswer"] = exercise.validatedAnswer
+                 s["exerciseWords"] = exercise.exerciseWords
+                 dictj["lessons"][id]["exercises"][sid] = s
+     q = Exercise.query()
      if q:
-         for session in q:
-             id = str(session.key.id())
-             dictj["sessions"][id] = {"open": session.open}
-             dictj["sessions"][id]["students"] = session.students
-             dictj["sessions"][id]["type"] = session.type
-             dictj["sessions"][id]["datetime"] = session.datetime.isoformat()
-             dictj["sessions"][id]["target"] = session.target
-             dictj["sessions"][id]["exerciseText"] = session.exerciseText
-             dictj["sessions"][id]["answersProposed"] = session.answersProposed
-             dictj["sessions"][id]["validatedAnswer"] = session.validatedAnswer
-             dictj["sessions"][id]["exerciseWords"] = session.exerciseWords
+         for exercise in q:
+             id = str(exercise.key.id())
+             dictj["exercises"][id] = {"open": exercise.open}
+             dictj["exercises"][id]["students"] = exercise.students
+             dictj["exercises"][id]["type"] = exercise.type
+             dictj["exercises"][id]["datetime"] = exercise.datetime.isoformat()
+             dictj["exercises"][id]["target"] = exercise.target
+             dictj["exercises"][id]["exerciseText"] = exercise.exerciseText
+             dictj["exercises"][id]["answersProposed"] = exercise.answersProposed
+             dictj["exercises"][id]["validatedAnswer"] = exercise.validatedAnswer
+             dictj["exercises"][id]["exerciseWords"] = exercise.exerciseWords
      q = Teacher.query()
      if q:
          for teacher in q:
@@ -699,7 +698,7 @@ def exportJson():
              dictj["teachers"][id]["currentLessonName"] = teacher.currentLessonName
              dictj["teachers"][id]["lessons"] = teacher.lessons
              dictj["teachers"][id]["token"] = teacher.token
-             dictj["teachers"][id]["currentSession"] = teacher.currentSession
+             dictj["teachers"][id]["currentExercise"] = teacher.currentExercise
              dictj["teachers"][id]["lastAction"] = teacher.lastAction.isoformat()
              dictj["teachers"][id]["language"] = teacher.language
              dictj["teachers"][id]["password"] = teacher.password
@@ -707,7 +706,7 @@ def exportJson():
              for answer in teacher.answers:
                  s = {"content": answer.content}
                  s["correct"] = answer.correct
-                 dictj["teachers"][id]["answers"][answer.session] = s
+                 dictj["teachers"][id]["answers"][answer.exercise] = s
      q = Student.query()
      if q:
          for student in q:
@@ -718,12 +717,12 @@ def exportJson():
              dictj["students"][id]["currentLessonName"] = student.currentLessonName
              dictj["students"][id]["lessons"] = student.lessons
              dictj["students"][id]["token"] = student.token
-             dictj["students"][id]["currentSession"] = student.currentSession
+             dictj["students"][id]["currentExercise"] = student.currentExercise
              dictj["students"][id]["lastAction"] = student.lastAction.isoformat()
              dictj["students"][id]["language"] = student.language
              dictj["students"][id]["answers"] = {}
              for answer in student.answers:
                  s = {"content": answer.content}
                  s["correct"] = answer.correct
-                 dictj["students"][id]["answers"][answer.session] = s
+                 dictj["students"][id]["answers"][answer.exercise] = s
      return json.dumps(dictj)
