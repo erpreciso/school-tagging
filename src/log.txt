@@ -1,0 +1,268 @@
+--2014-11-30 09:20:48--  http://localhost:8080/t/signup
+Resolving localhost (localhost)... 127.0.0.1
+Connecting to localhost (localhost)|127.0.0.1|:8080... connected.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 200 OK
+  content-type: text/html; charset=utf-8
+  cache-control: no-cache
+  Content-Length: 2975
+  Server: Development/2.0
+  Date: Sun, 30 Nov 2014 08:20:48 GMT
+Length: 2975 (2.9K) [text/html]
+Saving to: ‘signup’
+
+     0K ..                                                    100%  280M=0s
+
+2014-11-30 09:20:48 (280 MB/s) - ‘signup’ saved [2975/2975]
+
+--2014-11-30 09:20:48--  http://localhost:8080/t/login
+Resolving localhost (localhost)... 127.0.0.1
+Connecting to localhost (localhost)|127.0.0.1|:8080... connected.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 302 Found
+  set-cookie: schooltagging-role=teacher; Max-Age=2591999; Path=/; expires=Tue, 30-Dec-2014 08:20:48 GMT; HttpOnly
+  set-cookie: schooltagging-username=Stefano; Max-Age=2591999; Path=/; expires=Tue, 30-Dec-2014 08:20:48 GMT; HttpOnly
+  set-cookie: schooltagging-lessonID=6333186975989760; Max-Age=2591999; Path=/; expires=Tue, 30-Dec-2014 08:20:48 GMT; HttpOnly
+  location: http://localhost:8080/t/dashboard
+  content-type: text/html; charset=utf-8
+  Expires: Sun, 30 Nov 2014 08:20:48 GMT
+  Cache-Control: no-cache
+  Content-Length: 0
+  Server: Development/2.0
+  Date: Sun, 30 Nov 2014 08:20:48 GMT
+Location: http://localhost:8080/t/dashboard [following]
+--2014-11-30 09:20:48--  http://localhost:8080/t/dashboard
+Reusing existing connection to localhost:8080.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 200 OK
+  content-type: text/html; charset=utf-8
+  cache-control: no-cache
+  Content-Length: 3219
+  Server: Development/2.0
+  Date: Sun, 30 Nov 2014 08:20:48 GMT
+Length: 3219 (3.1K) [text/html]
+Saving to: ‘login.5’
+
+     0K ...                                                   100%  210M=0s
+
+2014-11-30 09:20:48 (210 MB/s) - ‘login.5’ saved [3219/3219]
+
+--2014-11-30 09:20:48--  http://localhost:8080/s/login
+Resolving localhost (localhost)... 127.0.0.1
+Connecting to localhost (localhost)|127.0.0.1|:8080... connected.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 200 OK
+  content-type: text/html; charset=utf-8
+  cache-control: no-cache
+  Content-Length: 2416
+  Server: Development/2.0
+  Date: Sun, 30 Nov 2014 08:20:48 GMT
+Length: 2416 (2.4K) [text/html]
+Saving to: ‘login.6’
+
+     0K ..                                                    100%  225M=0s
+
+2014-11-30 09:20:48 (225 MB/s) - ‘login.6’ saved [2416/2416]
+
+--2014-11-30 09:22:17--  http://localhost:8080/s/login
+Resolving localhost (localhost)... 127.0.0.1
+Connecting to localhost (localhost)|127.0.0.1|:8080... connected.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 302 Found
+  set-cookie: schooltagging-role=student; Max-Age=2591999; Path=/; expires=Tue, 30-Dec-2014 08:22:17 GMT; HttpOnly
+  set-cookie: schooltagging-username=Anna; Max-Age=2591999; Path=/; expires=Tue, 30-Dec-2014 08:22:17 GMT; HttpOnly
+  set-cookie: schooltagging-lessonID=6333186975989760; Max-Age=2591999; Path=/; expires=Tue, 30-Dec-2014 08:22:17 GMT; HttpOnly
+  location: http://localhost:8080/s/dashboard
+  content-type: text/html; charset=utf-8
+  Expires: Sun, 30 Nov 2014 08:22:17 GMT
+  Cache-Control: no-cache
+  Content-Length: 0
+  Server: Development/2.0
+  Date: Sun, 30 Nov 2014 08:22:17 GMT
+Location: http://localhost:8080/s/dashboard [following]
+--2014-11-30 09:22:17--  http://localhost:8080/s/dashboard
+Reusing existing connection to localhost:8080.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 200 OK
+  content-type: text/html; charset=utf-8
+  cache-control: no-cache
+  Content-Length: 2720
+  Server: Development/2.0
+  Date: Sun, 30 Nov 2014 08:22:17 GMT
+Length: 2720 (2.7K) [text/html]
+Saving to: ‘login.7’
+
+     0K ..                                                    100%  192M=0s
+
+2014-11-30 09:22:17 (192 MB/s) - ‘login.7’ saved [2720/2720]
+
+--2014-11-30 09:30:33--  http://localhost:8080/data/answer
+Resolving localhost (localhost)... 127.0.0.1
+Connecting to localhost (localhost)|127.0.0.1|:8080... connected.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 200 OK
+  content-type: text/html; charset=utf-8
+  cache-control: no-cache
+  Content-Length: 0
+  Server: Development/2.0
+  Date: Sun, 30 Nov 2014 08:30:34 GMT
+Length: 0 [text/html]
+Saving to: ‘answer’
+
+     0K                                                        0.00 =0s
+
+2014-11-30 09:30:34 (0.00 B/s) - ‘answer’ saved [0/0]
+
+--2014-11-30 09:30:34--  http://localhost:8080/data/answer
+Resolving localhost (localhost)... 127.0.0.1
+Connecting to localhost (localhost)|127.0.0.1|:8080... connected.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 200 OK
+  content-type: text/html; charset=utf-8
+  cache-control: no-cache
+  Content-Length: 0
+  Server: Development/2.0
+  Date: Sun, 30 Nov 2014 08:30:35 GMT
+Length: 0 [text/html]
+Saving to: ‘answer.1’
+
+     0K                                                        0.00 =0s
+
+2014-11-30 09:30:35 (0.00 B/s) - ‘answer.1’ saved [0/0]
+
+--2014-11-30 09:50:15--  http://localhost:8080/data/answer
+Resolving localhost (localhost)... 127.0.0.1
+Connecting to localhost (localhost)|127.0.0.1|:8080... connected.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 200 OK
+  content-type: text/html; charset=utf-8
+  cache-control: no-cache
+  Content-Length: 0
+  Server: Development/2.0
+  Date: Sun, 30 Nov 2014 08:50:15 GMT
+Length: 0 [text/html]
+Saving to: ‘answer’
+
+     0K                                                        0.00 =0s
+
+2014-11-30 09:50:15 (0.00 B/s) - ‘answer’ saved [0/0]
+
+--2014-11-30 09:50:15--  http://localhost:8080/data/answer
+Resolving localhost (localhost)... 127.0.0.1
+Connecting to localhost (localhost)|127.0.0.1|:8080... connected.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 200 OK
+  content-type: text/html; charset=utf-8
+  cache-control: no-cache
+  Content-Length: 0
+  Server: Development/2.0
+  Date: Sun, 30 Nov 2014 08:50:16 GMT
+Length: 0 [text/html]
+Saving to: ‘answer.1’
+
+     0K                                                        0.00 =0s
+
+2014-11-30 09:50:16 (0.00 B/s) - ‘answer.1’ saved [0/0]
+
+--2014-11-30 09:53:37--  http://localhost:8080/data/answer
+Resolving localhost (localhost)... 127.0.0.1
+Connecting to localhost (localhost)|127.0.0.1|:8080... connected.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 200 OK
+  content-type: text/html; charset=utf-8
+  cache-control: no-cache
+  Content-Length: 0
+  Server: Development/2.0
+  Date: Sun, 30 Nov 2014 08:53:37 GMT
+Length: 0 [text/html]
+Saving to: ‘answer.2’
+
+     0K                                                        0.00 =0s
+
+2014-11-30 09:53:37 (0.00 B/s) - ‘answer.2’ saved [0/0]
+
+--2014-11-30 09:53:37--  http://localhost:8080/data/answer
+Resolving localhost (localhost)... 127.0.0.1
+Connecting to localhost (localhost)|127.0.0.1|:8080... connected.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 200 OK
+  content-type: text/html; charset=utf-8
+  cache-control: no-cache
+  Content-Length: 0
+  Server: Development/2.0
+  Date: Sun, 30 Nov 2014 08:53:38 GMT
+Length: 0 [text/html]
+Saving to: ‘answer.3’
+
+     0K                                                        0.00 =0s
+
+2014-11-30 09:53:38 (0.00 B/s) - ‘answer.3’ saved [0/0]
+
+--2014-11-30 09:59:12--  http://localhost:8080/data/answer
+Resolving localhost (localhost)... 127.0.0.1
+Connecting to localhost (localhost)|127.0.0.1|:8080... connected.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 200 OK
+  content-type: text/html; charset=utf-8
+  cache-control: no-cache
+  Content-Length: 0
+  Server: Development/2.0
+  Date: Sun, 30 Nov 2014 08:59:12 GMT
+Length: 0 [text/html]
+Saving to: ‘answer.4’
+
+     0K                                                        0.00 =0s
+
+2014-11-30 09:59:12 (0.00 B/s) - ‘answer.4’ saved [0/0]
+
+--2014-11-30 09:59:12--  http://localhost:8080/data/answer
+Resolving localhost (localhost)... 127.0.0.1
+Connecting to localhost (localhost)|127.0.0.1|:8080... connected.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 200 OK
+  content-type: text/html; charset=utf-8
+  cache-control: no-cache
+  Content-Length: 0
+  Server: Development/2.0
+  Date: Sun, 30 Nov 2014 08:59:12 GMT
+Length: 0 [text/html]
+Saving to: ‘answer.5’
+
+     0K                                                        0.00 =0s
+
+2014-11-30 09:59:12 (0.00 B/s) - ‘answer.5’ saved [0/0]
+
+--2014-11-30 10:03:32--  http://localhost:8080/data/answer
+Resolving localhost (localhost)... 127.0.0.1
+Connecting to localhost (localhost)|127.0.0.1|:8080... connected.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 200 OK
+  content-type: text/html; charset=utf-8
+  cache-control: no-cache
+  Content-Length: 0
+  Server: Development/2.0
+  Date: Sun, 30 Nov 2014 09:03:32 GMT
+Length: 0 [text/html]
+Saving to: ‘answer.6’
+
+     0K                                                        0.00 =0s
+
+2014-11-30 10:03:32 (0.00 B/s) - ‘answer.6’ saved [0/0]
+
+--2014-11-30 10:03:32--  http://localhost:8080/data/answer
+Resolving localhost (localhost)... 127.0.0.1
+Connecting to localhost (localhost)|127.0.0.1|:8080... connected.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 200 OK
+  content-type: text/html; charset=utf-8
+  cache-control: no-cache
+  Content-Length: 0
+  Server: Development/2.0
+  Date: Sun, 30 Nov 2014 09:03:32 GMT
+Length: 0 [text/html]
+Saving to: ‘answer.7’
+
+     0K                                                        0.00 =0s
+
+2014-11-30 10:03:32 (0.00 B/s) - ‘answer.7’ saved [0/0]
+
