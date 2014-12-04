@@ -251,6 +251,8 @@ class DataHandler(MainHandler):
                 exerciseIdSent = self.request.get("exerciseID")
                 if str(exerciseIdSent) == str(student.currentExercise):
                     exercise = objs.getExercise(student.currentExercise)
+                    if student.username not in exercise.students:
+                        exercise.addStudent(student)
                     if exercise.addNdbAnswer("student", student.username, answer):
                         logging.info("Answer from <" + student.username + "> saved in datastore")
                         exercise.sendStatusToTeacher()

@@ -597,6 +597,11 @@ class Exercise(ndb.Model):
                 self.students.remove(student.username)
                 self.save()
      
+     def addStudent(self, student):
+          if student.username not in self.students:
+                self.students.add(student.username)
+                self.save()
+
      def end(self):
           for studentName in self.students:
                 student = getStudent(studentName, self.lesson)
