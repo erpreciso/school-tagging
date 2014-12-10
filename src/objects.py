@@ -269,6 +269,7 @@ def getStudent(username, currentLessonID):
                 Student.currentLessonID == currentLessonID)
           student = q.get()
           if student:
+                memcache.flush_all()
                 memcache.set("Student:" + username + \
                      "|CurrentLesson:" + str(currentLessonID), student)
      if student:

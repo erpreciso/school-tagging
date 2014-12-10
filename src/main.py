@@ -200,7 +200,7 @@ class TeacherHandler(MainHandler):
 	        student = objs.getStudent(studentName, teacher.currentLessonID)
                 if student:
 		    studentLabels.append({"username":studentName,"fullname":student.fullname})
-		    return self.renderPage(templ ,
+	    return self.renderPage(templ ,
 				teacherName=teacher.fullname,
 				lessonName=teacher.currentLessonName,
 				students=studentLabels,
@@ -208,8 +208,8 @@ class TeacherHandler(MainHandler):
 				language=language,
 				labels=labdict.labels(templ, language),
 				)
-		else:
-		    return self.redirect("/t/login")
+	else:
+	    return self.redirect("/t/login")
 
     def endExercise(self):
         teacher = self.getFromCookie()
