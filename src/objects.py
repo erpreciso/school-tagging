@@ -433,17 +433,6 @@ def getExercise(exerciseID):
      else:
           return False
      
-def getAnswer(answerID):
-     answer = memcache.get("Answer:" + str(answerID))
-     if not answer:
-          answer = ndb.Key("Answer", answerID).get()
-          if answer:
-                memcache.set("Answer:" + str(answerID), answer)
-     if answer:
-          return answer
-     else:
-          return False
-
 def getSentence():
      pool = codecs.open("sentence-pool.txt", encoding="UTF-8").readlines()
      i = int(random.random() * len(pool))
