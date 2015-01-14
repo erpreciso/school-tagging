@@ -90,9 +90,9 @@ newExercise = function (){
 		var t3 = "Start Complex Exercise";
 	}
 	else if (language == "IT") {
-		var t1 = "Esercizio scelta categorie";
-		var t2 = "Mostra le statistiche della lezione";
-		var t3 = "Esercizio di selzione su:";
+		var t1 = "Choose Category Exercise";
+		var t2 = "Show Lesson Statistics";
+		var t3 = "Selection Excercise on:";
 	}
 	if ($("#newSimpleExercise").length > 0){
 		 	 $("#newSimpleExercise").remove();
@@ -131,7 +131,7 @@ newExercise = function (){
 	
 	
 	
-	var selectHTMLString = '<select id="categorySelection" class="styled-select"><option>Verbi</option><option>Nomi</option><option>Aggettivi</option><option>Pronomi</option></select>';
+	var selectHTMLString = '<select id="categorySelection" class="styled-select"><option>Verbs</option><option>Nouns</option><option>Adjectives</option><option>Pronouns</option></select>';
 	
 	
 	$("#newComplexExercise").html('<center><div style="margin:0px;font-size:12px;cursor:pointer;"><div class="start_button"><i class="fa fa fa-pencil-square-o" style="color:#000;font-size:40px;"></i><br/> '+t3+'</div></div>'+selectHTMLString+'</center>');
@@ -156,9 +156,9 @@ studentStats = function (message) {
 		var t3 = "Missing";
 	}
 	else if (language == "IT") {
-		var t1 = "Corretti";
-		var t2 = "Sbagliati";
-		var t3 = "Mancanti";
+		var t1 = "Correct";
+		var t2 = "Wrong";
+		var t3 = "Missing";
 	}
 	var student = message.student;
 	var stats = t1 + ": " + message.stats.correct;
@@ -182,7 +182,7 @@ showStats = function (message) {
 		var t1 = "LESSON STATISTICS";
 	}
 	else if (language == "IT"){
-		var t1 = "STATISTICHE DELLA LEZIONE";
+		var t1 = "LESSON STATISTICS";
 	}
 	$("#exercise, #answers, #showStats, #studentAnswers").remove();
 	
@@ -224,7 +224,7 @@ showStats = function (message) {
 				.text(name + ": " + stats[name] + " correct answers"));
 	}
 	
-	initCharts(studentsArray,'divise per studenti','Risposte Corrette');
+	initCharts(studentsArray,'by students','Right Answers');
 	updateChartDataStudents(fullstats);
 	
 	
@@ -261,7 +261,7 @@ onMessage = function(message) {
 			$('#'+data.message.studentName).html(data.message.studentName);
 		}else if (data.message.focus == "off") {
 			$('#'+data.message.studentName).css('color','red');
-			$('#'+data.message.studentName).html(data.message.studentName + "(assente)");
+			$('#'+data.message.studentName).html(data.message.studentName + "(absent)");
 		}	
 	}
 	else if (data.type == "studentDisconnected") {
@@ -333,7 +333,7 @@ $('#container').highcharts({
         	animation: false
         },
         title: {
-            text: 'Risposte della Classe'
+            text: 'Classroom Answers'
         },
         subtitle: {
             text: subtitle
@@ -405,7 +405,7 @@ function updateChartData(answers, answersDict){
 			//}
 		}
 		
-		initCharts(categoriesFromAnswer,'divise per categorie','Risposte');
+		initCharts(categoriesFromAnswer,'by categories','Answers');
 		
 	}
 	var chart = $('#container').highcharts();
@@ -476,8 +476,8 @@ function updateChartDataStudents(students){
 	
 	var data = chart.series[0].data;
 	
-	chart.addSeries({name: "Mancanti", data: emptySeries});
-	chart.addSeries({name: "Sbagliate", data: emptySeries});
+	chart.addSeries({name: "Missing", data: emptySeries});
+	chart.addSeries({name: "Wrong", data: emptySeries});
 	
 
 	
@@ -515,9 +515,9 @@ function buildExercise(message){
 		var t3 = "Time is up!";
 	}
 	else if (language == "IT"){
-		var t1 = "ESERCIZIO";
-		var t2 = "OPZIONI";
-		var t3 = "Tempo scaduto!";
+		var t1 = "EXERCISE";
+		var t2 = "OPTIONS";
+		var t3 = "Time is up!";
 	}
 	$("#exercise, #answers, #startExercise, #showStats, #stats").remove();
 	
@@ -554,7 +554,7 @@ function buildExercise(message){
 	
 	
 	if (target == -1 ){
-		var label = $(document.createElement("div")).text("Seleziona tutti i "+message.category).addClass("instruction_teacher");
+		var label = $(document.createElement("div")).text("Select all "+message.category).addClass("instruction_teacher");
 			$("#exercise").append(label);
 		allow_selection=true;
 	}
@@ -651,11 +651,11 @@ buildDashboard = function (status){
 		var t5 = "Answered";
 	}
 	else if (language == "IT"){
-		var t1 = "RISPOSTE DEGLI STUDENTI";
-		var t2 = "BARRA DI STATO";
-		var t3 = "Mancanti";
-		var t4 = "Tutti gli studenti hanno risposto";
-		var t5 = "Risposte";
+		var t1 = "STUDENT ANSWERS";
+		var t2 = "STATUS BAR";
+		var t3 = "Missing";
+		var t4 = "All students answered";
+		var t5 = "Answered";
 	}
 	cleanDashboard();
 	statusBar(status.message.totalAnswers);
@@ -742,7 +742,7 @@ buildDashboard = function (status){
 				.css("margin","0 auto")
 				.text(t2 + ": "));
 				
-		initCharts(categories,'divise per categorie','Risposte');
+		initCharts(categories,'by categories','Answers');
 		
 		startWorker();
 	};
@@ -766,7 +766,7 @@ askValidation = function () {
 	if (language == "EN")
 		var t1 = "Click on the right answer";
 	else if (language == "IT")
-		var t1 = "Clicca sulla risposta giusta";
+		var t1 = "Click on the right answer";
 		
 	if ($("#askValidation").length == 0) {
 		$("#timeIsUp").remove();
@@ -798,7 +798,7 @@ askValidation = function () {
 
 			$("#exercise").append(selectionButtons);
 			$("#exercise").append(selectionList);
-			$("#exercise").append('<div id="sendButton"><center><div style="margin:0px;font-size:12px;" ><div class="send_button" onclick="sendExercise();">Controlla Esercizio<i class="fa fa fa fa-paper-plane" style="color:#000;font-size:30px;"></i></div></div></center></div>');
+			$("#exercise").append('<div id="sendButton"><center><div style="margin:0px;font-size:12px;" ><div class="send_button" onclick="sendExercise();">Check Exercise<i class="fa fa fa fa-paper-plane" style="color:#000;font-size:30px;"></i></div></div></center></div>');
 			}
 			
 		}
@@ -951,7 +951,7 @@ function sendExercise(){
 		var t2 = "Show Lesson Statistics";
 	}
 	else if (language == "IT") {
-		var t2 = "Mostra le statistiche della lezione";
+		var t2 = "Show Lesson Statistics";
 	}
 	
 	

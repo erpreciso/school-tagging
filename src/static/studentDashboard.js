@@ -44,7 +44,7 @@ onMessage = function(message) {
 	if (language == "EN")
 		var t1 = "Session aborted by teacher; correct answer was ";
 	else if (language == "IT")
-		var t1 = "Esercizio interrotto dall'insegnante; la risposta esatta era ";
+		var t1 = "Session aborted by teacher; correct answer was ";
 	if (data.type == "sessionExercise")
 		presentExercise(data.message);
 	else if (data.type == "validAnswer")
@@ -90,7 +90,7 @@ function lessonTerminated () {
 	if (language == "EN")
 		var t1 = "Lesson terminated by teacher";
 	else if (language == "IT")
-		var t1 = "Lezione interrotta dall'insegnante";
+		var t1 = "Lesson terminated by teacher";
 	$("#lessonName").text(t1);
 	$("#exercise, #answers").remove();
 	if ($("#feedback").length > 0){
@@ -133,7 +133,7 @@ function presentExercise(message) {
 
 
 	if (target == -1 ){
-		var label = $(document.createElement("div")).text("Seleziona tutti i "+message.category).addClass("instruction");
+		var label = $(document.createElement("div")).text("Please select all "+message.category).addClass("instruction");
 			$("#exercise").append(label);
 		allow_selection=true;
 		selectionExercise = true;
@@ -243,7 +243,7 @@ function presentExercise(message) {
 
 		$("#exercise").append(selectionButtons);
 		$("#exercise").append(selectionList);
-		$("#exercise").append('<div id="sendButton"><center><div style="margin:0px;font-size:12px;" ><div class="send_button" onclick="sendExercise();">Finito!<br/>Invia all\'insegnante <i class="fa fa fa fa-paper-plane" style="color:#fff;font-size:30px;"></i></div></div></center></div>');
+		$("#exercise").append('<div id="sendButton"><center><div style="margin:0px;font-size:12px;" ><div class="send_button" onclick="sendExercise();">Finished!<br/>Send to the Teacher <i class="fa fa fa fa-paper-plane" style="color:#fff;font-size:30px;"></i></div></div></center></div>');
 	}else{
 		selectionExercise = false;
 	}
@@ -276,7 +276,7 @@ function presentExercise(message) {
 			if (language == "EN")
 				var t1 = "Waiting for teacher to assess...";
 			else if (language == "IT")
-				var t1 = "Attendi la validazione dell'insegnante";
+				var t1 = "Waiting for teacher to assess...";
 
 			$("#feedback").text(t1);
 
@@ -443,7 +443,7 @@ function sendExercise(){
 	if (language == "EN")
 				var t1 = "Waiting for teacher to assess...";
 			else if (language == "IT")
-				var t1 = "Attendi la validazione dell'insegnante";
+				var t1 = "Waiting for teacher to assess...";
 
 	$("#feedback").text(t1);
 	answer.selections =selections;
@@ -483,8 +483,8 @@ function feedbackFromTeacher(message) {
 		var t2 = "Answer not correct; it was ";
 	}
 	else if (language == "IT") {
-		var t1 = "Risposta esatta!";
-		var t2 = "Risposta non corretta; quella giusta era ";
+		var t1 = "Good job!";
+		var t2 = "Answer not correct; it was ";
 	}
 	
 	var validAnswerTextFromJSON = "";
@@ -585,7 +585,7 @@ function initializeDashboard(){
 	if (language == "EN")
 		var t1 = "Waiting for exercise to start...";
 	else if (language == "IT"){
-		var t1 = "Attendi l'inizio dell'esercizio";
+		var t1 = "Waiting for exercise to start...";
 	}
 	$("#lessonName").after($(document.createElement("div"))
 			.attr("id", "exercise")

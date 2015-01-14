@@ -1,134 +1,237 @@
-Il libro che ho letto alla biblioteca civica è veramente divertente .
-I tuoi amici ti cercavano , li hai incontrati ?
-Quando lo incontrai provai una forte emozione .
-Non vedo Giulia da tempo: ne sento la mancanza .
-Lo andai a trovare e gli regalai un barattolo di marmellata .
-La mamma , che lavora in banca, esce di casa la mattina presto . 
-Mara ha un simpatico cagnolino che si chiama Sommy .
-La piazza nella quale vado a giocare è molto vasta .
-Domani vedrò Giacomo che mi porta un magnifico libro di avventure .
-Tutti i pomeriggi Fabrizio si allena in palestra .
-Finalmente ho comprato il motorino che sognavo da tempo .
-Al mercato ho acquistato delle magliette di cotone e dei pantaloncini da spiaggia .
-Tommaso accompagnò a casa Emilia con un taxi .
-Per favore , state attenti .
-Chiara , la sorella di Pietro , domani parte per la Germania .
-Il figlio di Giovanni ha mangiato un grosso gelato .
-E’ arrivata la zia di Ernesto .
-Il padre di Paolo , un signore anziano , mostra ancora baldanza .
-Il tetto della nostra scuola è stato danneggiato dal temporale .
-Mio zio è un arredatore di interni .
-La tua lettera mi ha fatto piacere .
-Mio fratello Luca tornerà a casa domani .
-Il vaso della nonna è stato rotto dal mio gatto .
-Questa giornata di lavoro è stata faticosa .
-Questo è un quadro di Modigliani .
-Il dottor Bianchi è in ambulatorio .
-Sono caduti dal cielo dei grossi chicchi di grandine .
-L’ acqua del lago in superficie era freddissima .
-Il terremoto ha provocato diversi danni .
-E’ stato eletto il nuovo rappresentante di classe .
-Gli alunni delle prime sono vivaci .
-Il monte Everest è la cima più alta del mondo .
-E’ accaduto un piccolo incidente .
-Gli inverni delle regioni padane sono rigidi .
-Durante la partita sono stati segnati tre goal .
-Matteo è un calciatore di grande valore .
-Quel giocatore di scacchi è bravissimo nei tornei .
-Mi piace il cappellino rosso della zia .
-Sul vialetto del parco la ghiaia è bianca come la neve .
-La prof di italiano ti ha portato alcuni libri .
-Maria salutò con gioia la sua compagna .
-L’ incontro con i docenti è fissato per la settimana prossima .
-Le scarpe da ginnastica sono comode per le passeggiate .
-Il prof di matematica è in classe .
-Gli alberi del parco sono imponenti .
-L’ amica di Lucia ha un carattere impossibile .
-La figlia della prof ama l’ autunno per i suoi colori .
-L’ automobile di mia madre rossa .
-Il poeta Alfieri era astigiano .
-Il furetto è un animale vorace .
-La colpa della tua arrabbiatura è mia .
-L’ esercito di Cesare varcò le Alpi .
-Io in autunno sono malinconica .
-La luna stasera è oscurata da nubi nere .
-Parigi è la capitale della Francia .
-Il clima di questo luogo è umido .
-Il valore dell’ esercito greco era innegabile .
-I pretoriani erano soldati romani .
-Lo spettacolo di burattini è piaciuto a tutti .
-Mio cugino Andrea ama i viaggi .
-Mario di 2D è un ragazzo studioso .
-Il bello è soggettivo .
-Londra , capitale della Gran Bretagna , è una città enorme .
-I compagni di classe ridono alle tue battute .
-Il mio gatto Arturo è stato operato ieri .
-Il temporale violento di ieri ha abbattuto degli alberi .
-Lo sciabordare delle onde è rilassante .
-Dalla casa provenivano strani rumori .
-Tua sorella Elisabetta mi ha invitato a cena .
-Conoscerei volentieri i tuoi amici di scuola .
-La padrona di casa ricevette dei bellissimi fiori .
-Nel giardino si udivano le risate dei bambini .
-La antica città di Cartagine era africana .
-Dei cacciatori hanno avvistato un capriolo ferito .
-Stamattina sulla soglia della casa c’ era una vecchia signora .
-Alle pareti erano appesi degli arnesi di ferro arrugginiti .
-Il ragazzo a malincuore lasciò la casa dell’ amico .
-Ho letto un racconto appassionante .
-Il gatto nero di Luca ha le pulci .
-I rapporti con i miei genitori sono ottimi .
-Vi aspetto la settimana prossima per l’ organizzazione della festa .
-Nella bella stagione il clima è mite .
-Ho dimenticato la mia racchetta da tennis .
-Uno strano rumore lo sveglio .
-Gli ho dato alcuni buoni consigli .
-Il pallone scomparso è sotto la macchina dell’ allenatore .
-Lo chiederemo domani alla professoressa .
-Il prof ha assegnato alla classe un sacco di compiti difficili .
-Dopo qualche ora arrivarono gli altri .
-D’ estate gli animali del bosco morivano di sete .
-Due uomini entrarono , all’ imbrunire , nella casa del dottor Rossi .
-Mio fratello è andato alla ricerca di funghi con l’ amico Luca .
-Stefano ha regalato dei fiori freschi .
-La mia amica Cristiana è considerata un bravo dottore .
-La città di Londra offre numerose attrazioni .
-Due dei miei amici più cari sono partiti .
-Ho divorato del gelato squisito .
-La rosa è la più ammirata tra i fiori .
-L’ esercito ha guadato il fiume Piave .
-Il successo li ha resi importanti .
-Questo libro sembra noioso .
-Cosa stavi osservando ?
-La scuola è obbligatoria .
-Comprerò dei pasticcini a mia mamma .
-Sono stati venduti dal grossista dei vestiti rossi .
-La città di Roma è ricca di monumenti storici .
-Mia zia Angela è stimata da tutti una buona madre .
-Mafalda , la gatta di mia sorella , ha mangiato due scatolette di tonno .
-Il motoscafo procedeva a gran velocità .
-La notizia ci giunse tramite la televisione .
-In soccorso di Luca sono arrivati dei suoi amici .
-Dalla preoccupazione stanotte non ho chiuso occhio .
-Ragazzi , aprite il libro di geografia .
-Le cime dell’ Himalaya sono state scalate tempo fa da Messner .
-Molti tra i presenti furono affascinati dal film .
-Cosa ti passa per la testa ?
-Quel fiume scorre calmo nell’ alveo .
-Cleopatra , la mia scoiattolina giapponese , mangia noccioline .
-Da Roma a Firenze occorrono quattro ore .
-A mia mamma ieri hanno regalato delle fresie profumatissime .
-La nuova auto di Roberto , quella con gli adesivi sui vetri , Ë posteggiata nel piazzale .
-Ci ha intrattenuto per un’ intera giornata sui problemi dei giovani .
-Dopo la notizia della mia promozione , sono al settimo cielo .
-Ho acquistato due nuovi profumi .
-Per alcuni giorni Fausto ha lasciato i libri sotto il banco .
-Ogni anno a Sanremo si tiene il festival della canzone italiana .
-L’ attore Roberto Benigni ha recitato come bis le commoventi terzine di Paolo e Francesca .
-Ho evitato l’ interrogazione con una scusa .
-Il piccino nella culla urlava per la fame .
-I presenti hanno seguito la conferenza in rigoroso silenzio .
-Abbiamo riempito di cemento i fori nel muro .
-Luca è un genio in matematica .
-Nonostante la pioggia , abbiamo fatto una lunga escursione in montagna .
-Domani , Filippo , ragazzo di grande talento, si allenerà in palestra con noi .
+We will see into this thing . 
+We must be cautious in our movements . 
+One conceited pigeon among the rest gave them bad advice . 
+He told them to fly down to the rice-grains and satisfy their hunger . 
+On beginning to peck they were all caught in the net . 
+They ought rather to have blamed themselves for having listened to him . 
+The king now told them what to do . 
+Small things become strong by being united among them-selves . 
+The pigeons acted on this advice . 
+At first the fowler hoped to see them come down again to the earth . 
+In this way the fowler lost both his net and the pigeons . 
+The king directed them to a certain place . 
+There his friend , the king of the mice , received them kindly . 
+The king of the mice set them all free by nibbling through the net . 
+Thus the whole troop of pigeons escaped by means of union . 
+All men should profit by this lesson . 
+A chariot will not go on a single wheel . 
+A square thing does not fit into a round hole . 
+Draw a circle round a given centre . 
+The flies are flying round and round . 
+Men must go their daily round of duty . 
+Vasco da Gama was the first to round the Cape of Good Hope .
+The earth is very dry , and needs rain . 
+He must needs know the reason of this . 
+Our needs or wants are few . 
+I will wait for you at the next house . 
+He stood next me in the class . 
+Who came next ? 
+The road was all covered with sand . 
+He returned after a week 's absence . 
+He returned after he had been absent for a week . 
+The man died of fever , and his son died a few days after . 
+6 . A beggar is standing before the gate . I never saw such a tiling 
+before . He took the book , before he had paid for it . 
+My book is a better one than yours . 
+You are working better to-day . 
+Do not despise your betters . 
+There is but one man present . 
+Who but you would have made such a mistake . 
+He is a man of common sense , but not learned in books . 
+He had enough to do . 
+We have wages enough for three men . 
+Half measures do not succeed . 
+One half of his task is now done . 
+He was half dead with fear . 
+He has eaten more bread to-day than yesterday . 
+More has been done than was expected . 
+I like him more than I like you . 
+Near our house there is a fine tree . 
+He is a near relative of mine . 
+Stand near , while I whisper something into your ear . 
+He has wasted much time . 
+I am much pleased with your conduct . 
+You will not get much from me . 
+We should pity the sorrows of others . 
+Other men besides you deserve pity . 
+You will save him if you try . 
+I have not seen him since Monday last . 
+I took this house four weeks since . 
+We shall trust you , since you were always honest . 
+I am not a student in that school . 
+A student that works hard will get promotion . 
+I heard that you were coming . 
+We must stop here a little while . 
+While the cat is away , the mice play .
+I am sorry that he behaved with so much rudeness . 
+A sharp ride on a spirited horse is the best kind of exercise . 
+The beauties of nature are beyond description . 
+Dinner being over , let us now go into the next room . 
+He will be dismissed in the event of his doing such a thing again . 
+The young have to learn how to profit by experience . 
+He was not often behind time . 
+An English sailor had been shut up for several years , but he was set free at the peace . 
+Bind him hand and foot and take him away . 
+A man in bad health can seldom be happy . 
+He was not a man to tell a lie . 
+The two chief points having been gained , success is now certain . 
+He took medicine in order that he might recover . 
+He still feels tired , notwithstanding that he had ten hours ' sleep . 
+Justice is a virtue . 
+He is a justice of the peace . 
+She is admired for her beauty . 
+She is the beauty of the town .
+He has no authority . 
+The best authorities differ . 
+I admire nobility of character . 
+He is a man of sound judgment .
+The magistrate passed a severe judgment .
+Sight is a valuable faculty .
+That was a fine sight .
+The news fills me with wonder .
+We have seen a wonder to-day . 
+Kindness is part of his character .
+He did me a great kindness .
+The step you have taken is one of much risk .
+Such a book as yours deserves to be well read . 
+Prosperous men are much exposed to flattery . 
+For such alone can be made to pay for it . 
+Prosperous men are not always more happy than unlucky ones . 
+A pale light , begins to fringe the horizon . 
+Will you ride this horse or that ? 
+A stranger could not be received twice as such in the same house . 
+The plan you have chosen does not seem to me to be a wise one . 
+One man says this , another that ; whom should I believe ? 
+The fire burnt up the house . 
+Do not stop me . 
+They open the doors at nine . 
+A man breaks stones with a hammer . 
+The ox drew this cart . 
+Move away this stone . 
+He broke up the meeting . 
+The mouse steals food . 
+They bathed the child . 
+He rolls a ball down the hill . 
+He burst the door open . 
+Bad men hide their faults . 
+He turned me out of the room . 
+They drop the boat into the water . 
+They keep the boat on the left bank . 
+He sets the school in order . 
+He feeds the horse on grain . 
+He rested his horse . 
+He lengthened his journey . 
+He spread his garment . 
+The shepherd gathered the sheep . 
+The wind dispersed the clouds . 
+He closed the business . 
+The sun melts the snow . 
+He dashed down the cup . 
+We must widen the road . 
+He burnt with rage . 
+Let us stop here a little . 
+School opens at ten o 'clock . 
+The day breaks at six .
+He drew near to me . 
+Move on a little faster . 
+School broke up at three . 
+The mouse steals into its hole . 
+Let us lathe here . 
+The ball rolls down the hill . 
+The monsoon has burst . 
+Bats hide during the day . 
+He turned to me and spoke . 
+Rain drops from the sky . 
+The boat keeps on the left bank . 
+The sun sets at six P.M . 
+Many men feed on rice . 
+The horse rested in the stable . 
+The days begin to lengthen . 
+The mist spreads over the earth . 
+The sheep gathered round their shepherd . 
+The clouds have dispersed from the sky . 
+The day closed at six P.M . 
+The snow melts in the sun . 
+He dashed out of the room . 
+The road widens at this point . 
+The fog has lifted . 
+He boils the water . 
+He walks out the prisoners . 
+He ran a thorn into his hand . 
+Do not starve the horse . 
+Ring the bell . 
+He flew the kite . 
+He marches out the soldiers . 
+He grows wheat in the field . 
+He floated the boat . 
+The prisoners walk out . 
+A thorn ran into his hand . 
+That horse will starve . 
+The bell rang twice . 
+The kite flew into the air . 
+The soldiers march out . 
+Wheat grows in the field . 
+The boat floated . 
+The bird flew exactly over the sleeper 's head . 
+He paid the money quite up to date . 
+His abilities are decidedly above the average . 
+He was sitting almost outside the door . 
+He arrived long before the time . 
+He held his hand partly on the table . 
+A man is truly happy only when he is in sound health . 
+I dislike this weather simply because the air is too hot . 
+No animal is larger than a whale . 
+I will not take less than ten shillings . 
+He did nothing else than laugh .
+He got more than he asked for 
+He has said so more than once .
+He is not such a fool as he looks . 
+As many men as came were caught . 
+Yours is not the same book as mine .
+The exact time when the theft was committed was never found out . 
+The man by whom the theft was committed has been caught .
+The house we lived in has fallen down . 
+This is the same story that I heard ten years ago . 
+It 's an ill wind that blows no one any good . 
+This is not such a book as I should have chosen . 
+He made his living by the presents he received from the men he served . 
+All that glitters is not gold . 
+A river is joined at places by tributaries that swell its waters . 
+Of what use is a knowledge of books to him who fails to practise virtue ? 
+Fortune selects him for her lord , who reflects before acting . 
+Springs are fed by rain , which has percolated through the rocks or soil . 
+I have seen the house where Shakspeare was born . 
+The plan you acted on has answered well . 
+They accepted every plan we proposed . 
+Surely the story you are telling me is not true . 
+Thrice is he armed that hath his quarrel just . 
+The night is long that never finds the day . 
+He travelled home by the way his father showed him . 
+There are times when every one feels a little sad . 
+Such men as are false to their friends should always be avoided . 
+I forgot to tell you the time when I shall return . 
+Our present house suits us exactly . 
+This rule , the source of all our troubles , is disliked by every one . 
+That was a fault not to be forgiven . 
+The diamond field is not far from here . 
+He and his friend entered into a partnership binding them-selves to incur equal risks . 
+Their explanation cannot be true . 
+The snow-line in India is about 20,000 feet high . 
+The troubles besetting him on all sides did not daunt him . 
+They soon forgot their past labours . 
+This spot , the first landing-place of the Pilgrim Fathers , is held to be sacred ground . 
+My leave-application has been dispatched . 
+Is this the way to learn your lessons ? 
+A certain cholera-cure has not yet been found . 
+Egypt was one of the first countries to become civilised . 
+Death from snake-bite is of daily occurrence . 
+The benefits of his early training were thrown away . 
+That was the act of a coward . 
+Milton was the greatest poet in King Charles 's reign . 
+These hills have never yet been trodden by the foot of man . 
+He will succeed , because he works hard .
+He worked so hard , that he was quite tired .
+He took medicine that he might get well .
+I will do this , if I am allowed .
+He is honest , although he is poor .
+He likes you more than me .
