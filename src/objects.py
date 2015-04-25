@@ -1,3 +1,12 @@
+## school-tagging --> an educative Student / Classroom 
+##    Response Systems designed to help teaching and merge into 
+##    academic research.
+##    Copyright (C) 2014  Stefano Merlo, Federico Sangati, Giovanni Moretti.
+## This program comes with ABSOLUTELY NO WARRANTY.
+## This is free software, and you are welcome to redistribute it 
+## under certain conditions (i.e. attribution); for details refer 
+##     to 'LICENSE.txt'.
+
 from google.appengine.ext import ndb
 from google.appengine.api import memcache
 from google.appengine.api import channel
