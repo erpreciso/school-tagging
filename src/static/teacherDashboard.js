@@ -1,5 +1,4 @@
 var categories = new Array();
-
 // global variables for the selection management
 var clicking = false;
 var allow_selection = false;
@@ -50,6 +49,7 @@ function startWorker() {
         alert("Web Worker Not supported!");
     }
 }
+
 function stopWorker() { 
     w.terminate();
     w = undefined;
@@ -67,15 +67,10 @@ $(document).ready(function () {
 	});
 	$("body").css("background","url(../static/images/paper_texture.jpg)" );
 });
-
-
 onError = function (){
 	askMeRefresh();
 	$.get("/channelExpired");
 };
-
-
-
 
 
 
@@ -177,6 +172,7 @@ studentStats = function (message) {
 };
 
 showStats = function (message) {
+	
 	var language = getLanguage();
 	if (language == "EN"){
 		var t1 = "LESSON STATISTICS";
@@ -213,7 +209,7 @@ showStats = function (message) {
 	var stats = message.stats;
         // qui il nuovo dizionario con le statistiche dettagliate
         //
-        var fullstats = message.fullstats;
+    var fullstats = message.fullstats;
 	$("#dashboard").append($(document.createElement("div"))
 			.attr("id", "stats")
 			.css("display", "none")
@@ -237,6 +233,9 @@ function attachStatRequest(id){
 
 onMessage = function(message) {
 	var language = getLanguage();
+	console.group("Teacher log");
+        console.log(message.data);
+        console.groupEnd();
 	var data = JSON.parse(message.data);
 	if (data.type == "studentArrived") {
 		var studentName = data.message.studentName;
@@ -263,6 +262,9 @@ onMessage = function(message) {
 			$('#'+data.message.studentName).css('color','red');
 			$('#'+data.message.studentName).html(data.message.studentName + "(absent)");
 		}	
+	}
+	else if (data.type == "studentFocusStatus") {
+//	    console.log(data.message.studentName + " is going " + data.message.focus + " focus");
 	}
 	else if (data.type == "studentDisconnected") {
 		if (language == "EN"){
@@ -298,10 +300,10 @@ onMessage = function(message) {
 			$("#" + data.message.studentName).children(".logoutStudent").remove();
 		}
 	}
-	else if (data.type == "sessionExercise") {
+	else if (data.type == "exerciseExercise") {
 		buildExercise(data.message);
 	}
-	else if (data.type == "sessionStatus") {
+	else if (data.type == "exerciseStatus") {
 		buildDashboard(data);
 	}
 	else if (data.type == "lessonStats") {
@@ -311,10 +313,6 @@ onMessage = function(message) {
 		studentStats(data.message);
 	}
 };
-
-
-
-
 
 function initCharts(cat,subtitle,label){
 
@@ -642,6 +640,7 @@ function buildExercise(message){
 }
 
 buildDashboard = function (status){
+//	console.log(JSON.stringify(status));
 	var language = getLanguage();
 	if (language == "EN"){
 		var t1 = "STUDENT ANSWERS";
@@ -761,7 +760,7 @@ startComplexExercise = function () {
 
 
 askValidation = function () {
-	stopWorker();
+	//
 	var language = getLanguage();
 	if (language == "EN")
 		var t1 = "Click on the right answer";
@@ -783,7 +782,7 @@ askValidation = function () {
 			.text(t1);
 			
 			
-			
+			//stopWorker();
 		//parte esercizio di selezione
 		if (categories.length == 0 ){
 			if ($('#selectionButtons').length <=0){
@@ -817,7 +816,7 @@ askValidation = function () {
 					$(studentAnswers[i]).css("color", "Green");					
 				}
 			}
-			console.log(valid);
+//			console.log(valid);
 			$.post("/data/teacherValidation", {"valid": valid});
 			$("#answers").children().off("click");
 			newExercise();
@@ -965,7 +964,7 @@ function sendExercise(){
 	
 	answer.selections =selections;
 	answerJSON.answer  = answer;
-	console.log(JSON.stringify(answerJSON))
+//	console.log(JSON.stringify(answerJSON))
 	$.ajax({
 		url: "/data/teacherValidation",
 		type: "POST",

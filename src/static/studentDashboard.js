@@ -23,12 +23,10 @@ window.onblur = imnotfocused;
 window.onfocus = imfocused;
 
 function imnotfocused(){
-    //console.log("losing focus");
     $.post("/focus",{"focus": "off"});
 }
 
 function imfocused(){
-    //console.log("gaining focus");
     $.post("/focus",{"focus": "on"});
 }
 
@@ -39,6 +37,7 @@ onError = function (){
 onClose = function (){};
 
 onMessage = function(message) {
+//        console.log(message)
 	var data = JSON.parse(message.data);
 	var language = getLanguage();
 	if (language == "EN")
@@ -53,7 +52,7 @@ onMessage = function(message) {
 		lessonTerminated();
 	else if (data.type == "pingFromTeacher")
 		$.post("/ping", {"alive": true});
-	else if (data.type == "sessionExpired") {
+	else if (data.type == "exerciseExpired") {
 		
 		var validAnswerTextFromJSON ="";
 		
@@ -73,7 +72,7 @@ onMessage = function(message) {
 		
 		
 		var italianAnswer = "";
-                //console.log(data.message);
+//                console.log(data.message);
 		for (var i = 0; i < data.message.dict.length; i++){
 			if (data.message.dict[i]["EN"] == data.message.validAnswer){
 				italianAnswer = data.message.dict[i]["IT"];
@@ -269,7 +268,10 @@ function presentExercise(message) {
 			$("#" + triggered).css("background-color", "orange");
 			$("#" + triggered).addClass("answered");
 
-			$.post("/data/answer", {"answer": triggered});
+			$.post("/data/answer", {
+                  "answer": triggered,
+                  "exerciseID": localStorage.getItem("exerciseID")
+                  });
 			$("#answers").children().off("click");
 
 
@@ -452,7 +454,8 @@ function sendExercise(){
 	$.ajax({
 		url: "/data/answer",
 		type: "POST",
-		data: { answer : JSON.stringify(answerJSON)},
+		data: { answer : JSON.stringify(answerJSON),
+                  "exerciseID": localStorage.getItem("exerciseID")},
 		datatype : "html",
 		contentType: "application/x-www-form-urlencoded; charset=UTF-8"	,
     	traditional: true
