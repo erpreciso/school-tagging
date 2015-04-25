@@ -18,15 +18,15 @@ def labels(template, language):
                     },
                 "login_title": {
                     "EN": "LOGIN",
-                    "IT": "ENTRA",
+                    "IT": "LOGIN",
                     },
                 "insert_username_password": {
                     "EN": "Please insert your username and password",
-                    "IT": "Pregasi inserire il proprio nome utente e la password",
+                    "IT": "Please insert your username and password",
                     },
                 "username": {
                     "EN": "Username",
-                    "IT": "Nome utente",
+                    "IT": "Username",
                     },
                 "password": {
                     "EN": "Password",
@@ -34,23 +34,23 @@ def labels(template, language):
                     },
                 "lesson_name": {
                     "EN": "Lesson name",
-                    "IT": "Nome della lezione",
+                    "IT": "Lesson name",
                     },
                 "login_button": {
                     "EN": "Login",
-                    "IT": "Entra nel sito",
+                    "IT": "Login",
                     },
                 "signup_title": {
                     "EN": "SIGNUP",
-                    "IT": "REGISTRATI",
+                    "IT": "SIGNUP",
                     },
                 "do_not_have_account": {
                     "EN": "Do not have an account yet?",
-                    "IT": "Non sei ancora registrato?",
+                    "IT": "Do not have an account yet?",
                     },
                 "signup_button": {
                     "EN": "Signup",
-                    "IT": "Registrati",
+                    "IT": "Signup",
                     },
                 "message_title": {
                     "EN": "MESSAGE",
@@ -58,27 +58,27 @@ def labels(template, language):
                     },
                 "lesson_name_in_use": {
                     "EN": "Lesson name already in use",
-                    "IT": u"Il nome scelto per la lezione non è al momento disponibile",
+                    "IT": u"Lesson name already in use",
                     },        
                 "provide_lesson_name": {
                     "EN": "Please provide a name for the lesson",
-                    "IT": "Prego inserire un nome per la lezione",
+                    "IT": "Please provide a name for the lesson",
                     },
                 "password_not_correct": {
                     "EN": "Password not correct",
-                    "IT": u"La password non è corretta",
+                    "IT": u"Password not correct",
                     },
                 "username_not_existing": {
                     "EN": "Username not existing",
-                    "IT": "Nome utente sconosciuto",
+                    "IT": "Username not existing",
                     },
                 "re-enter_login": {
                     "EN": "Please re-enter username and password in the LOGIN area",
-                    "IT": "Ri-digitare il nome utente e la password nell'area ENTRA",
+                    "IT": "Please re-enter username and password in the LOGIN area",
                     },
                 "username_already_used": {
                     "EN": "Username already in use",
-                    "IT": "Nome utente non disponibile",
+                    "IT": "Username already in use",
                     },
                 "": {
                     "EN": "",
@@ -93,19 +93,19 @@ def labels(template, language):
                     },
                 "teacher_title": {
                     "EN": "Teacher",
-                    "IT": "Insegnante",
+                    "IT": "Teacher",
                     },
                 "logout": {
                     "EN": "Logout",
-                    "IT": "Disconnetti",
+                    "IT": "Logout",
                     },
                 "lesson_name_title": {
                     "EN": "Lesson name (pass to students)",
-                    "IT": "Nome della lezione (da comunicare agli studenti)",
+                    "IT": "Lesson name (pass to students)",
                     },
                 "enrolled_students": {
                     "EN": "Enrolled students (click to view stats)",
-                    "IT": "Studenti collegati (cliccare sul nome per visualizzare le statistiche)",
+                    "IT": "Enrolled students (click to view stats)",
                     },
                 "": {
                     "EN": "",
@@ -119,15 +119,15 @@ def labels(template, language):
                     },
                 "logout": {
                     "EN": "Logout",
-                    "IT": "Disconnetti",
+                    "IT": "Logout",
                     },
                 "lesson_name_title": {
                     "EN": "Lesson name",
-                    "IT": "Nome della lezione",
+                    "IT": "Lesson name",
                     },
                 "student_title": {
                     "EN": "Student",
-                    "IT": "Studente",
+                    "IT": "Student",
                     },
               },
          "studentLogin.html": {
@@ -137,27 +137,27 @@ def labels(template, language):
                     },
                 "enter_username_and_lesson": {
                     "EN": "Please enter your name and your session ID provided by your teacher",
-                    "IT": "Prego inserisci il tuo nome e l'identificativo della lezione che l'insegnante ti ha comunicato",
+                    "IT": "Please enter your name and your session ID provided by your teacher",
                     },
                 "name_and_surname": {
                     "EN": "Name and Last Name",
-                    "IT": "Nome e Cognome",
+                    "IT": "Name and Last Name",
                     },
                 "session_id": {
                     "EN": "Session ID",
-                    "IT": "Identificativo della lezione",
+                    "IT": "Session ID",
                     },
                 "login_button": {
                     "EN": "Go to class exercise",
-                    "IT": "Entra nella lezione",
+                    "IT": "Go to class exercise",
                     },
                 "name_already_in_use": {
                     "EN": "Name already in use",
-                    "IT": u"Nome già utilizzato",
+                    "IT": u"Name already in use",
                     },
                 "lesson_not_started": {
                     "EN": "Lesson not started yet",
-                    "IT": "Lezione non ancora iniziata",
+                    "IT": "Lesson not started yet",
                     },
                 "message_title": {
                     "EN": "MESSAGE",

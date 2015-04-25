@@ -19,8 +19,8 @@ $(document).ready(function () {if (navigator.cookieEnabled){
 	$("noscript").remove();
 	
 	
-	$("#start").html('<center><table width=70% border=0><tr><td width=50%><center><div style="margin:40px;"><div class="start_button"><a href="/s/login"><i class="fa fa-child" style="color:#000;font-size:60px;"></i><br/>STUDENTE</a></div></div></center></td>'+
-	'<td width=50%><center><div style="margin:40px;"><div class="start_button"><a href="/t/login"><i class="fa fa-graduation-cap" style="color:#000;font-size:60px;"></i><br/>INSEGNANTE</a></div></div></center></td></tr></table></center>');
+	$("#start").html('<center><table width=70% border=0><tr><td width=50%><center><div style="margin:40px;"><div class="start_button"><a href="/s/login"><i class="fa fa-child" style="color:#000;font-size:60px;"></i><br/>STUDENT</a></div></div></center></td>'+
+	'<td width=50%><center><div style="margin:40px;"><div class="start_button"><a href="/t/login"><i class="fa fa-graduation-cap" style="color:#000;font-size:60px;"></i><br/>TEACHER</a></div></div></center></td></tr></table></center>');
 	
 
 	{% if resumeDashboardLink %}
@@ -40,4 +40,9 @@ $(document).ready(function () {if (navigator.cookieEnabled){
 {% block content %}
 <noscript>JavaScript should be enabled to continue</noscript>
 <div id="start"></div>
+
+<center><div>
+<iframe width="560" height="315" src="//www.youtube.com/embed/DOoYUzmY9Pg" frameborder="0" allowfullscreen></iframe>
+</center></div>
+
 {% endblock %}

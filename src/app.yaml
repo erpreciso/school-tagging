@@ -8,7 +8,7 @@
 ##     to 'LICENSE.txt'.
 
 application: school-tagging
-version: 8a
+version: 9e
 runtime: python27
 api_version: 1
 threadsafe: yes
