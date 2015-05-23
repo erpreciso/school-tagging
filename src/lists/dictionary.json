@@ -1,0 +1,12 @@
+{
+    "teacherDashboard.js": {
+	"label001": {
+	    "EN": "school-tagging|teacher|login",
+	    "IT": "school-tagging|insegnante|entra",
+	    },
+	"label002": {
+	    "EN": "LOGIN",
+	    "IT": "LOGIN",
+	    },
+	}
+}
