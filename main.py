@@ -422,6 +422,10 @@ class LanguageHandler(MainHandler):
             requester.save()
             return
         
+class LanguageDictionaryHandler(MainHandler):
+    def get(self):
+        requester = self.getFromCookie()
+        requester.sendMeLanguageDict()
         
 PAGE_RE = r'(/(?:[a-zA-Z0-9_-]+/?)*)'
 app = webapp2.WSGIApplication([
@@ -443,5 +447,6 @@ app = webapp2.WSGIApplication([
     ("/admin/clean", CleanIdle),
     ("/channelExpired", ChannelHandler),
     ("/language", LanguageHandler),
+    ("/get_language_dict", LanguageDictionaryHandler),
     (PAGE_RE, JollyHandler),
             ])

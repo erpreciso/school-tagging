@@ -40,20 +40,19 @@
 </head>
 <body>
 	<header style="min-width:400px">
-	 <div class="language current">IT</div>
+          <div >
+            <ul >
+              <li><a href="/help" target="_blank" >Click here for help</a></li>
+              <li><div id="language_switch" >Switch language
+				<div class="language{% if language == 'EN' %} current{% endif %}">EN</div>
+				<div class="language{% if language == 'IT' %} current{% endif %}">IT</div>
+				</div></li>
+            </ul>
+          </div>
 	 <div class="navbar navbar-inverse navbar-fixed-top" style="min-width:400px">
       <div class="navbar-inner">
         <div class="container" style="position: absolute; left :20px;width:300px;" >  
           <p class="brand" style=" font-family: KGSecondChancesSketch; font-size:30px;color:#fff;" href="#">School Tagging</p>
-          <div class="nav-collapse collapse">
-            <ul class="nav">
-              <li><a href="/help" target="_blank" style="display:none">Click here for help</a></li>
-              <li><a><div id="language_switch" style="display:none">Switch language
-				<div class="language{% if language == 'EN' %} current{% endif %}">EN</div>
-				<div class="language{% if language == 'IT' %} current{% endif %}">IT</div>
-				</div></a></li>
-            </ul>
-          </div><!--/.nav-collapse -->
         </div>
       </div>
     </div>

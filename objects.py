@@ -113,6 +113,11 @@ class User(ndb.Model):
           message = json.dumps({"type": "askMeRefresh"})
           channel.send_message(self.token, message)
 
+     def sendMeLanguageDict(self):
+          d = json.loads(open("lists/languageDictionary.json","r").read())
+          message = json.dumps({"type": "languageDictionary", "message": d})
+          channel.send_message(self.token, message)
+
 class Student(User):
      def produceOwnStats(self):
           statsDict = {"correct": 0, "wrong": 0, "missing": 0}
