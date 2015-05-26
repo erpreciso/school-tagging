@@ -45,6 +45,7 @@ onMessage = function(message) {
 	var data = JSON.parse(message.data);
         if (data.type == "languageDictionary"){
                 localStorage.setItem("language_dictionary", JSON.stringify(data.message));
+                afterDictionaryReceived();
         }
         manageMessage(data, language);
 }

@@ -7,9 +7,9 @@
 // under certain conditions (i.e. attribution); for details refer 
 //     to 'LICENSE.txt'.
 
-$(document).ready(function () {
+afterDictionaryReceived = function(){
     initializeDashboard();
-});
+}
 
 var answerJSON = {};
 var selections = new Array();
@@ -46,10 +46,7 @@ onError = function (){
 onClose = function (){};
 
 manageMessage = function(data, language) {
-	if (language == "EN")
-		var t1 = "Session aborted by teacher; correct answer was ";
-	else if (language == "IT")
-		var t1 = "Session aborted by teacher; correct answer was ";
+	var t1 = languageDict().teacherDashboard.label001[language];
 	if (data.type == "sessionExercise")
 		presentExercise(data.message);
 	else if (data.type == "validAnswer")
@@ -92,10 +89,7 @@ manageMessage = function(data, language) {
 
 function lessonTerminated () {
 	var language = getLanguage(); 
-	if (language == "EN")
-		var t1 = "Lesson terminated by teacher";
-	else if (language == "IT")
-		var t1 = "Lesson terminated by teacher";
+	var t1 = languageDict().teacherDashboard.label002[language];
 	$("#lessonName").text(t1);
 	$("#exercise, #answers").remove();
 	if ($("#feedback").length > 0){
@@ -280,11 +274,8 @@ function presentExercise(message) {
                   });
 			$("#answers").children().off("click");
 
+			var t1 = languageDict().teacherDashboard.label003[language];
 
-			if (language == "EN")
-				var t1 = "Waiting for teacher to assess...";
-			else if (language == "IT")
-				var t1 = "Waiting for teacher to assess...";
 
 			$("#feedback").text(t1);
 
@@ -448,10 +439,7 @@ function sendExercise(){
 	});
 	allow_selection=false;
 	$("#sendButton").remove();
-	if (language == "EN")
-				var t1 = "Waiting for teacher to assess...";
-			else if (language == "IT")
-				var t1 = "Waiting for teacher to assess...";
+	var t1 = languageDict().teacherDashboard.label003[language];
 
 	$("#feedback").text(t1);
 	answer.selections =selections;
@@ -487,14 +475,8 @@ function feedbackFromTeacher(message) {
 	var feedback;
 	var background;
 	var language = getLanguage();
-	if (language == "EN") {
-		var t1 = "Good job!";
-		var t2 = "Answer not correct; it was ";
-	}
-	else if (language == "IT") {
-		var t1 = "Good job!";
-		var t2 = "Answer not correct; it was ";
-	}
+	var t1 = languageDict().teacherDashboard.label004[language];
+	var t2 = languageDict().teacherDashboard.label005[language];
 	
 	var validAnswerTextFromJSON = "";
 	var jsonEquivalence = false;
@@ -591,11 +573,7 @@ onOpened = function(){};
 
 function initializeDashboard(){
 	var language = getLanguage();
-	if (language == "EN")
-		var t1 = "Waiting for exercise to start...";
-	else if (language == "IT"){
-		var t1 = "Waiting for exercise to start...";
-	}
+	var t1 = languageDict().teacherDashboard.label006[language];
 	$("#lessonName").after($(document.createElement("div"))
 			.attr("id", "exercise")
 			.text(t1));

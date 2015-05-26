@@ -1,6 +1,30 @@
 {"teacherDashboard": {
         "label001": {"EN": "Choose category exercise", "IT": "Inizia esercizio semplice"},
         "label002": {"EN": "Show Lesson Statistics", "IT": "Mostra statistiche"},
-        "label003": {"EN": "Selection Exercise on", "IT": "Inizia esercizio selezione"}
+        "label003": {"EN": "Selection Exercise on", "IT": "Inizia esercizio selezione"},
+        "label004": {"EN": "Correct", "IT": "Corretto"},
+        "label005": {"EN": "Wrong", "IT": "Sbagliato"},
+        "label006": {"EN": "Missing", "IT": "Mancante"},
+        "label007": {"EN": "LESSON STATISTICS", "IT": "STATISTICHE LEZIONE"},
+        "label008": {"EN": "It seems I'm offline: ping me...", "IT": "Sembra io sia scollegato: prova a sondare la mia connessione"},
+        "label009": {"EN": "..oppure disconnettimi definitivamente", "IT": ".. or kick me out of the lesson"},
+        "label010": {"EN": "EXERCISE", "IT": "ESERCIZIO"},
+        "label011": {"EN": "OPTIONS", "IT": "OPZIONI"},
+        "label012": {"EN": "Time is up!", "IT": "Il tempo è scaduto!"},
+        "label013": {"EN": "Student answers", "IT": "Risposte degli studenti"},
+        "label014": {"EN": "Status bar", "IT": "Barra di stato"},
+        "label015": {"EN": "Missing", "IT": "Mancanti"},
+        "label016": {"EN": "All student answered", "IT": "Tutti gli studenti hanno risposto"},
+        "label017": {"EN": "Answered", "IT": "Risposto"},
+        "label018": {"EN": "Click on the right answer", "IT": "Clicca sulla risposta corretta"},
+        "label019": {"EN": "Show Lesson Statistics", "IT": "Mostra statistiche lezione"}
+	},
+"studentDashboard": {
+        "label001": {"EN": "Session aborted by teacher; correct answer was ", "IT": "Sessione interrotta dall'insegnante; la risposta corretta era "},
+        "label002": {"EN": "Lesson terminated by teacher", "IT": "Lezione interrotta dall'insegnante"},
+        "label003": {"EN": "Waiting for teacher to assess...", "IT": "Attendi validazione dell'insegnante"},
+        "label004": {"EN": "Good job!", "IT": "Ottimo lavoro!"},
+        "label005": {"EN": "Answer not correct; it was ", "IT": "Risposta non corretta; era "},
+        "label006": {"EN": "Waiting for exercise to start...", "IT": "Attendi l'inizio dell'esercizio"}
 	}
 }
