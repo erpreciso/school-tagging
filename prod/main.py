@@ -1,10 +1,10 @@
-## school-tagging --> an educative Student / Classroom 
-##    Response Systems designed to help teaching and merge into 
+## school-tagging --> an educative Student / Classroom
+##    Response Systems designed to help teaching and merge into
 ##    academic research.
 ##    Copyright (C) 2014  Stefano Merlo, Federico Sangati, Giovanni Moretti.
 ## This program comes with ABSOLUTELY NO WARRANTY.
-## This is free software, and you are welcome to redistribute it 
-## under certain conditions (i.e. attribution); for details refer 
+## This is free software, and you are welcome to redistribute it
+## under certain conditions (i.e. attribution); for details refer
 ##     to 'LICENSE.txt'.
 
 
@@ -27,33 +27,33 @@ class MainHandler(webapp2.RequestHandler):
 
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
-    
+
     def read(self,param):
         return self.request.get(param)
-        
+
     def renderStr(self, template, **params):
         params["env"] = os.environ["DEV_WORKFLOW_STATUS"]
         return self.jinja_env.get_template(template).render(params)
-        
+
     def renderPage(self, template, **kw):
         self.write(self.renderStr(template, **kw))
 
     def addCookie(self, kind, value):
         expiresTime = datetime.datetime.utcnow() + datetime.timedelta(days=30)
         self.response.set_cookie(kind, value=str(value), httponly=True, expires=expiresTime)
-    
+
     def getCookie(self, kind):
         return self.request.cookies.get(kind)
-    
+
     def clearCookies(self):
         self.response.delete_cookie("schooltagging-username")
         self.response.delete_cookie("schooltagging-lessonID")
         self.response.delete_cookie("schooltagging-role")
-    
-    
+
+
     def getRoleFromCookie(self):
         return self.getCookie("schooltagging-role")
-        
+
     def getFromCookie(self):
         username = self.getCookie("schooltagging-username")
         lessonStrID = self.getCookie("schooltagging-lessonID")
@@ -78,7 +78,7 @@ class StartPage(MainHandler):
                 elif self.getRoleFromCookie() == "student":
                     link = "/s/dashboard"
         self.renderPage("start.html", resumeDashboardLink=link)
-        
+
 class TeacherHandler(MainHandler):
     def get(self, action):
         if action == "dashboard":
@@ -90,7 +90,7 @@ class TeacherHandler(MainHandler):
         elif action == "askStats":
             self.sendStats()
         else:
-	    self.renderLoginPage()
+            self.renderLoginPage()
 
     def renderLoginPage(self, message=None):
         t = "teacherLogin.html"
@@ -99,7 +99,7 @@ class TeacherHandler(MainHandler):
         else:
             m = None
         self.renderPage(t, labels=labdict.labels(t, objs.DEFAULT_LANGUAGE), message=m)
-        
+
     def post(self, action):
         if action == "login":
             self.login()
@@ -107,7 +107,7 @@ class TeacherHandler(MainHandler):
             self.signup()
         elif action == "askStudentStats":
             self.produceStudentStats(self.read("student"))
-    
+
 
     def login(self):
         fullname = self.read("username")
@@ -133,7 +133,7 @@ class TeacherHandler(MainHandler):
         else:
             message = "username_not_existing"
         return self.renderLoginPage(message)
-        
+
     def logout(self):
         teacher = self.getFromCookie()
         if teacher:
@@ -148,7 +148,7 @@ class TeacherHandler(MainHandler):
                     lesson.end()
                 teacher.logout()
         return self.redirect("/t/login")
-    
+
     def signup(self):
         fullname = self.read("username")
         username = fullname.replace(" ", "_")
@@ -159,7 +159,7 @@ class TeacherHandler(MainHandler):
         else:
             message = "username_already_used"
         return self.renderLoginPage(message)
-    
+
     def startLesson(self, teacher):
         lessonName = self.read("lessonName")
         if lessonName not in objs.getOpenLessonsNames():
@@ -170,7 +170,7 @@ class TeacherHandler(MainHandler):
         else:
             message = "lesson_name_in_use"
         return self.renderLoginPage(message)
-    
+
     def sendStats(self):
         teacher = self.getFromCookie()
         if not teacher:
@@ -182,7 +182,7 @@ class TeacherHandler(MainHandler):
             return lesson.produceAndSendStats()
         else:
             return self.redirect("/t/login")
-    
+
     def produceStudentStats(self, studentName):
         teacher = self.getFromCookie()
         if not teacher:
@@ -198,28 +198,28 @@ class TeacherHandler(MainHandler):
     def initializeDashboard(self):
         teacher = self.getFromCookie()
         if not teacher:
-	    return self.redirect("/t/login")
-	if not teacher.currentLessonID:
-	    return self.redirect("/t/login")
-	language = teacher.language or objs.DEFAULT_LANGUAGE
-	lesson = objs.getLesson(teacher.currentLessonID)
-	if lesson:
-	    templ = "teacherDashboard.html"
-	    studentLabels = []
-	    for studentName in lesson.students:
-	        student = objs.getStudent(studentName, teacher.currentLessonID)
+            return self.redirect("/t/login")
+        if not teacher.currentLessonID:
+            return self.redirect("/t/login")
+        language = teacher.language or objs.DEFAULT_LANGUAGE
+        lesson = objs.getLesson(teacher.currentLessonID)
+        if lesson:
+            templ = "teacherDashboard.html"
+            studentLabels = []
+            for studentName in lesson.students:
+                student = objs.getStudent(studentName, teacher.currentLessonID)
                 if student:
-		    studentLabels.append({"username":studentName,"fullname":student.fullname})
-	    return self.renderPage(templ ,
-				teacherName=teacher.fullname,
-				lessonName=teacher.currentLessonName,
-				students=studentLabels,
-				token=teacher.token,
-				language=language,
-				labels=labdict.labels(templ, language),
-				)
-	else:
-	    return self.redirect("/t/login")
+                    studentLabels.append({"username":studentName,"fullname":student.fullname})
+            return self.renderPage(templ ,
+                                teacherName=teacher.fullname,
+                                lessonName=teacher.currentLessonName,
+                                students=studentLabels,
+                                token=teacher.token,
+                                language=language,
+                                labels=labdict.labels(templ, language),
+                                )
+        else:
+            return self.redirect("/t/login")
 
     def endExercise(self):
         teacher = self.getFromCookie()
@@ -263,13 +263,13 @@ class DataHandler(MainHandler):
                     exercise = objs.getExercise(student.currentExercise)
                     if student.username not in exercise.students:
                         exercise.addStudent(student)
-                    if exercise.addNdbAnswer("student", student.username, answer):
-                        logging.info("Answer from <" + student.username + "> saved in datastore")
+                    if exercise.addNdbAnswer("student",
+                                               student.username, answer):
                         exercise.sendStatusToTeacher()
                     else:
                         logging.error("Warning! Answer not saved")
                 else:
-                    logging.error("Student " + student.fullname + "Sent answer of a different exercise")    
+                    logging.error("Student " + student.fullname + "Sent answer of a different exercise")
 
 class StudentHandler(MainHandler):
     def get(self, action):
@@ -279,11 +279,11 @@ class StudentHandler(MainHandler):
             self.renderLoginPage()
         elif action == "logout":
             self.logout()
-        
+
     def post(self, action):
         if action == "login":
             self.login()
-    
+
     def renderLoginPage(self, message=None):
         t = "studentLogin.html"
         if message:
@@ -312,7 +312,7 @@ class StudentHandler(MainHandler):
         else:
             message = "lesson_not_started"
         self.renderLoginPage(message)
-        
+
     def initializeDashboard(self):
         student = self.getFromCookie()
         if not student:
@@ -333,7 +333,7 @@ class StudentHandler(MainHandler):
             self.clearCookies()
             student.logout()
         return self.redirect("/s/login")
-        
+
 class DeleteHandler(MainHandler):
     def get(self):
         objs.clean()
@@ -360,7 +360,7 @@ class ChannelHandler(MainHandler):
             return requester.connect()
         else:
             return requester.logout()
-        
+
 class PingHandler(MainHandler):
     def post(self):
         requester = self.getFromCookie()
@@ -372,18 +372,21 @@ class PingHandler(MainHandler):
         elif requesterRole == "student":
             student = requester
             return student.alertTeacherImAlive()
-            
+
 class LosingFocusHandler(MainHandler):
     def post(self):
-		requester = self.getFromCookie()
-		status = self.request.get("focus")
-		requesterRole = self.getRoleFromCookie()
-		assert requesterRole == "student"
-		student = requester
-		if student:
-                    student.alertTeacherAboutMyFocus(status)
-    
+        requester = self.getFromCookie()
+        status = self.request.get("focus")
+        requesterRole = self.getRoleFromCookie()
+        assert requesterRole == "student"
+        student = requester
+        if student:
+            student.alertTeacherAboutMyFocus(status)
+
 class ForceLogoutStudentHandler(MainHandler):
+    def __init__(self):
+        pass
+
     def post(self):
         requester = self.getFromCookie()
         requesterRole = self.getRoleFromCookie()
@@ -393,16 +396,16 @@ class ForceLogoutStudentHandler(MainHandler):
             student = objs.getStudent(studentName, teacher.currentLessonID)
             if student:
                 return student.logout()
-        
+
 class ExportPage(MainHandler):
     def get(self):
         data = objs.exportJson()
         return self.write(data)
-        
+
 class JollyHandler(MainHandler):
     def get(self, jolly):
         return self.redirect("/start")
-    
+
 class HelpHandler(MainHandler):
     # currently the hyperlink to get here, originally in "wrapper.html",
     # has been removed.
@@ -421,22 +424,18 @@ class LanguageHandler(MainHandler):
             requester.language = language
             requester.save()
             return
-        
+
 class LanguageDictionaryHandler(MainHandler):
     def get(self):
         requester = self.getFromCookie()
         requester.sendMeLanguageDict()
-        
+
 PAGE_RE = r'(/(?:[a-zA-Z0-9_-]+/?)*)'
 app = webapp2.WSGIApplication([
-    webapp2.Route(r'/t/<action>',
-    handler = TeacherHandler, name="teacher"),
-    webapp2.Route(r'/s/<action>',
-    handler = StudentHandler, name="student"),
-    webapp2.Route(r'/data/<kind>',
-    handler=DataHandler, name="data"),
-    webapp2.Route(r'/_ah/channel/<action>/',
-    handler=ConnectionHandler, name="connection"),
+    webapp2.Route(r'/t/<action>', handler=TeacherHandler, name="teacher"),
+    webapp2.Route(r'/s/<action>', handler=StudentHandler, name="student"),
+    webapp2.Route(r'/data/<kind>', handler=DataHandler, name="data"),
+    webapp2.Route(r'/_ah/channel/<action>/', handler=ConnectionHandler, name="connection"),
     ("/export", ExportPage),
     ("/start", StartPage),
     ("/admin/delete", DeleteHandler),

@@ -10,7 +10,7 @@ class MainPage(webapp2.RequestHandler):
 class TextReceivedPage(webapp2.RequestHandler):
     def post(self):
         txt = self.request.get("text")
-	logging.info(txt)
+        logging.info(txt)
 
 app = webapp2.WSGIApplication([
     ('/', MainPage),
@@ -26,17 +26,17 @@ def getHtml(token):
   body {
     font-family : sans-serif;
   }
-  </style> 
+  </style>
   <script src="/static/jquery.min.js"></script>
   <script type="text/javascript" src="/_ah/channel/jsapi"></script>
   <script>
-    function sendText(textToSend) { 
+    function sendText(textToSend) {
       $.post("/text",{"text": textToSend});
     };
     $(document).ready(function(){
       $("#send_text").click(function(event){sendText($("textarea").val())});
     });
-      
+
 
   </script>
 </head>

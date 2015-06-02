@@ -1,12 +1,12 @@
 # coding: utf-8
 
-## school-tagging --> an educative Student / Classroom 
-##    Response Systems designed to help teaching and merge into 
+## school-tagging --> an educative Student / Classroom
+##    Response Systems designed to help teaching and merge into
 ##    academic research.
 ##    Copyright (C) 2014  Stefano Merlo, Federico Sangati, Giovanni Moretti.
 ## This program comes with ABSOLUTELY NO WARRANTY.
-## This is free software, and you are welcome to redistribute it 
-## under certain conditions (i.e. attribution); for details refer 
+## This is free software, and you are welcome to redistribute it
+## under certain conditions (i.e. attribution); for details refer
 ##     to 'LICENSE.txt'.
 
 
@@ -60,7 +60,7 @@ def labels(template, language):
                 "lesson_name_in_use": {
                     "EN": "Lesson name already in use",
                     "IT": u"Il nome scelto per la lezione non è al momento disponibile",
-                    },        
+                    },
                 "provide_lesson_name": {
                     "EN": "Please provide a name for the lesson",
                     "IT": "Prego inserire un nome per la lezione",
@@ -85,7 +85,7 @@ def labels(template, language):
                     "EN": "",
                     "IT": "",
                     },
-                                
+
                 },
         "teacherDashboard.html": {
                 "page_title": {
