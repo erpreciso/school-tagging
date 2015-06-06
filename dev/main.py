@@ -1,60 +1,57 @@
+import os
+import json
 import webapp2
+import jinja2
 import logging
 from google.appengine.api import channel
 
-class MainPage(webapp2.RequestHandler):
+USERS = []
+
+class MainHandler(webapp2.RequestHandler):
+    """Main handler to be inherited from extension-specific handlers."""
+    template_dir = os.path.join(os.path.dirname(__file__), 'pages')
+    jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir),
+        autoescape=True)
+
+    def write(self, *a, **kw):
+        """Write out the response."""
+        self.response.out.write(*a, **kw)
+
+    def read(self, param):
+        """Read a parameter in the http request."""
+        return self.request.get(param)
+
+    def render_str(self, template, **params):
+        """Print a jinjia2 template using the global variable from yaml file,
+        dev or prod."""
+        return self.jinja_env.get_template(template).render(params)
+
+    def render_page(self, template, **kw):
+        """Render a jinja2 template."""
+        self.write(self.render_str(template, **kw))
+
+
+class StartPage(MainHandler):
+    """Handler from the main page."""
     def get(self):
-        token = channel.create_channel("id1")
-        self.response.out.write(getHtml(token))
+        """GET method."""
+        global USERS
+        user_id = "User-" + str(len(USERS))
+        tk = channel.create_channel(user_id)
+        USERS.append([user_id, tk])
+        self.render_page("index.html", token=tk, username=user_id)
+
 
 class TextReceivedPage(webapp2.RequestHandler):
     def post(self):
+        sender = self.request.get("from")
         txt = self.request.get("text")
-        logging.info(txt)
+        for user in USERS:
+            message = json.dumps({"message_content": txt, "sender": sender})
+            channel.send_message(user[1], message)
 
 app = webapp2.WSGIApplication([
-    ('/', MainPage),
+    ('/', StartPage),
     ('/text', TextReceivedPage),
 ], debug=True)
 
-def getHtml(token):
-    return """
-<!DOCTYPE html>
-<html>
-<head>
-  <style type="text/css">
-  body {
-    font-family : sans-serif;
-  }
-  </style>
-  <script src="/static/jquery.min.js"></script>
-  <script type="text/javascript" src="/_ah/channel/jsapi"></script>
-  <script>
-    function sendText(textToSend) {
-      $.post("/text",{"text": textToSend});
-    };
-    $(document).ready(function(){
-      $("#send_text").click(function(event){sendText($("textarea").val())});
-    });
-
-
-  </script>
-</head>
-<body>
-  <div>The token is <strong>""" + token + """</strong></div>
-  <div>
-    <div>Listen the teacher, and fill the text area below</div>
-    <textarea id="txt" cols=40></textarea>
-    <button id="send_text">Send text</button>
-  </div>
-    <script>
-      channel = new goog.appengine.Channel('""" + token + """');
-      socket = channel.open();
-      socket.onopen = onOpened;
-      socket.onmessage = onMessage;
-      socket.onerror = onError;
-      socket.onclose = onClose;
-  </script>
-</body>
-</html>
-"""

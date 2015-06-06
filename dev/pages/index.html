@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style type="text/css">
+  body {
+    font-family : sans-serif;
+  }
+  </style>
+  <script src="/static/jquery.min.js"></script>
+  <script type="text/javascript" src="/_ah/channel/jsapi"></script>
+  <script>
+    function sendText(textToSend) {
+      var my_id = $("#user_id").text();
+      $.post("/text",{"text": textToSend, "from": my_id});
+    };
+    $(document).ready(function(){
+      $("#send_text").click(function(event){sendText($("textarea").val())});
+    });
+    onMessage = function(message) {
+      var data = JSON.parse(message.data);
+      var content = data.message_content;
+      $("#input_area").after($(document.createElement("div"))
+                      .text(data.sender + " @ " + timestamp() + " --> " + content)
+                      .css("color", "red"));
+    };
+    function timestamp() {
+	var now     = new Date(); 
+	var hour    = now.getHours();
+	var minute  = now.getMinutes();
+	var second  = now.getSeconds(); 
+	if(hour.toString().length == 1) {
+	    var hour = '0'+hour;
+	}
+	if(minute.toString().length == 1) {
+	    var minute = '0'+minute;
+	}
+	if(second.toString().length == 1) {
+	    var second = '0'+second;
+	}   
+	var dTime = hour+':'+minute+':'+second;   
+	return dTime;
+    }
+    onOpened = function(){};
+    onError = function(){};
+    onClose = function(){};
+  </script>
+</head>
+<body>
+<!--  <div>The token is <strong>{{token}}</strong></div> -->
+  <div>You are user <strong><span id="user_id">{{username}}</span></strong></div>
+  <div id="input_area">
+    <div>Write in the text area below and send to everybody</div>
+    <textarea id="txt" cols=40></textarea>
+    <button id="send_text">Send text</button>
+  </div>
+    <script>
+      channel = new goog.appengine.Channel('{{ token }}');
+      socket = channel.open();
+      socket.onopen = onOpened;
+      socket.onmessage = onMessage;
+      socket.onerror = onError;
+      socket.onclose = onClose;
+  </script>
+</body>
+</html>
