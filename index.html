@@ -31,7 +31,7 @@
 				<nav id="nav">
 					<ul>
 						<li><a href="index.html">Home</a></li>
-						<li><a href="generic.html">Generic</a></li>
+						<li><a href="implementation.html">Implementation</a></li>
 						<li><a href="elements.html">Elements</a></li>
 					</ul>
 				</nav>
@@ -40,10 +40,10 @@
 		<!-- Banner -->
 			<section id="banner">
 				<h2>This is school-tagging</h2>
-				<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+				<p>School-Tagging (ST) is a web-based platform for classrooms, which aims at engaging students in game-like interactive language exercises.</p>
 				<ul class="actions">
 					<li>
-						<a href="#" class="button big">Learn More</a>
+						<a href="implementation.html" class="button big">Implementation</a>
 					</li>
 				</ul>
 			</section>
@@ -52,21 +52,21 @@
 			<section id="one" class="wrapper style1 align-center">
 				<div class="container">
 					<header>
-						<h2>Consectetur adipisicing elit</h2>
-						<p>Lorem ipsum dolor sit amet adipisicing elit. Delectus consequatur sed tempus.</p>
+						<h2>In few words</h2>
+						<!--<p>Lorem ipsum dolor sit amet adipisicing elit. Delectus consequatur sed tempus.</p>-->
 					</header>
 					<div class="row 200%">
 						<section class="4u 12u$(small)">
 							<i class="icon big rounded fa-clock-o"></i>
-							<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Enim quam consectetur quibusdam magni minus aut modi aliquid.</p>
+							<p>We present a prototype of a novel online platform for promoting playful learning exercises in classrooms, allowing teachers to engage with students in an interactive way.  Differently from typical e-learning environments, it is the teacher, not the machine, who leads the learning activity, i.e., she is able to monitor students' individual and aggregated answers and provide them real-time feedback</p>
 						</section>
 						<section class="4u 12u$(small)">
 							<i class="icon big rounded fa-comments"></i>
-							<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Laudantium ullam consequatur repellat debitis maxime molestiae.</p>
+							<p>Although the platform is subject-independent, we are currently focusing on language exercises based on standard school curriculum. Answers provided by students and validated by the teacher (or automatic assessment) could constitute, in a large scale scenario, a valuable source of linguistic annotation</p>
 						</section>
 						<section class="4u$ 12u$(small)">
 							<i class="icon big rounded fa-user"></i>
-							<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Atque eaque eveniet, nesciunt molestias. Ipsam, voluptate vero.</p>
+							<p> The platform can therefore be seen also as a crowdsourcing system to create novel linguistic resources to be used by the scientic community in the Natural Language Processing field.</p>
 						</section>
 					</div>
 				</div>
@@ -76,36 +76,44 @@
 			<section id="two" class="wrapper style2 align-center">
 				<div class="container">
 					<header>
-						<h2>Lorem ipsum dolor sit</h2>
-						<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Distinctio, autem.</p>
+						<h2>BACKGROUND AND MOTIVATION</h2>
+						<!--<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Distinctio, autem.</p>-->
 					</header>
 					<div class="row">
 						<section class="feature 6u 12u$(small)">
 							<!--	<img class="image fit" src="images/pic01.jpg" alt="" /> -->
 							<iframe width="560" height="315" class="image fit" src="http://www.youtube.com/embed/DOoYUzmY9Pg" frameborder="0" allowfullscreen></iframe>
-							<h3 class="title">Lorem ipsum dolor</h3>
-							<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Dolore ipsa voluptate, quae quibusdam. Doloremque similique, reiciendis sit quibusdam aperiam? Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+							<h3 class="title">Demo video</h3>
+							<p>School-Tagging (ST) is a web-based platform for classrooms, which aims at engaging students in game-like interactive language exercises.</p>
+							<p>Language exercises are abundant in all education levels. Grammar exercises, writing tests and learning a foreign language are all intrinsically about language. However, also subjects like literature and history make extensive use of language comprehension tasks. Language is also a big research topic within the academic fields of Natural Language Processing (NLP), (Computational) Linguistics and Digital Humanities (DH).</p>
+							<p>The idea behind School-Tagging is to recast traditional pencil \& paper language exercises into online game-oriented learning activities, to 1) stimulate students' interest and motivation, 2) promote cooperation among classmates with the help of teachers and 3) support scientific researchers related to language analysis and technologies.</p>
+							<p>Today's young generations are already fully immersed in technology, and teachers face a challenge of keeping their full attention on taught material. This often leads to classroom technologies being received with suspicion. Our platform would encourage teachers to incorporate a \emph{controlled} level of technology in the class to keep students more engaged by means of game-like interactive activities, without abandoning traditional training methods and social dynamics.</p>
+							<p>A typical ST activity requires students in the same classroom to solve individually (but at the same pace) the same set of language exercises using digital devices (e.g., laptops, tablets). Students' answers are compared and checked in real-time by the teacher, who can optionally encourage open discussions. Anonymized answers are collected and made openly available for scientific purposes, thereby creating a virtuous cycle between education and academic research.</p>
 						</section>
 						<section class="feature 6u$ 12u$(small)">
-							<img class="image fit" src="images/pic02.jpg" alt="" />
-							<h3 class="title">Esse, fugiat, in</h3>
-							<p>Natus perspiciatis fugit illum porro iusto fuga nam voluptas minima voluptates deserunt, veniam reiciendis harum repellat necessitatibus. Animi, adipisci qui. Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+							<img class="image fit" src="images/fig1.png" alt="" />
+							<h3 class="title">Data annotation process and the 3 main stakeholders benefitting from the platform.</h3>
+							<p><strong>Students</strong> The ST platform improves student engagement during exercise sessions in the classroom and promotes cooperation among the classmates with the teacher's assistance. It enables them to receive an immediate feedback from the teacher right after submitting each answer, and ask questions in case of difficulty.</p>
+							<p><strong>Teachers</strong> The platform allows the teacher to control the classroom activity as she follows them step by step in real-time. It also provides a way to monitor overall class progress over longer time, as well as particular students, and guide those who have particular needs. Additionally, teachers can tailor the exercise sets to the class level and interest.</p>
+							<p><strong>Language Researchers</strong> The collected annotated data can be made openly available to NLP and DH research communities. Most state-of-the-art systems in Human Language Technology research are based on supervised approaches, requiring large amounts of annotated data to be trained. The collection of such data is a resource- and time-consuming task. The ST platform enables the creation of high-quality training data to happen at the same time as education goals are being achieved.</p>
 						</section>
 						<section class="feature 6u 12u$(small)">
-							<img class="image fit" src="images/pic03.jpg" alt="" />
-							<h3 class="title">Voluptates, repudiandae, dolor</h3>
-							<p>Voluptatibus repellendus tempora, quia! Consequuntur atque, rerum quis, ullam labore officiis ipsa beatae dolore, assumenda eos harum repudiandae, qui ab! Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+							<img class="image fit" src="images/fig3.png" alt="" />
+							<h3 class="title">Digital Social Innovation</h3>
+							<p>School-Tagging fits well the European Digital Social Innovation (DSI) agenda\footnote{\url{http://digitalsocial.eu/}}. It is in fact a social and innovative web platform which aims at using the full capabilities of today's Internet technologies, enabling a type of real-time multiuser interaction which was inconceivable only few years ago. However, it preserves the offline modality, essential in social dynamics: the classroom remains the central physical space where the learning process takes place, and it is only partially replaced by a virtual environment.</p>
+							<p>The platform aims at setting up a collaboration between schools, scholars involved in scientific research, and other possibly partners developing language technologies applications.</p>
+							<p>Student's responses function as one collective intelligence, which produces annotated resources. Such language resources remain essential for the development of more advanced linguistic knowledge, and for building state-of-the-art NLP systems by  training language technologies that are widely used in today's society (e.g., Machine Translation, Automatic Question Answering).  Besides, they contribute to the progress of Digital Humanities research, which exploits language annotation for developing better tools for humanities scholars (e.g., Historical Content Analysis). Finally, students are more engaged when using game-like interactive tools, and feel empowered by solving language tasks that contribute to scientific research.</p>
 						</section>
-						<section class="feature 6u$ 12u$(small)">
-							<img class="image fit" src="images/pic04.jpg" alt="" />
+						<!--<section class="feature 6u$ 12u$(small)">
+							<img class="image fit" src="images/fig3.png" alt="" />
 							<h3 class="title">Eveniet, reiciendis, veniam</h3>
 							<p>Rem nulla molestiae inventore quibusdam repudiandae doloremque eveniet ullam, qui autem possimus saepe laudantium numquam sapiente vel. Repudiandae, nihil tempore. Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-						</section>
+						</section>-->
 					</div>
 					<footer>
 						<ul class="actions">
 							<li>
-								<a href="#" class="button alt big">Learn More</a>
+								<a href="implementation.html" class="button alt big">Implementation</a>
 							</li>
 						</ul>
 					</footer>
