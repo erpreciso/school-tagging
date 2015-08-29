@@ -45,9 +45,10 @@ class StartPage(MainHandler):
 class TextReceivedPage(webapp2.RequestHandler):
     def post(self):
         sender = self.request.get("from")
-        txt = self.request.get("text")
+        text_received = self.request.get("text")
+        # TODO: do stuff with the text received
         for user in USERS:
-            message = json.dumps({"message_content": txt, "sender": sender})
+            message = json.dumps({"message_content": text_received, "sender": sender})
             channel.send_message(user[1], message)
 
 app = webapp2.WSGIApplication([

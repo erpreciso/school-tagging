@@ -139,6 +139,7 @@ class TeacherHandler(MainHandler):
             teacher = objs.getTeacher(username)
             if password == teacher.password:
                 lesson_name = self.read("lesson_name")
+	        logging.info(lesson_name)
                 if lesson_name:
                     if lesson_name not in objs.getOpenLessonsNames():
                         teacher.connect()
@@ -492,7 +493,8 @@ class LanguageDictionaryHandler(MainHandler):
     def get(self):
         """GET method."""
         requester = self.get_from_cookie()
-        requester.sendMeLanguageDict()
+        if requester:
+            requester.sendMeLanguageDict()
 
 PAGE_RE = r'(/(?:[a-zA-Z0-9_-]+/?)*)'
 #pylint: disable=invalid-name

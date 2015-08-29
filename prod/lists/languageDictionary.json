@@ -1,30 +1,194 @@
-{"teacherDashboard": {
-        "label001": {"EN": "Choose category exercise", "IT": "Inizia esercizio semplice"},
-        "label002": {"EN": "Show Lesson Statistics", "IT": "Mostra statistiche"},
-        "label003": {"EN": "Selection Exercise on", "IT": "Inizia esercizio selezione"},
-        "label004": {"EN": "Correct", "IT": "Corretto"},
-        "label005": {"EN": "Wrong", "IT": "Sbagliato"},
-        "label006": {"EN": "Missing", "IT": "Mancante"},
-        "label007": {"EN": "LESSON STATISTICS", "IT": "STATISTICHE LEZIONE"},
-        "label008": {"EN": "It seems I'm offline: ping me...", "IT": "Sembra io sia scollegato: prova a sondare la mia connessione"},
-        "label009": {"EN": "..oppure disconnettimi definitivamente", "IT": ".. or kick me out of the lesson"},
-        "label010": {"EN": "EXERCISE", "IT": "ESERCIZIO"},
-        "label011": {"EN": "OPTIONS", "IT": "OPZIONI"},
-        "label012": {"EN": "Time is up!", "IT": "Il tempo è scaduto!"},
-        "label013": {"EN": "Student answers", "IT": "Risposte degli studenti"},
-        "label014": {"EN": "Status bar", "IT": "Barra di stato"},
-        "label015": {"EN": "Missing", "IT": "Mancanti"},
-        "label016": {"EN": "All student answered", "IT": "Tutti gli studenti hanno risposto"},
-        "label017": {"EN": "Answered", "IT": "Risposto"},
-        "label018": {"EN": "Click on the right answer", "IT": "Clicca sulla risposta corretta"},
-        "label019": {"EN": "Show Lesson Statistics", "IT": "Mostra statistiche lezione"}
+{
+  "teacherDashboard": {
+    "label001": {"EN": "Choose category exercise", "IT": "Inizia esercizio semplice"},
+    "label002": {"EN": "Show Lesson Statistics", "IT": "Mostra statistiche"},
+    "label003": {"EN": "Selection Exercise on", "IT": "Inizia esercizio selezione"},
+    "label004": {"EN": "Correct", "IT": "Corretto"},
+    "label005": {"EN": "Wrong", "IT": "Sbagliato"},
+    "label006": {"EN": "Missing", "IT": "Mancante"},
+    "label007": {"EN": "LESSON STATISTICS", "IT": "STATISTICHE LEZIONE"},
+    "label008": {"EN": "It seems I'm offline: ping me...", "IT": "Sembra io sia scollegato: prova a sondare la mia connessione"},
+    "label009": {"EN": "..oppure disconnettimi definitivamente", "IT": ".. or kick me out of the lesson"},
+    "label010": {"EN": "EXERCISE", "IT": "ESERCIZIO"},
+    "label011": {"EN": "OPTIONS", "IT": "OPZIONI"},
+    "label012": {"EN": "Time is up!", "IT": "Il tempo è scaduto!"},
+    "label013": {"EN": "Student answers", "IT": "Risposte degli studenti"},
+    "label014": {"EN": "Status bar", "IT": "Barra di stato"},
+    "label015": {"EN": "Missing", "IT": "Mancanti"},
+    "label016": {"EN": "All student answered", "IT": "Tutti gli studenti hanno risposto"},
+    "label017": {"EN": "Answered", "IT": "Risposto"},
+    "label018": {"EN": "Click on the right answer", "IT": "Clicca sulla risposta corretta"},
+    "label019": {"EN": "Show Lesson Statistics", "IT": "Mostra statistiche lezione"}
+  },
+  "studentDashboard": {
+    "label001": {"EN": "Session aborted by teacher; correct answer was ", "IT": "Sessione interrotta dall'insegnante; la risposta corretta era "},
+    "label002": {"EN": "Lesson terminated by teacher", "IT": "Lezione interrotta dall'insegnante"},
+    "label003": {"EN": "Waiting for teacher to assess...", "IT": "Attendi validazione dell'insegnante"},
+    "label004": {"EN": "Good job!", "IT": "Ottimo lavoro!"},
+    "label005": {"EN": "Answer not correct; it was ", "IT": "Risposta non corretta; era "},
+    "label006": {"EN": "Waiting for exercise to start...", "IT": "Attendi l'inizio dell'esercizio"}
+  },
+  "teacherDashboard.js": {
+    "label001": {
+      "EN": "school-tagging|teacher|login",
+      "IT": "school-tagging|insegnante|entra",
+      },
+    "label002": {
+      "EN": "LOGIN",
+      "IT": "LOGIN",
+    },
+  },
+    "teacherLogin.html": {
+	"page_title": {
+	    "EN": "school-tagging|teacher|login",
+	    "IT": "school-tagging|insegnante|entra",
+	    },
+	"login_title": {
+	    "EN": "LOGIN",
+	    "IT": "ENTRA",
+	    },
+	"insert_username_password": {
+	    "EN": "Please insert your username and password",
+	    "IT": "Pregasi inserire il proprio nome utente e la password",
+	    },
+	"username": {
+	    "EN": "Username",
+	    "IT": "Nome utente",
+	    },
+	"password": {
+	    "EN": "Password",
+	    "IT": "Password",
+	    },
+	"lesson_name": {
+	    "EN": "Lesson name",
+	    "IT": "Nome della lezione",
+	    },
+	"login_button": {
+	    "EN": "Login",
+	    "IT": "Entra nel sito",
+	    },
+	"signup_title": {
+	    "EN": "SIGNUP",
+	    "IT": "REGISTRATI",
+	    },
+	"do_not_have_account": {
+	    "EN": "Do not have an account yet?",
+	    "IT": "Non sei ancora registrato?",
+	    },
+	"signup_button": {
+	    "EN": "Signup",
+	    "IT": "Registrati",
+	    },
+	"message_title": {
+	    "EN": "MESSAGE",
+	    "IT": "ATTENZIONE",
+	    },
+	"lesson_name_in_use": {
+	    "EN": "Lesson name already in use",
+	    "IT": u"Il nome scelto per la lezione non è al momento disponibile",
+	    },
+	"provide_lesson_name": {
+	    "EN": "Please provide a name for the lesson",
+	    "IT": "Prego inserire un nome per la lezione",
+	    },
+	"password_not_correct": {
+	    "EN": "Password not correct",
+	    "IT": u"La password non è corretta",
+	    },
+	"username_not_existing": {
+	    "EN": "Username not existing",
+	    "IT": "Nome utente sconosciuto",
+	    },
+	"re-enter_login": {
+	    "EN": "Please re-enter username and password in the LOGIN area",
+	    "IT": "Ri-digitare il nome utente e la password nell'area ENTRA",
+	    },
+	"username_already_used": {
+	    "EN": "Username already in use",
+	    "IT": "Nome utente non disponibile",
+	    },
+	"": {
+	    "EN": "",
+	    "IT": "",
+	    },
+
 	},
-"studentDashboard": {
-        "label001": {"EN": "Session aborted by teacher; correct answer was ", "IT": "Sessione interrotta dall'insegnante; la risposta corretta era "},
-        "label002": {"EN": "Lesson terminated by teacher", "IT": "Lezione interrotta dall'insegnante"},
-        "label003": {"EN": "Waiting for teacher to assess...", "IT": "Attendi validazione dell'insegnante"},
-        "label004": {"EN": "Good job!", "IT": "Ottimo lavoro!"},
-        "label005": {"EN": "Answer not correct; it was ", "IT": "Risposta non corretta; era "},
-        "label006": {"EN": "Waiting for exercise to start...", "IT": "Attendi l'inizio dell'esercizio"}
-	}
+"teacherDashboard.html": {
+	"page_title": {
+	    "EN": "school-tagging|teacher|dashboard",
+	    "IT": "school-tagging|insegnante|cruscotto",
+	    },
+	"teacher_title": {
+	    "EN": "Teacher",
+	    "IT": "Insegnante",
+	    },
+	"logout": {
+	    "EN": "Logout",
+	    "IT": "Disconnetti",
+	    },
+	"lesson_name_title": {
+	    "EN": "Lesson name (pass to students)",
+	    "IT": "Nome della lezione (da comunicare agli studenti)",
+	    },
+	"enrolled_students": {
+	    "EN": "Enrolled students (click to view stats)",
+	    "IT": "Studenti collegati (cliccare sul nome per visualizzare le statistiche)",
+	    },
+	"": {
+	    "EN": "",
+	    "IT": "",
+	    },
+      },
+"studentDashboard.html": {
+	"page_title": {
+	    "EN": "school-tagging|student|dashboard",
+	    "IT": "school-tagging|studente|cruscotto",
+	    },
+	"logout": {
+	    "EN": "Logout",
+	    "IT": "Disconnetti",
+	    },
+	"lesson_name_title": {
+	    "EN": "Lesson name",
+	    "IT": "Nome della lezione",
+	    },
+	"student_title": {
+	    "EN": "Student",
+	    "IT": "Studente",
+	    },
+      },
+ "studentLogin.html": {
+	"page_title": {
+	    "EN": "school-tagging|student|login",
+	    "IT": "school-tagging|studente|entra",
+	    },
+	"enter_username_and_lesson": {
+	    "EN": "Please enter your name and your session ID provided by your teacher",
+	    "IT": "Prego inserisci il tuo nome e l'identificativo della lezione che l'insegnante ti ha comunicato",
+	    },
+	"name_and_surname": {
+	    "EN": "Name and Last Name",
+	    "IT": "Nome e Cognome",
+	    },
+	"session_id": {
+	    "EN": "Session ID",
+	    "IT": "Identificativo della lezione",
+	    },
+	"login_button": {
+	    "EN": "Go to class exercise",
+	    "IT": "Entra nella lezione",
+	    },
+	"name_already_in_use": {
+	    "EN": "Name already in use",
+	    "IT": "Nome già utilizzato",
+	    },
+	"lesson_not_started": {
+	    "EN": "Lesson not started yet",
+	    "IT": "Lezione non ancora iniziata",
+	    },
+	"message_title": {
+	    "EN": "MESSAGE",
+	    "IT": "ATTENZIONE",
+	    }
+       }
 }
